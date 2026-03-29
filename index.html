@@ -416,7 +416,7 @@ async function loadVideos() {
   showLoading();
   try {
     const data = await callScript('videos', { email: currentUser.email });
-    allVideos = (data.videos || []).map(v => ({ ...v, _cat: categorize(v.name) }));
+    allVideos = (data.videos || []).map(v => ({ ...v, _cat: categorize(v) }));
     renderAll();
   } catch(e) {
     document.getElementById('content').innerHTML = `<div class="empty-state"><h3>Erreur</h3><p>${escHtml(e.message)}</p><br><button class="btn btn-ghost" onclick="loadVideos()" style="margin:0 auto;">Réessayer</button></div>`;
@@ -469,10 +469,13 @@ function showLoading() {
 // ============================================
 // CATEGORIZE & RENDER
 // ============================================
-function categorize(name) {
-  const n = name.toLowerCase();
+function categorize(video) {
+  // Priorité à la catégorie renvoyée par le serveur (basée sur le dossier Drive)
+  if (video._category) return video._category;
+  // Fallback sur les règles locales par mots-clés
+  const n = (video.name || '').toLowerCase();
   for (const r of settings.rules) { if (n.includes(r.keyword.toLowerCase())) return r.cat; }
-  return 'Autres';
+  return 'Divers';
 }
 
 function renderAll() { showScreen('app'); renderToolbar(); renderVideos(); }
