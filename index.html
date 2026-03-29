@@ -135,7 +135,9 @@
     position: relative; background: #000;
     aspect-ratio: 16/9; width: 100%; overflow: hidden;
   }
-  .modal-player iframe { width: 100%; height: 100%; border: none; display: block; }
+  .modal-player iframe,
+  .modal-player video { width: 100%; height: 100%; border: none; display: block; }
+  .modal-player video { object-fit: contain; background: #000; }
   .fs-btn {
     position: absolute; bottom: 10px; right: 10px; z-index: 10;
     width: 38px; height: 38px;
@@ -819,22 +821,64 @@ function videoCard(v) {
 function openVideo(id) {
   const v = allVideos.find(x=>x.id===id); if(!v) return;
   document.getElementById('modalTitle').textContent = v.name.replace(/\.[^.]+$/,'');
+
+  // URL de lecture directe via token OAuth — plein écran natif garanti
+  const token = sessionStorage.getItem('lfiag_token');
+  const directUrl = 'https://www.googleapis.com/drive/v3/files/' + id + '?alt=media';
+  const mimeType = v.mimeType || 'video/mp4';
+
   document.getElementById('modalPlayer').innerHTML =
-    '<iframe src="https://drive.google.com/file/d/' + id + '/preview"' +
-    ' allow="autoplay; fullscreen; encrypted-media; picture-in-picture"' +
-    ' allowfullscreen webkitallowfullscreen mozallowfullscreen' +
-    ' style="width:100%;height:100%;border:none;"></iframe>' +
-    '<button class="fs-btn" id="fsBtn" onclick="toggleFullscreen()" title="Plein écran">' +
-    '<svg id="fsIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
-    '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>' +
-    '</svg></button>';
-  const dur = v.videoMediaMetadata?.durationMillis ? formatDuration(parseInt(v.videoMediaMetadata.durationMillis)) : null;
-  const date = v.modifiedTime ? new Date(v.modifiedTime).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}) : null;
-  let meta = `<span class="pill">${escHtml(v._cat)}</span>`;
-  if(dur) meta+=`<span>⏱ ${dur}</span>`;
-  if(date) meta+=`<span>📅 ${date}</span>`;
-  document.getElementById('modalMeta').innerHTML = meta;
-  document.getElementById('modalDriveLink').href = v.webViewLink || `https://drive.google.com/file/d/${id}/view`;
+    '<video id="videoPlayer" controls playsinline webkit-playsinline' +
+    ' style="width:100%;height:100%;background:#000;display:block;"' +
+    ' preload="metadata">' +
+    '<source src="' + directUrl + '" type="' + mimeType + '">' +
+    '</video>';
+
+  // Injecter le token Authorization sur la balise video via fetch blob
+  const videoEl = document.getElementById('videoPlayer');
+  videoEl.addEventListener('error', function() {
+    // Fallback : iframe Drive si le stream direct échoue
+    document.getElementById('modalPlayer').innerHTML =
+      '<iframe src="https://drive.google.com/file/d/' + id + '/preview"' +
+      ' allow="autoplay; fullscreen; encrypted-media; picture-in-picture"' +
+      ' allowfullscreen webkitallowfullscreen mozallowfullscreen' +
+      ' style="width:100%;height:100%;border:none;"></iframe>' +
+      '<button class="fs-btn" id="fsBtn" onclick="toggleFullscreen()" title="Plein écran">' +
+      '<svg id="fsIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+      '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>' +
+      '</svg></button>';
+  }, { once: true });
+
+  // Créer un blob URL authentifié pour la vidéo
+  fetch(directUrl, { headers: { Authorization: 'Bearer ' + token } })
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.blob();
+    })
+    .then(function(blob) {
+      const blobUrl = URL.createObjectURL(blob);
+      const v2 = document.getElementById('videoPlayer');
+      if (v2) {
+        v2.src = blobUrl;
+        v2.load();
+        // Libérer le blob quand la vidéo est fermée
+        v2._blobUrl = blobUrl;
+      }
+    })
+    .catch(function(err) {
+      console.warn('Stream direct échoué, fallback iframe:', err);
+      document.getElementById('modalPlayer').innerHTML =
+        '<iframe src="https://drive.google.com/file/d/' + id + '/preview"' +
+        ' allow="autoplay; fullscreen; encrypted-media; picture-in-picture"' +
+        ' allowfullscreen webkitallowfullscreen mozallowfullscreen' +
+        ' style="width:100%;height:100%;border:none;"></iframe>' +
+        '<button class="fs-btn" id="fsBtn" onclick="toggleFullscreen()" title="Plein écran">' +
+        '<svg id="fsIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+        '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>' +
+        '</svg></button>';
+    });
+
+  document.getElementById('modalDriveLink').href = v.webViewLink || 'https://drive.google.com/file/d/' + id + '/view';
   document.getElementById('modal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -889,6 +933,8 @@ function closeModal() {
   if (p && p._sim) { p.style.cssText = ''; p._sim = false; }
   if (document.exitFullscreen) document.exitFullscreen().catch(function(){});
   else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+  var vp = document.getElementById('videoPlayer');
+  if (vp && vp._blobUrl) { URL.revokeObjectURL(vp._blobUrl); }
   document.getElementById('modal').classList.remove('open');
   document.getElementById('modalPlayer').innerHTML = '';
   document.body.style.overflow = '';
