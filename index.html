@@ -662,7 +662,7 @@
 <div class="toast-container" id="toasts"></div>
 
 <script>
-const CLIENT_ID = '__YOUR_CLIENT_ID__';
+const CLIENT_ID = '770493413843-ovgjb1u0hnc3lcgab6otfs92q8hm2knn.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
 
 let accessToken = null;
@@ -691,7 +691,7 @@ try {
 } catch(e) {}
 
 function signIn() {
-  if (CLIENT_ID === '__YOUR_CLIENT_ID__') { showConfigModal(); return; }
+  if (CLIENT_ID === '770493413843-ovgjb1u0hnc3lcgab6otfs92q8hm2knn.apps.googleusercontent.com') { showConfigModal(); return; }
   location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(CLIENT_ID)}&redirect_uri=${encodeURIComponent(location.href.split('?')[0])}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
 }
 
@@ -904,7 +904,7 @@ function showConfigModal() {
       <li>Créez un projet, activez l'API Google Drive</li>
       <li>Identifiants → Créer un ID client OAuth → Application Web</li>
       <li>Ajoutez <code style="background:var(--bg3);padding:1px 5px;border-radius:4px;">${location.href.split('?')[0]}</code> dans les origines autorisées</li>
-      <li>Remplacez <code style="background:var(--bg3);padding:1px 5px;border-radius:4px;">__YOUR_CLIENT_ID__</code> dans le HTML</li>
+      <li>Remplacez <code style="background:var(--bg3);padding:1px 5px;border-radius:4px;">770493413843-ovgjb1u0hnc3lcgab6otfs92q8hm2knn.apps.googleusercontent.com</code> dans le HTML</li>
     </ol>
     <button class="btn btn-primary" onclick="this.closest('div').parentElement.remove()" style="padding:.7rem 1.5rem;width:auto;">Compris</button>
   </div>`;
