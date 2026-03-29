@@ -587,7 +587,8 @@ function renderMobCatbar() {
   if (!bar) return;
   bar.innerHTML = cats.map(function(c) {
     var count = c === 'Tout' ? allVideos.length : allVideos.filter(function(v) { return v._cat === c; }).length;
-    return '<div class="cat-pill ' + (c === activeCategory ? 'active' : '') + '" onclick="mobSetCat('' + escHtml(c) + '')">'
+    var cls = c === activeCategory ? 'active' : '';
+    return '<div class="cat-pill ' + cls + '" onclick="mobSetCat(\'' + escHtml(c) + '\')">'
       + escHtml(c) + ' <span style="opacity:.55;font-size:.7em;">' + count + '</span></div>';
   }).join('');
 }
@@ -599,14 +600,20 @@ function mobSetCat(c) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-document.getElementById('mobSearchInput').addEventListener('input', function(e) {
+var _mob = document.getElementById('mobSearchInput');
+if (_mob) _mob.addEventListener('input', function(e) {
   searchQuery = e.target.value.trim();
-  document.getElementById('searchInput').value = searchQuery;
+  var _si = document.getElementById('searchInput');
+  if (_si) _si.value = searchQuery;
   if (allVideos.length) renderVideos();
 });
 
-window.addEventListener('resize', setupMobileUI);
-setupMobileUI();
+window.addEventListener('resize', function() {
+  try { setupMobileUI(); } catch(e) { console.warn('setupMobileUI:', e); }
+});
+
+// Init mobile au chargement (sécurisé)
+try { setupMobileUI(); } catch(e) { console.warn('mobile init:', e); }
 
 async function handleCallback() {
   // Récupérer le token depuis le hash
