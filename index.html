@@ -158,8 +158,12 @@
   .modal-meta .pill { background: var(--bg3); border: 1px solid rgba(196,155,100,0.25); border-radius: 100px; padding: 3px 12px; color: var(--gold2); font-size: 0.75rem; font-weight: 500; }
   .modal-drive-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.25rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 100px; color: var(--text); font-size: 0.85rem; font-weight: 500; text-decoration: none; transition: all 0.18s; font-family: var(--font-body); }
   .modal-drive-btn:hover { border-color: var(--gold); color: var(--gold); }
-  .mob-only { display: none; }
-  @media (max-width: 640px) { .mob-only { display: inline-flex; } }
+  .mob-only  { display: none; }
+  .desk-only { display: inline-flex; }
+  @media (max-width: 640px) {
+    .mob-only  { display: inline-flex; }
+    .desk-only { display: none; }
+  }
 
   /* EMPTY */
   .empty-state { text-align: center; padding: 4rem 2rem; color: var(--muted); }
@@ -497,14 +501,16 @@
     <div class="modal-body">
       <div class="modal-meta" id="modalMeta"></div>
       <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
-        <a class="modal-drive-btn" id="modalDriveLink" target="_blank">
+        <!-- Desktop : bouton Drive simple -->
+        <a class="modal-drive-btn desk-only" id="modalDriveLink" target="_blank">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           Ouvrir dans Google Drive
         </a>
-        <button class="modal-drive-btn mob-only" onclick="goFullscreen()" style="border:none;cursor:pointer;">
+        <!-- Mobile : bouton unique Drive + plein écran -->
+        <a class="modal-drive-btn mob-only" id="modalDriveLinkMob" target="_blank">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-          Plein écran
-        </button>
+          Ouvrir dans Google Drive pour Plein Écran
+        </a>
       </div>
     </div>
   </div>
@@ -836,6 +842,8 @@ function openVideo(id) {
 
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalDriveLink').href = driveLink;
+  var mobLink = document.getElementById('modalDriveLinkMob');
+  if (mobLink) mobLink.href = driveLink;
 
   var dur  = v.videoMediaMetadata && v.videoMediaMetadata.durationMillis
     ? formatDuration(parseInt(v.videoMediaMetadata.durationMillis)) : null;
