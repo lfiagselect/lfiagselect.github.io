@@ -151,12 +151,136 @@
   /* ADMIN PANEL */
   .admin-banner { background: rgba(196,155,100,0.08); border: 1px solid rgba(196,155,100,0.25); border-radius: var(--card-radius); padding: 0.85rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.82rem; color: var(--gold); }
 
-  @media (max-width: 640px) {
-    header { padding: 0 1rem; } main { padding: 1rem; }
-    .settings-grid { grid-template-columns: 1fr; }
-    .video-grid { grid-template-columns: 1fr; }
-    .logo-text { font-size: 1.3rem; } .search-bar { max-width: 180px; }
+  /* =============================
+     RESPONSIVE MOBILE COMPLET
+     ============================= */
+
+  /* Tablette */
+  @media (max-width: 900px) {
+    .video-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
   }
+
+  /* Mobile */
+  @media (max-width: 640px) {
+    header { padding: 0 0.75rem; height: 56px; gap: 0.5rem; }
+    .logo-img { width: 30px; height: 30px; border-radius: 8px; }
+    .logo-text { font-size: 1.15rem; }
+    .search-bar { display: none !important; }
+    .user-badge span { max-width: 90px; font-size: 0.7rem; }
+    .btn-ghost { padding: 0.4rem 0.6rem; font-size: 0.78rem; }
+    #signOutBtn { display: none !important; }
+
+    /* Barre de recherche mobile en dessous du header */
+    .mobile-search {
+      display: flex !important;
+      padding: 0.6rem 1rem;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 56px;
+      z-index: 99;
+    }
+    .mobile-search input {
+      width: 100%;
+      padding: 0.5rem 1rem 0.5rem 2.2rem;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      outline: none;
+    }
+    .mobile-search input:focus { border-color: var(--gold); }
+    .mobile-search input::placeholder { color: var(--muted); }
+    .mobile-search svg { position: absolute; left: 1.75rem; top: 50%; transform: translateY(-50%); color: var(--muted); }
+    .mobile-search-wrap { position: relative; flex: 1; }
+
+    main { padding: 0.75rem 0.75rem 5rem; }
+    .settings-grid { grid-template-columns: 1fr; }
+
+    /* Grille mobile : 2 colonnes */
+    .video-grid { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+
+    /* Cards compactes */
+    .card-body { padding: 0.5rem 0.6rem; }
+    .card-title { font-size: 0.82rem; -webkit-line-clamp: 2; }
+    .card-category { font-size: 0.6rem; }
+    .card-meta { font-size: 0.65rem; }
+    .play-btn { width: 36px; height: 36px; }
+    .play-btn svg { width: 12px; height: 12px; }
+    .duration-badge { font-size: 0.6rem; padding: 1px 5px; }
+
+    /* Toolbar pills scrollables */
+    .toolbar { gap: 0.35rem; margin-bottom: 1rem; padding-bottom: 6px; }
+    .cat-pill { font-size: 0.72rem; padding: 0.35rem 0.75rem; }
+
+    /* Section headers */
+    .section-title { font-size: 1.1rem; }
+    .cat-section { margin-bottom: 2rem; }
+
+    /* Modal plein écran sur mobile */
+    .modal-backdrop { padding: 0; align-items: flex-end; }
+    .modal {
+      border-radius: 20px 20px 0 0;
+      max-height: 95vh;
+      width: 100%;
+      max-width: 100%;
+    }
+    .modal-player { aspect-ratio: 16/9; }
+    .modal-body { padding: 1rem; }
+    .modal-title { font-size: 1rem; }
+    .modal-meta { gap: 0.5rem; font-size: 0.72rem; }
+
+    /* Auth card */
+    .auth-card { padding: 2rem 1.5rem; border-radius: 20px; }
+    .denied-card { padding: 2rem 1.5rem; }
+
+    /* Settings panel */
+    .settings-panel { padding: 1.25rem; border-radius: 14px; }
+
+    /* Admin banner */
+    .admin-banner { font-size: 0.75rem; padding: 0.65rem 1rem; }
+
+    /* Bottom nav bar mobile */
+    .mobile-nav {
+      display: flex !important;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      background: rgba(13,10,11,0.97);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      z-index: 150;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 0.5rem;
+    }
+    .mobile-nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--muted);
+      font-size: 0.6rem;
+      font-weight: 500;
+      padding: 0.4rem 0.75rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: color 0.18s;
+      background: none;
+      border: none;
+      font-family: var(--font-body);
+    }
+    .mobile-nav-btn.active, .mobile-nav-btn:hover { color: var(--gold); }
+    .mobile-nav-btn svg { width: 20px; height: 20px; }
+  }
+
+  /* Cacher éléments mobile sur desktop */
+  .mobile-search { display: none; }
+  .mobile-nav { display: none; }
 </style>
 </head>
 <body>
@@ -184,6 +308,34 @@
     <button class="btn btn-ghost" id="signOutBtn" style="display:none;" onclick="signOut()">Déconnexion</button>
   </div>
 </header>
+
+<!-- BARRE DE RECHERCHE MOBILE -->
+<div class="mobile-search" id="mobileSearch" style="display:none;">
+  <div class="mobile-search-wrap">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="mobileSearchInput" placeholder="Rechercher…" />
+  </div>
+</div>
+
+<!-- NAV BAR MOBILE -->
+<nav class="mobile-nav" id="mobileNav" style="display:none;">
+  <button class="mobile-nav-btn active" id="navHome" onclick="mobileNavClick('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Accueil
+  </button>
+  <button class="mobile-nav-btn" id="navSearch" onclick="mobileNavClick('search')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    Recherche
+  </button>
+  <button class="mobile-nav-btn" id="navSettings" onclick="mobileNavClick('settings')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+    Paramètres
+  </button>
+  <button class="mobile-nav-btn" id="navSignout" onclick="signOut()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Quitter
+  </button>
+</nav>
 
 <!-- ÉCRAN : CONNEXION -->
 <div id="screen-auth" class="screen active">
@@ -459,6 +611,7 @@ function showAppUI() {
     document.getElementById('adminBanner').style.display = 'flex';
   }
   renderRules();
+  showAppMobile();
 }
 
 function showLoading() {
