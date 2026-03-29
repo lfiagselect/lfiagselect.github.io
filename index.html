@@ -691,7 +691,7 @@ try {
 } catch(e) {}
 
 function signIn() {
-  if (CLIENT_ID === '770493413843-ovgjb1u0hnc3lcgab6otfs92q8hm2knn.apps.googleusercontent.com') { showConfigModal(); return; }
+  if (CLIENT_ID === '__YOUR_CLIENT_ID__') { showConfigModal(); return; }
   location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(CLIENT_ID)}&redirect_uri=${encodeURIComponent(location.href.split('?')[0])}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
 }
 
