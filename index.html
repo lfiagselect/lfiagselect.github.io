@@ -152,73 +152,192 @@
   .admin-banner { background: rgba(196,155,100,0.08); border: 1px solid rgba(196,155,100,0.25); border-radius: var(--card-radius); padding: 0.85rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.82rem; color: var(--gold); }
 
 
+  /* ── Tablette ── */
   @media (max-width: 900px) {
-    .video-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+    .video-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
   }
 
-  .mobile-search-bar { display: none; }
-  .mobile-nav { display: none; }
+  /* ── Éléments mobiles cachés sur desktop ── */
+  .mob-topbar { display: none; }
+  .mob-nav    { display: none; }
+  .mob-catbar { display: none; }
 
+  /* ══════════════════════════════════════════
+     MOBILE  (≤ 640 px)
+  ══════════════════════════════════════════ */
   @media (max-width: 640px) {
-    header { padding: 0 0.75rem; height: 56px; gap: 0.5rem; }
-    .logo-img { width: 30px; height: 30px; }
-    .logo-text { font-size: 1.15rem; }
-    .search-bar { display: none !important; }
-    #signOutBtn { display: none !important; }
-    .user-badge span { max-width: 90px; font-size: 0.7rem; }
-    .btn-ghost { padding: 0.4rem 0.6rem; }
-    .mobile-search-bar {
-      display: flex; position: sticky; top: 56px; z-index: 99;
-      padding: 0.6rem 0.75rem; background: var(--bg2);
+
+    /* Header simplifié */
+    header {
+      padding: 0 1rem;
+      height: 52px;
+      gap: 0.5rem;
+    }
+    .logo-img  { width: 28px; height: 28px; }
+    .logo-text { font-size: 1.1rem; }
+    .search-bar,
+    #searchWrap,
+    #refreshBtn,
+    #settingsBtn,
+    #signOutBtn,
+    .user-badge { display: none !important; }
+
+    /* ── Barre du haut mobile (recherche + compte) ── */
+    .mob-topbar {
+      display: flex;
+      position: sticky;
+      top: 52px;
+      z-index: 98;
+      padding: 0.55rem 0.75rem;
+      gap: 0.5rem;
+      background: rgba(13,10,11,0.97);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+    }
+    .mob-search-wrap { position: relative; flex: 1; }
+    .mob-search-wrap svg {
+      position: absolute; left: 0.7rem; top: 50%;
+      transform: translateY(-50%); color: var(--muted);
+      pointer-events: none;
+    }
+    .mob-search-wrap input {
+      width: 100%;
+      padding: 0.45rem 0.9rem 0.45rem 2rem;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .mob-search-wrap input:focus { border-color: var(--gold); }
+    .mob-search-wrap input::placeholder { color: var(--muted); }
+    .mob-user-dot {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: var(--crimson);
+      border: 1.5px solid rgba(196,155,100,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 600; color: var(--gold2);
+      flex-shrink: 0; cursor: pointer;
+    }
+
+    /* ── Barre catégories sticky ── */
+    .mob-catbar {
+      display: flex;
+      position: sticky;
+      top: 100px;
+      z-index: 97;
+      padding: 0.4rem 0.75rem;
+      gap: 0.4rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+      background: rgba(13,10,11,0.95);
+      backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
     }
-    .mobile-search-bar-inner { position: relative; flex: 1; }
-    .mobile-search-bar input {
-      width: 100%; padding: 0.5rem 1rem 0.5rem 2.2rem;
-      background: var(--bg3); border: 1px solid var(--border);
-      border-radius: 100px; color: var(--text);
-      font-family: var(--font-body); font-size: 0.875rem; outline: none;
+    .mob-catbar::-webkit-scrollbar { display: none; }
+    .mob-catbar .cat-pill { font-size: 0.7rem; padding: 0.3rem 0.7rem; }
+
+    /* Cacher la toolbar desktop */
+    .toolbar { display: none !important; }
+
+    /* Contenu principal */
+    main { padding: 0.6rem 0.6rem 4.5rem; }
+    .settings-panel { border-radius: 14px; padding: 1.25rem; }
+    .settings-grid  { grid-template-columns: 1fr; }
+    .admin-banner   { font-size: 0.75rem; padding: 0.6rem 1rem; }
+
+    /* Grille 2 colonnes */
+    .video-grid { grid-template-columns: repeat(2, 1fr); gap: 0.55rem; }
+    .card-body      { padding: 0.45rem 0.55rem 0.55rem; }
+    .card-title     { font-size: 0.78rem; -webkit-line-clamp: 2; }
+    .card-category  { font-size: 0.58rem; margin-bottom: 0.2rem; }
+    .card-meta      { font-size: 0.6rem; }
+    .play-btn       { width: 34px; height: 34px; }
+    .play-btn svg   { width: 11px; height: 11px; }
+    .duration-badge { font-size: 0.58rem; padding: 1px 4px; }
+    .cat-section    { margin-bottom: 1.75rem; }
+    .section-title  { font-size: 1rem; }
+    .section-count  { font-size: 0.72rem; }
+
+    /* Auth / denied */
+    .auth-card   { padding: 2rem 1.25rem; border-radius: 18px; }
+    .denied-card { padding: 2rem 1.25rem; border-radius: 18px; }
+
+    /* ── Lecteur plein écran mobile ── */
+    .modal-backdrop {
+      padding: 0;
+      align-items: flex-start;
     }
-    .mobile-search-bar input:focus { border-color: var(--gold); }
-    .mobile-search-bar input::placeholder { color: var(--muted); }
-    .mobile-search-bar svg { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--muted); }
-    main { padding: 0.75rem 0.75rem 5rem; }
-    .settings-grid { grid-template-columns: 1fr; }
-    .video-grid { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
-    .card-body { padding: 0.5rem 0.6rem; }
-    .card-title { font-size: 0.82rem; }
-    .card-category { font-size: 0.6rem; }
-    .card-meta { font-size: 0.65rem; }
-    .play-btn { width: 36px; height: 36px; }
-    .play-btn svg { width: 12px; height: 12px; }
-    .duration-badge { font-size: 0.6rem; padding: 1px 5px; }
-    .toolbar { gap: 0.35rem; margin-bottom: 1rem; }
-    .cat-pill { font-size: 0.72rem; padding: 0.35rem 0.75rem; }
-    .section-title { font-size: 1.1rem; }
-    .cat-section { margin-bottom: 2rem; }
-    .modal-backdrop { padding: 0; align-items: flex-end; }
-    .modal { border-radius: 20px 20px 0 0; max-height: 95vh; max-width: 100%; }
-    .modal-body { padding: 1rem; }
-    .modal-title { font-size: 1rem; }
-    .modal-meta { gap: 0.5rem; font-size: 0.72rem; }
-    .auth-card { padding: 2rem 1.5rem; }
-    .denied-card { padding: 2rem 1.5rem; }
-    .mobile-nav {
-      display: flex; position: fixed; bottom: 0; left: 0; right: 0;
-      height: 56px; background: rgba(13,10,11,0.97);
-      backdrop-filter: blur(20px); border-top: 1px solid var(--border);
-      z-index: 150; align-items: center; justify-content: space-around;
-      padding: 0 0.5rem;
+    .modal {
+      border-radius: 0;
+      max-height: 100dvh;
+      height: 100dvh;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
     }
-    .mobile-nav-btn {
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
-      color: var(--muted); font-size: 0.6rem; font-weight: 500;
-      padding: 0.4rem 0.75rem; border-radius: 10px; cursor: pointer;
-      transition: color 0.18s; background: none; border: none;
+    .modal-header {
+      padding: 0.85rem 1rem;
+      flex-shrink: 0;
+    }
+    .modal-title { font-size: 0.95rem; }
+    .modal-player {
+      /* Plein écran natif : on laisse le navigateur gérer */
+      flex-shrink: 0;
+      aspect-ratio: 16/9;
+      width: 100%;
+      background: #000;
+    }
+    .modal-player iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      /* Autoriser le plein écran */
+      allow: "autoplay; fullscreen; encrypted-media";
+    }
+    .modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.85rem 1rem;
+      -webkit-overflow-scrolling: touch;
+    }
+    .modal-meta  { font-size: 0.72rem; gap: 0.5rem; }
+    .modal-drive-btn { font-size: 0.8rem; padding: 0.5rem 1rem; }
+
+    /* ── Nav bar fixe en bas ── */
+    .mob-nav {
+      display: flex;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 54px;
+      background: rgba(13,10,11,0.98);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      z-index: 200;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 0.25rem;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .mob-nav-btn {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 2px;
+      color: var(--muted);
+      font-size: 0.58rem; font-weight: 500;
+      padding: 0.35rem 0.6rem;
+      border-radius: 10px; cursor: pointer;
+      transition: color 0.15s, background 0.15s;
+      background: none; border: none;
       font-family: var(--font-body);
+      min-width: 52px;
     }
-    .mobile-nav-btn.active { color: var(--gold); }
-    .mobile-nav-btn svg { width: 20px; height: 20px; }
+    .mob-nav-btn svg { width: 22px; height: 22px; stroke-width: 1.75; }
+    .mob-nav-btn.active { color: var(--gold); }
+    .mob-nav-btn:active { background: rgba(196,155,100,0.08); }
   }
 </style>
 </head>
@@ -248,32 +367,39 @@
   </div>
 </header>
 
-<!-- RECHERCHE MOBILE -->
-<div class="mobile-search-bar" id="mobileSearchBar">
-  <div class="mobile-search-bar-inner">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input type="text" id="mobileSearchInput" placeholder="Rechercher une vidéo…" />
+<!-- ── MOBILE UI ── -->
+<div class="mob-topbar" id="mobTopbar">
+  <div class="mob-search-wrap">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input type="text" id="mobSearchInput" placeholder="Rechercher…" autocomplete="off" />
   </div>
+  <div class="mob-user-dot" id="mobUserDot" title="Mon compte">?</div>
 </div>
-<nav class="mobile-nav" id="mobileNav">
-  <button class="mobile-nav-btn active" id="navHome" onclick="mobileNavGo('home')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+
+<div class="mob-catbar" id="mobCatbar"></div>
+
+<nav class="mob-nav" id="mobNav">
+  <button class="mob-nav-btn active" id="mnHome" onclick="mobNavGo('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     Accueil
   </button>
-  <button class="mobile-nav-btn" id="navSearch" onclick="mobileNavGo('search')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+  <button class="mob-nav-btn" id="mnSearch" onclick="mobNavGo('search')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     Recherche
   </button>
-  <button class="mobile-nav-btn" id="navCats" onclick="mobileNavGo('cats')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-    Catégories
+  <button class="mob-nav-btn" id="mnRefresh" onclick="loadVideos()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    Actualiser
   </button>
-  <button class="mobile-nav-btn" onclick="signOut()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+  <button class="mob-nav-btn" onclick="signOut()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     Quitter
   </button>
 </nav>
-<!-- ÉCRAN : CONNEXION -->
+
+<!-- ÉCRAN : CONNEXION --><!-- ÉCRAN : CONNEXION -->
 <div id="screen-auth" class="screen active">
   <div class="auth-card">
     <div class="auth-logo-wrap">
@@ -424,38 +550,56 @@ function signOut() {
 }
 
 // ============================================
-// MOBILE — détection automatique
+// MOBILE — détection & UI native
 // ============================================
-function isMobile() {
-  return window.innerWidth <= 640;
-}
+function isMobile() { return window.innerWidth <= 640; }
 
 function setupMobileUI() {
-  var show = isMobile() ? 'flex' : 'none';
-  var sb = document.getElementById('mobileSearchBar');
-  var mn = document.getElementById('mobileNav');
-  if (sb) sb.style.display = show;
-  if (mn) mn.style.display = show;
+  var on = isMobile();
+  ['mobTopbar','mobCatbar','mobNav'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = on ? (id === 'mobCatbar' ? 'flex' : 'flex') : 'none';
+  });
 }
 
-function mobileNavGo(tab) {
-  document.querySelectorAll('.mobile-nav-btn').forEach(function(b) { b.classList.remove('active'); });
-  var btn = document.getElementById('nav' + tab.charAt(0).toUpperCase() + tab.slice(1));
+function mobNavGo(tab) {
+  document.querySelectorAll('.mob-nav-btn').forEach(function(b) { b.classList.remove('active'); });
+  var btn = document.getElementById('mn' + tab.charAt(0).toUpperCase() + tab.slice(1));
   if (btn) btn.classList.add('active');
   if (tab === 'home') {
     activeCategory = 'Tout';
     searchQuery = '';
-    document.getElementById('mobileSearchInput').value = '';
+    document.getElementById('mobSearchInput').value = '';
     document.getElementById('searchInput').value = '';
     if (allVideos.length) renderAll();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   } else if (tab === 'search') {
-    document.getElementById('mobileSearchInput').focus();
-  } else if (tab === 'cats') {
-    document.getElementById('toolbar').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('mobSearchInput').focus();
   }
 }
 
-document.getElementById('mobileSearchInput').addEventListener('input', function(e) {
+function renderMobCatbar() {
+  if (!isMobile()) return;
+  var cats = ['Tout'].concat(
+    [...new Set(allVideos.map(function(v) { return v._cat; }))].sort()
+  );
+  var bar = document.getElementById('mobCatbar');
+  if (!bar) return;
+  bar.innerHTML = cats.map(function(c) {
+    var count = c === 'Tout' ? allVideos.length : allVideos.filter(function(v) { return v._cat === c; }).length;
+    return '<div class="cat-pill ' + (c === activeCategory ? 'active' : '') + '" onclick="mobSetCat('' + escHtml(c) + '')">'
+      + escHtml(c) + ' <span style="opacity:.55;font-size:.7em;">' + count + '</span></div>';
+  }).join('');
+}
+
+function mobSetCat(c) {
+  activeCategory = c;
+  renderMobCatbar();
+  renderVideos();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.getElementById('mobSearchInput').addEventListener('input', function(e) {
   searchQuery = e.target.value.trim();
   document.getElementById('searchInput').value = searchQuery;
   if (allVideos.length) renderVideos();
@@ -589,6 +733,12 @@ function showAppUI() {
   }
   renderRules();
   setupMobileUI();
+  // Initiale du compte dans le dot mobile
+  var dot = document.getElementById('mobUserDot');
+  if (dot && currentUser && currentUser.email) {
+    dot.textContent = currentUser.email.charAt(0).toUpperCase();
+    dot.title = currentUser.email;
+  }
 }
 
 function showLoading() {
@@ -608,7 +758,7 @@ function categorize(video) {
   return 'Divers';
 }
 
-function renderAll() { showScreen('app'); renderToolbar(); renderVideos(); }
+function renderAll() { showScreen('app'); renderToolbar(); renderMobCatbar(); renderVideos(); }
 
 function getFiltered() {
   let v = allVideos;
@@ -655,7 +805,7 @@ function videoCard(v) {
 function openVideo(id) {
   const v = allVideos.find(x=>x.id===id); if(!v) return;
   document.getElementById('modalTitle').textContent = v.name.replace(/\.[^.]+$/,'');
-  document.getElementById('modalPlayer').innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+  document.getElementById('modalPlayer').innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allow="autoplay; fullscreen; encrypted-media" allowfullscreen webkitallowfullscreen mozallowfullscreen></iframe>`;
   const dur = v.videoMediaMetadata?.durationMillis ? formatDuration(parseInt(v.videoMediaMetadata.durationMillis)) : null;
   const date = v.modifiedTime ? new Date(v.modifiedTime).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}) : null;
   let meta = `<span class="pill">${escHtml(v._cat)}</span>`;
