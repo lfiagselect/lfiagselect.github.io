@@ -883,27 +883,39 @@ function openVideo(id) {
   document.body.style.overflow = 'hidden';
 }
 
+function enterImmersive(player, video) {
+  player.classList.add('immersive');
+  player._sim = true;
+  document.body.style.overflow = 'hidden';
+  updateFsIcon(true);
+  try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(function(){}); } catch(e) {}
+  if (video && video.webkitEnterFullscreen) { try { video.webkitEnterFullscreen(); } catch(e) {} }
+}
+
+function exitImmersive(player, video) {
+  player.classList.remove('immersive');
+  player._sim = false;
+  updateFsIcon(false);
+  try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch(e) {}
+}
+
 function toggleFullscreen() {
   var player = document.getElementById('modalPlayer');
+  var video  = document.getElementById('videoPlayer');
   if (!player) return;
-  var isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+  var isFs = !!(document.fullscreenElement || document.webkitFullscreenElement) || player.classList.contains('immersive');
   if (!isFs) {
-    var fn = player.requestFullscreen || player.webkitRequestFullscreen || player.mozRequestFullScreen;
+    var fn = video && (video.requestFullscreen || video.webkitRequestFullscreen);
     if (fn) {
-      fn.call(player).catch(function() {
-        // Fallback iOS : plein écran simulé
-        player.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100svh;z-index:9999;background:#000;aspect-ratio:unset;';
-        player._sim = true;
+      fn.call(video).then(function() {
+        try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(function(){}); } catch(e) {}
         updateFsIcon(true);
-      });
+      }).catch(function() { enterImmersive(player, video); });
     } else {
-      player.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100svh;z-index:9999;background:#000;aspect-ratio:unset;';
-      player._sim = true;
-      updateFsIcon(true);
+      enterImmersive(player, video);
     }
   } else {
-    var ex = document.exitFullscreen || document.webkitExitFullscreen;
-    if (ex) ex.call(document).catch(function(){});
+    exitImmersive(player, video);
   }
 }
 
@@ -914,31 +926,30 @@ function updateFsIcon(on) {
     : '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>';
 }
 
-['fullscreenchange','webkitfullscreenchange'].forEach(function(e) {
-  document.addEventListener(e, function() {
+['fullscreenchange','webkitfullscreenchange'].forEach(function(ev) {
+  document.addEventListener(ev, function() {
     var p = document.getElementById('modalPlayer');
     var on = !!(document.fullscreenElement || document.webkitFullscreenElement);
-    if (!on && p && p._sim) { p.style.cssText = ''; p._sim = false; }
+    if (!on && p) { p.classList.remove('immersive'); p._sim = false; }
     updateFsIcon(on);
+    if (!on) { try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch(e) {} }
   });
-});
-
-document.addEventListener('click', function(e) {
-  var p = document.getElementById('modalPlayer');
-  if (p && p._sim && !p.contains(e.target)) { p.style.cssText = ''; p._sim = false; updateFsIcon(false); }
 });
 
 function closeModal() {
   var p = document.getElementById('modalPlayer');
-  if (p && p._sim) { p.style.cssText = ''; p._sim = false; }
+  var v = document.getElementById('videoPlayer');
+  if (v && v._blobUrl) { URL.revokeObjectURL(v._blobUrl); }
+  if (p && p.classList.contains('immersive')) exitImmersive(p, v);
+  try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch(e) {}
   if (document.exitFullscreen) document.exitFullscreen().catch(function(){});
   else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-  var vp = document.getElementById('videoPlayer');
-  if (vp && vp._blobUrl) { URL.revokeObjectURL(vp._blobUrl); }
   document.getElementById('modal').classList.remove('open');
   document.getElementById('modalPlayer').innerHTML = '';
   document.body.style.overflow = '';
 }
+
+
 document.getElementById('modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
 
