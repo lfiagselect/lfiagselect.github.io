@@ -131,8 +131,26 @@
   .modal-title { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; line-height: 1.3; }
   .modal-close { width: 32px; height: 32px; border-radius: 50%; background: var(--bg3); border: 1px solid var(--border); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all 0.18s; font-size: 1rem; }
   .modal-close:hover { background: var(--crimson); }
-  .modal-player { background: #000; aspect-ratio: 16/9; width: 100%; overflow: hidden; }
-  .modal-player iframe { width: 100%; height: 100%; border: none; }
+  .modal-player {
+    position: relative; background: #000;
+    aspect-ratio: 16/9; width: 100%; overflow: hidden;
+  }
+  .modal-player iframe { width: 100%; height: 100%; border: none; display: block; }
+  .fs-btn {
+    position: absolute; bottom: 10px; right: 10px; z-index: 10;
+    width: 38px; height: 38px;
+    background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #fff; transition: background 0.15s;
+  }
+  .fs-btn:hover { background: rgba(125,30,46,0.85); }
+  .fs-btn svg { width: 16px; height: 16px; pointer-events: none; }
+  .modal-player:fullscreen, .modal-player:-webkit-full-screen {
+    aspect-ratio: unset; width: 100vw; height: 100vh;
+  }
+  .modal-player:fullscreen iframe, .modal-player:-webkit-full-screen iframe {
+    width: 100%; height: 100%;
+  }
   .modal-body { padding: 1.5rem; }
   .modal-meta { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; font-size: 0.8rem; color: var(--muted); margin-bottom: 1.25rem; }
   .modal-meta .pill { background: var(--bg3); border: 1px solid rgba(196,155,100,0.25); border-radius: 100px; padding: 3px 12px; color: var(--gold2); font-size: 0.75rem; font-weight: 500; }
@@ -285,20 +303,9 @@
       flex-shrink: 0;
     }
     .modal-title { font-size: 0.95rem; }
-    .modal-player {
-      /* Plein écran natif : on laisse le navigateur gérer */
-      flex-shrink: 0;
-      aspect-ratio: 16/9;
-      width: 100%;
-      background: #000;
-    }
-    .modal-player iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      /* Autoriser le plein écran */
-      allow: "autoplay; fullscreen; encrypted-media";
-    }
+    .modal-player { position: relative; flex-shrink: 0; aspect-ratio: 16/9; width: 100%; background: #000; }
+    .fs-btn { bottom: 8px; right: 8px; width: 32px; height: 32px; }
+    .fs-btn svg { width: 13px; height: 13px; }
     .modal-body {
       flex: 1;
       overflow-y: auto;
@@ -812,7 +819,15 @@ function videoCard(v) {
 function openVideo(id) {
   const v = allVideos.find(x=>x.id===id); if(!v) return;
   document.getElementById('modalTitle').textContent = v.name.replace(/\.[^.]+$/,'');
-  document.getElementById('modalPlayer').innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allow="autoplay; fullscreen; encrypted-media" allowfullscreen webkitallowfullscreen mozallowfullscreen></iframe>`;
+  document.getElementById('modalPlayer').innerHTML =
+    '<iframe src="https://drive.google.com/file/d/' + id + '/preview"' +
+    ' allow="autoplay; fullscreen; encrypted-media; picture-in-picture"' +
+    ' allowfullscreen webkitallowfullscreen mozallowfullscreen' +
+    ' style="width:100%;height:100%;border:none;"></iframe>' +
+    '<button class="fs-btn" id="fsBtn" onclick="toggleFullscreen()" title="Plein écran">' +
+    '<svg id="fsIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+    '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>' +
+    '</svg></button>';
   const dur = v.videoMediaMetadata?.durationMillis ? formatDuration(parseInt(v.videoMediaMetadata.durationMillis)) : null;
   const date = v.modifiedTime ? new Date(v.modifiedTime).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}) : null;
   let meta = `<span class="pill">${escHtml(v._cat)}</span>`;
@@ -824,7 +839,60 @@ function openVideo(id) {
   document.body.style.overflow = 'hidden';
 }
 
-function closeModal() { document.getElementById('modal').classList.remove('open'); document.getElementById('modalPlayer').innerHTML=''; document.body.style.overflow=''; }
+function toggleFullscreen() {
+  var player = document.getElementById('modalPlayer');
+  if (!player) return;
+  var isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+  if (!isFs) {
+    var fn = player.requestFullscreen || player.webkitRequestFullscreen || player.mozRequestFullScreen;
+    if (fn) {
+      fn.call(player).catch(function() {
+        // Fallback iOS : plein écran simulé
+        player.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100svh;z-index:9999;background:#000;aspect-ratio:unset;';
+        player._sim = true;
+        updateFsIcon(true);
+      });
+    } else {
+      player.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100svh;z-index:9999;background:#000;aspect-ratio:unset;';
+      player._sim = true;
+      updateFsIcon(true);
+    }
+  } else {
+    var ex = document.exitFullscreen || document.webkitExitFullscreen;
+    if (ex) ex.call(document).catch(function(){});
+  }
+}
+
+function updateFsIcon(on) {
+  var i = document.getElementById('fsIcon'); if (!i) return;
+  i.innerHTML = on
+    ? '<path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>'
+    : '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>';
+}
+
+['fullscreenchange','webkitfullscreenchange'].forEach(function(e) {
+  document.addEventListener(e, function() {
+    var p = document.getElementById('modalPlayer');
+    var on = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    if (!on && p && p._sim) { p.style.cssText = ''; p._sim = false; }
+    updateFsIcon(on);
+  });
+});
+
+document.addEventListener('click', function(e) {
+  var p = document.getElementById('modalPlayer');
+  if (p && p._sim && !p.contains(e.target)) { p.style.cssText = ''; p._sim = false; updateFsIcon(false); }
+});
+
+function closeModal() {
+  var p = document.getElementById('modalPlayer');
+  if (p && p._sim) { p.style.cssText = ''; p._sim = false; }
+  if (document.exitFullscreen) document.exitFullscreen().catch(function(){});
+  else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+  document.getElementById('modal').classList.remove('open');
+  document.getElementById('modalPlayer').innerHTML = '';
+  document.body.style.overflow = '';
+}
 document.getElementById('modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
 
