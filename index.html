@@ -156,8 +156,10 @@
   .modal-body { padding: 1.5rem; }
   .modal-meta { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; font-size: 0.8rem; color: var(--muted); margin-bottom: 1.25rem; }
   .modal-meta .pill { background: var(--bg3); border: 1px solid rgba(196,155,100,0.25); border-radius: 100px; padding: 3px 12px; color: var(--gold2); font-size: 0.75rem; font-weight: 500; }
-  .modal-drive-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.25rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 100px; color: var(--text); font-size: 0.85rem; font-weight: 500; text-decoration: none; transition: all 0.18s; }
+  .modal-drive-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.25rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 100px; color: var(--text); font-size: 0.85rem; font-weight: 500; text-decoration: none; transition: all 0.18s; font-family: var(--font-body); }
   .modal-drive-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .mob-only { display: none; }
+  @media (max-width: 640px) { .mob-only { display: inline-flex; } }
 
   /* EMPTY */
   .empty-state { text-align: center; padding: 4rem 2rem; color: var(--muted); }
@@ -494,10 +496,16 @@
     <div class="modal-player" id="modalPlayer"></div>
     <div class="modal-body">
       <div class="modal-meta" id="modalMeta"></div>
-      <a class="modal-drive-btn" id="modalDriveLink" target="_blank">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-        Ouvrir dans Google Drive
-      </a>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
+        <a class="modal-drive-btn" id="modalDriveLink" target="_blank">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Ouvrir dans Google Drive
+        </a>
+        <button class="modal-drive-btn mob-only" onclick="goFullscreen()" style="border:none;cursor:pointer;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          Plein écran
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -822,15 +830,16 @@ function openVideo(id) {
   var v = allVideos.find(function(x){ return x.id === id; });
   if (!v) return;
 
-  var token = sessionStorage.getItem('lfiag_token');
-  var title = v.name.replace(/\.[^.]+$/, '');
+  var token    = sessionStorage.getItem('lfiag_token');
+  var title    = v.name.replace(/\.[^.]+$/, '');
   var mimeType = v.mimeType || 'video/mp4';
   var driveLink = v.webViewLink || ('https://drive.google.com/file/d/' + id + '/view');
   var streamUrl = 'https://www.googleapis.com/drive/v3/files/' + id + '?alt=media';
 
-  // Stocker pour goFullscreen
-  window._currentVideoId = id;
+  window._currentVideoId   = id;
   window._currentVideoMime = mimeType;
+  window._currentDriveLink = driveLink;
+  window._currentBlobUrl   = null;
 
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalDriveLink').href = driveLink;
@@ -850,8 +859,7 @@ function openVideo(id) {
     'justify-content:center;background:#000;gap:1rem;">' +
     '<div style="width:36px;height:36px;border:3px solid rgba(196,155,100,0.2);' +
     'border-top-color:#c49b64;border-radius:50%;animation:spin 0.7s linear infinite;"></div>' +
-    '<p style="color:#8a7060;font-size:0.8rem;">Chargement\u2026</p>' +
-    '</div>';
+    '<p style="color:#8a7060;font-size:0.8rem;">Chargement\u2026</p></div>';
 
   document.getElementById('modal').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -869,70 +877,26 @@ function openVideo(id) {
         '<video id="videoPlayer" controls playsinline' +
         ' style="width:100%;height:100%;display:block;object-fit:contain;background:#000;">' +
         '<source src="' + blobUrl + '" type="' + mimeType + '">' +
-        '</video>' +
-        '<button id="fsBtn" onclick="goFullscreen()" style="' +
-        'position:absolute;bottom:12px;right:12px;z-index:20;width:44px;height:44px;' +
-        'border-radius:10px;border:1.5px solid rgba(196,155,100,0.5);' +
-        'background:rgba(0,0,0,0.75);color:#e8c98a;display:flex;align-items:center;' +
-        'justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;' +
-        'touch-action:manipulation;">' +
-        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="pointer-events:none;">' +
-        '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>' +
-        '</svg></button>';
+        '</video>';
 
       var vid = document.getElementById('videoPlayer');
-      if (vid) { vid._blobUrl = blobUrl; }
+      if (vid) vid._blobUrl = blobUrl;
     })
-    .catch(function(err) {
-      console.warn('Fetch failed:', err);
+    .catch(function() {
       playerEl.innerHTML =
         '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;' +
         'justify-content:center;background:#000;gap:1.25rem;padding:1.5rem;text-align:center;">' +
         '<p style="color:#f5ede0;font-size:0.9rem;">Impossible de charger la vid\u00e9o.</p>' +
-        '<a href="' + driveLink + '" target="_blank" style="' +
-        'display:inline-flex;align-items:center;gap:0.5rem;padding:0.75rem 1.25rem;' +
-        'background:#7d1e2e;color:#e8c98a;border-radius:100px;text-decoration:none;font-size:0.875rem;">' +
-        'Ouvrir dans Google Drive</a>' +
-        '</div>';
+        '<a href="' + driveLink + '" target="_blank" style="display:inline-flex;align-items:center;' +
+        'gap:0.5rem;padding:0.75rem 1.25rem;background:#7d1e2e;color:#e8c98a;border-radius:100px;' +
+        'text-decoration:none;font-size:0.875rem;">Ouvrir dans Google Drive</a></div>';
     });
 }
 
-function goFullscreen() {
-  var vid = document.getElementById('videoPlayer');
-  var blobUrl = window._currentBlobUrl;
-
-  if (isMobile() && blobUrl) {
-    // Ouvrir une page HTML autonome dans un nouvel onglet avec <video> natif
-    // iOS ouvre automatiquement le lecteur natif avec vrai plein écran
-    var mime = window._currentVideoMime || 'video/mp4';
-    var html = '<!DOCTYPE html><html><head>' +
-      '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' +
-      '<meta name="apple-mobile-web-app-capable" content="yes">' +
-      '<style>*{margin:0;padding:0;box-sizing:border-box}' +
-      'html,body{width:100%;height:100%;background:#000;overflow:hidden}' +
-      'video{width:100vw;height:100vh;object-fit:contain;display:block}' +
-      '</style></head><body>' +
-      '<video controls autoplay playsinline' +
-      ' webkit-playsinline x-webkit-airplay="allow"' +
-      ' style="width:100vw;height:100vh;object-fit:contain;">' +
-      '<source src="' + blobUrl + '" type="' + mime + '">' +
-      '</video></body></html>';
-    var pageBlob = new Blob([html], { type: 'text/html' });
-    var pageUrl = URL.createObjectURL(pageBlob);
-    window.open(pageUrl, '_blank');
-    return;
-  }
-
-  // Desktop : requestFullscreen sur la vidéo
-  if (vid) {
-    var fn = vid.requestFullscreen || vid.webkitRequestFullscreen || vid.mozRequestFullScreen;
-    if (fn) { fn.call(vid).catch(function(){}); }
-  }
-}
 
 function closeModal() {
   var vid = document.getElementById('videoPlayer');
-  if (vid && vid._blobUrl) { URL.revokeObjectURL(vid._blobUrl); }
+  if (vid && vid._blobUrl) URL.revokeObjectURL(vid._blobUrl);
   window._currentBlobUrl = null;
   try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch(e) {}
   if (document.exitFullscreen) document.exitFullscreen().catch(function(){});
@@ -941,6 +905,7 @@ function closeModal() {
   document.getElementById('modalPlayer').innerHTML = '';
   document.body.style.overflow = '';
 }
+
 
 
 
