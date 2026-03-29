@@ -692,7 +692,8 @@ try {
 
 function signIn() {
   if (CLIENT_ID === '__YOUR_CLIENT_ID__') { showConfigModal(); return; }
-  location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(CLIENT_ID)}&redirect_uri=${encodeURIComponent(location.href.split('?')[0])}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
+  const REDIRECT_URI = "https://lfiagselect.github.io";
+  location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(CLIENT_ID)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
 }
 
 function signOut() {
