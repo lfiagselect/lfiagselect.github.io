@@ -129,6 +129,13 @@
   /* GRID */
   .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; }
   .video-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--card-radius); overflow: hidden; cursor: pointer; transition: all 0.22s; }
+  .type-badge{position:absolute;bottom:.4rem;right:.4rem;z-index:5;background:rgba(0,0,0,.7);color:#fff;font-size:.58rem;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:100px;text-transform:uppercase;backdrop-filter:blur(4px);}
+  .type-badge.pdf{background:rgba(220,60,40,.85);}
+  .type-badge.audio{background:rgba(40,120,200,.85);}
+  .audio-player{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:linear-gradient(135deg,#0d0a0b,#1a1015);padding:2rem;min-height:220px;}
+  .audio-player .audio-title{font-family:var(--font-display);font-size:1.15rem;color:var(--gold2);text-align:center;margin-bottom:1.5rem;line-height:1.4;}
+  .audio-player audio{width:100%;max-width:480px;outline:none;}
+  .audio-player .audio-meta{margin-top:.75rem;font-size:.75rem;color:var(--muted);}
   .video-card:hover { border-color: var(--border-hover); transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
   .thumb-wrap { position: relative; aspect-ratio: 16/9; background: var(--bg3); overflow: hidden; }
   .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
@@ -668,7 +675,7 @@ function renderMobCatbar() {
   bar.innerHTML = cats.map(function(c) {
     var count = c === 'Tout' ? allVideos.length : allVideos.filter(function(v) { return v._cat === c; }).length;
     var cls = c === activeCategory ? 'active' : '';
-    return '<div class="cat-pill ' + cls + '" data-cat="' + escAttr(c) + '" onclick="mobSetCat(this.dataset.cat)">'
+    return '<div class="cat-pill ' + cls + '" onclick="mobSetCat(\'' + escHtml(c) + '\')">'
       + escHtml(c) + ' <span style="opacity:.55;font-size:.7em;">' + count + '</span></div>';
   }).join('');
 }
@@ -835,11 +842,9 @@ async function refreshVideosBackground() {
   } catch(e) {}
 }
 
-async function fetchAndCacheVideos(showErr, bustCache) {
+async function fetchAndCacheVideos(showErr) {
   try {
-    var params = { email: currentUser.email };
-    if (bustCache) params.ts = Date.now(); // force bypass cache serveur
-    var data = await callScript('videos', params);
+    var data = await callScript('videos', { email: currentUser.email });
     var videos = dedup(data.videos || []);
     try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: videos, ts: Date.now()})); } catch(e) {}
     allVideos = videos.map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
@@ -935,8 +940,7 @@ function renderToolbar() {
   html += cats.map(c => {
     const count = c==='Tout' ? allVideos.length : allVideos.filter(v=>v._cat===c).length;
     const cls = c===activeCategory ? 'active' : '';
-    return '<div class="cat-pill ' + cls + '" data-cat="' + escAttr(c) + '" onclick="setCategory(this.dataset.cat)">'
-      + escHtml(c) + ' <span style="opacity:.55;font-size:.72em;">' + count + '</span></div>';
+    return '<div class="cat-pill ' + cls + '" onclick="setCategory(\'' + escHtml(c) + '\')">' + escHtml(c) + ' <span style="opacity:.55;font-size:.72em;">' + count + '</span></div>';
   }).join('');
   document.getElementById('toolbar').innerHTML = html;
   ['date_desc','date_asc','name_asc'].forEach(function(id){var el=document.getElementById('sort_'+id);if(el)el.classList.toggle('active',id===sortOrder);});
@@ -946,6 +950,7 @@ function setCategory(c) { activeCategory = c; renderToolbar(); renderVideos(); }
 
 function videoCard(v, isNew) {
   isNew=!!isNew;
+  var fileType = v.type || 'video';
   var _h={}; try{_h=JSON.parse(localStorage.getItem('lfiag_history')||'{}')}catch(e){}
   var _v={}; try{_v=JSON.parse(localStorage.getItem('lfiag_views')||'{}')}catch(e){}
   var seen=!!_h[v.id], vc_count=_v[v.id]||0;
@@ -955,8 +960,13 @@ function videoCard(v, isNew) {
   var _hue    = _cleanN.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0)%360;
   var _bg     = 'hsl('+_hue+',35%,22%)';
   var _fg     = 'hsl('+_hue+',60%,70%)';
+  var _icon = fileType==='pdf'
+    ? '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="'+_fg+'" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+    : fileType==='audio'
+    ? '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="'+_fg+'" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'
+    : '<span style="font-family:var(--font-display);font-size:2rem;font-weight:700;color:'+_fg+';letter-spacing:-.02em;">'+_init+'</span>';
   var _fbk    = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:'+_bg+';">'
-    +'<span style="font-family:var(--font-display);font-size:2rem;font-weight:700;color:'+_fg+';letter-spacing:-.02em;">'+_init+'</span></div>';
+    +_icon+'</div>';
   var _thumbUrl = v.thumbnailLink ? v.thumbnailLink.replace('=s220', isMobile()?'=s320':'=s560') : null;
   var thumb = _fbk + (_thumbUrl
     ? '<img src="'+_thumbUrl+'" alt="'+escHtml(v.name)+'" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">'
@@ -968,11 +978,12 @@ function videoCard(v, isNew) {
   const newBadge = isNew ? '<div class="new-badge">Nouveau</div>' : '';
   const vuBadge  = seen  ? '<div class="seen-badge">&#10003; Vu</div>' : '';
   const ncBadge  = (currentUser&&currentUser.role==='admin'&&v._cat==='Autres') ? '<div class="new-badge" style="background:#ef4444;left:auto;right:.5rem;">Non classé</div>' : '';
-  const durBadge = dur ? '<div class="duration-badge">' + dur + '</div>' : '';
+  const durBadge  = dur ? '<div class="duration-badge">' + dur + '</div>' : '';
+  const typeBadge = fileType !== 'video' ? '<div class="type-badge ' + fileType + '">' + fileType.toUpperCase() + '</div>' : '';
   return '<div class="video-card" onclick="openVideo(\'' + v.id + '\')">'
     + '<div class="thumb-wrap">' + thumb
     + '<div class="play-overlay"><div class="play-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>'
-    + newBadge + vuBadge + ncBadge + durBadge + '</div>'
+    + newBadge + vuBadge + ncBadge + durBadge + typeBadge + '</div>'
     + '<div class="card-body">'
     + '<div class="card-category">' + escHtml(v._cat) + '</div>'
     + '<div class="card-title">' + escHtml(v.name.replace(/\.[^.]+$/, '')) + '</div>'
@@ -1077,21 +1088,35 @@ function openVideo(id) {
   document.getElementById('modalMeta').innerHTML = meta;
 
   var _mp = document.getElementById('modalPlayer');
-  _mp.style.position = 'relative';
   _mp.innerHTML = '';
-  var _sp = document.createElement('div');
-  _sp.id = 'playerSpinner';
-  _sp.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;gap:.75rem;z-index:2;';
-  _sp.innerHTML = '<div style="width:36px;height:36px;border:3px solid rgba(196,155,100,.2);border-top-color:#c49b64;border-radius:50%;animation:spin .7s linear infinite;"></div><p style="color:#8a7060;font-size:.78rem;">Chargement…</p>';
-  var _if = document.createElement('iframe');
-  _if.id = 'videoIframe';
-  _if.src = 'https://drive.google.com/file/d/' + id + '/preview';
-  _if.setAttribute('allow','autoplay; encrypted-media');
-  _if.allowFullscreen = true;
-  _if.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;opacity:0;transition:opacity .3s;';
-  _if.addEventListener('load', function(){ var s=document.getElementById('playerSpinner');if(s)s.style.display='none';_if.style.opacity='1'; });
-  _mp.appendChild(_sp);
-  _mp.appendChild(_if);
+  var fileType = v.type || 'video';
+  if (fileType === 'audio') {
+    _mp.style.position = 'static';
+    var _ext = (v.name.match(/\.([^.]+)$/) || ['',''])[1].toUpperCase();
+    _mp.innerHTML =
+      '<div class="audio-player">' +
+      '<div class="audio-title">' + escHtml(v.name.replace(/\.[^.]+$/,'')) + '</div>' +
+      '<audio controls autoplay preload="metadata" style="width:100%;max-width:480px;">' +
+      '<source src="https://drive.google.com/uc?export=download&id=' + id + '" type="' + (v.mimeType||'audio/mpeg') + '">' +
+      '</audio>' +
+      '<div class="audio-meta">' + escHtml(_ext||'AUDIO') + (v.size?' · '+Math.round(v.size/1048576)+' MB':'') + '</div>' +
+      '</div>';
+  } else {
+    _mp.style.position = 'relative';
+    var _sp = document.createElement('div');
+    _sp.id = 'playerSpinner';
+    _sp.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;gap:.75rem;z-index:2;';
+    _sp.innerHTML = '<div style="width:36px;height:36px;border:3px solid rgba(196,155,100,.2);border-top-color:#c49b64;border-radius:50%;animation:spin .7s linear infinite;"></div><p style="color:#8a7060;font-size:.78rem;">Chargement…</p>';
+    var _if = document.createElement('iframe');
+    _if.id = 'videoIframe';
+    _if.src = 'https://drive.google.com/file/d/' + id + '/preview';
+    _if.setAttribute('allow','autoplay; encrypted-media');
+    _if.allowFullscreen = true;
+    _if.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;opacity:0;transition:opacity .3s;';
+    _if.addEventListener('load', function(){ var s=document.getElementById('playerSpinner');if(s)s.style.display='none';_if.style.opacity='1'; });
+    _mp.appendChild(_sp);
+    _mp.appendChild(_if);
+  }
 
   var _m=document.getElementById('modal');
   _m._currentVideoId=id;
@@ -1134,7 +1159,6 @@ function saveSettings() { localStorage.setItem('lfiag_settings_v2',JSON.stringif
 // HELPERS
 // ============================================
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function formatDuration(ms) { const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60; return h>0?`${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${m}:${String(sec).padStart(2,'0')}`; }
 function toast(msg,dur=3500) { const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.getElementById('toasts').appendChild(t); setTimeout(()=>t.remove(),dur); }
 
@@ -1152,7 +1176,7 @@ document.getElementById('searchInput').addEventListener('input', function(e) {
 document.getElementById('refreshBtn').addEventListener('click', function() {
   try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
   showLoading();
-  fetchAndCacheVideos(true, true); // true = bypass cache serveur aussi
+  fetchAndCacheVideos(true);
 });
 document.getElementById('settingsBtn').addEventListener('click', ()=>document.getElementById('settingsPanel').classList.toggle('open'));
 
@@ -1234,7 +1258,6 @@ function saveSettings() { localStorage.setItem('lfiag_settings_v2',JSON.stringif
 // HELPERS
 // ============================================
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function formatDuration(ms) { const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60; return h>0?`${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${m}:${String(sec).padStart(2,'0')}`; }
 function toast(msg,dur=3500) { const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.getElementById('toasts').appendChild(t); setTimeout(()=>t.remove(),dur); }
 
@@ -1246,7 +1269,7 @@ document.getElementById('searchInput').addEventListener('input', function(e) {
 document.getElementById('refreshBtn').addEventListener('click', function() {
   try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
   showLoading();
-  fetchAndCacheVideos(true, true); // true = bypass cache serveur aussi
+  fetchAndCacheVideos(true);
 });
 document.getElementById('settingsBtn').addEventListener('click', ()=>document.getElementById('settingsPanel').classList.toggle('open'));
 
