@@ -776,133 +776,120 @@ function callScript(action, params, retry) {
 // LOAD VIDEOS
 // ============================================
 async function loadVideos() {
-  // Afficher le cache instantanément si disponible (< 6h)
+  // 1. Afficher le cache instantanément
   var cached = null;
   try {
     var raw = localStorage.getItem('lfiag_videos_cache');
     if (raw) {
-      var parsed = JSON.parse(raw);
-      if (parsed && parsed.videos && (Date.now() - parsed.ts) < 21600000) {
-        cached = parsed.videos;
-      }
+      var p = JSON.parse(raw);
+      if (p && p.videos && (Date.now() - p.ts) < 21600000) cached = p.videos;
     }
   } catch(e) {}
 
   if (cached && cached.length > 0) {
     allVideos = dedup(cached).map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
     renderAll();
-    // Rafraîchir en arrière-plan sans bloquer
-    setTimeout(function(){ refreshVideosBackground(); }, 100);
+    setTimeout(refreshVideosBackground, 200);
   } else {
     showLoading();
     await fetchVideosFromDrive(true);
   }
 }
 
-function dedup(videos) {
-  var seen = {};
-  return videos.filter(function(v){
-    if (!v || !v.id || seen[v.id]) return false;
-    seen[v.id] = true; return true;
-  });
+function dedup(arr) {
+  var s={}; return arr.filter(function(v){ if(!v||!v.id||s[v.id]) return false; s[v.id]=true; return true; });
 }
 
 async function refreshVideosBackground() {
   try {
     var fresh = await fetchDriveVideos();
-    try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: fresh, ts: Date.now()})); } catch(e) {}
-    var freshIds = fresh.map(function(v){return v.id;}).sort().join(',');
-    var curIds   = allVideos.map(function(v){return v.id;}).sort().join(',');
-    if (freshIds !== curIds) {
+    try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos:fresh, ts:Date.now()})); } catch(e) {}
+    var a = fresh.map(function(v){return v.id;}).sort().join(',');
+    var b = allVideos.map(function(v){return v.id;}).sort().join(',');
+    if (a !== b) {
       allVideos = dedup(fresh).map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
       renderAll();
     }
-  } catch(e) { console.warn('Refresh background:', e.message); }
+  } catch(e) {}
 }
 
 async function fetchVideosFromDrive(showErr) {
   try {
     var videos = await fetchDriveVideos();
-    try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: videos, ts: Date.now()})); } catch(e) {}
+    try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos:videos, ts:Date.now()})); } catch(e) {}
     allVideos = dedup(videos).map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
     renderAll();
   } catch(e) {
-    if (showErr) {
-      document.getElementById('content').innerHTML =
-        '<div class="empty-state"><h3>Erreur de chargement</h3><p>' + escHtml(e.message) + '</p>' +
-        '<br><button class="btn btn-ghost" onclick="fetchVideosFromDrive(true)" style="margin:0 auto;">↺ Réessayer</button></div>';
-    }
+    if (showErr) document.getElementById('content').innerHTML =
+      '<div class="empty-state"><h3>Erreur</h3><p>' + escHtml(e.message) + '</p>' +
+      '<br><button class="btn btn-ghost" onclick="fetchVideosFromDrive(true)" style="margin:0 auto;">↺ Réessayer</button></div>';
   }
 }
 
-// Appel DIRECT à l'API Google Drive — rapide, pas de Apps Script
+async function fetchAndCacheVideos(showErr) { return fetchVideosFromDrive(showErr); }
+
 async function fetchDriveVideos() {
   var token = sessionStorage.getItem('lfiag_token');
   if (!token) throw new Error('Non connecté');
 
-  var videos = [];
-  var pageToken = null;
+  // Étape 1 : récupérer toutes les vidéos (paginé)
+  var videos = [], pageToken = null;
   var fields = 'nextPageToken,files(id,name,mimeType,size,createdTime,modifiedTime,thumbnailLink,webViewLink,videoMediaMetadata,parents)';
 
   do {
     var url = 'https://www.googleapis.com/drive/v3/files'
       + '?q=' + encodeURIComponent("mimeType contains 'video/' and trashed=false")
       + '&fields=' + encodeURIComponent(fields)
-      + '&pageSize=100&orderBy=name';
-    if (pageToken) url += '&pageToken=' + encodeURIComponent(pageToken);
+      + '&pageSize=100&orderBy=name'
+      + (pageToken ? '&pageToken=' + encodeURIComponent(pageToken) : '');
 
-    var resp = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
-    if (resp.status === 401) { signOut(); throw new Error('Session expirée'); }
-    if (!resp.ok) throw new Error('Drive API ' + resp.status);
-
-    var data = await resp.json();
-    (data.files || []).forEach(function(f) { videos.push(f); });
-    pageToken = data.nextPageToken || null;
+    var r = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+    if (r.status === 401) { signOut(); throw new Error('Session expirée'); }
+    if (!r.ok) throw new Error('Drive API ' + r.status);
+    var d = await r.json();
+    (d.files || []).forEach(function(f) { videos.push(f); });
+    pageToken = d.nextPageToken || null;
   } while (pageToken);
 
-  // Résoudre les catégories via les noms de dossiers parents
-  var parentIds = [...new Set(videos.flatMap(function(v){ return v.parents||[]; }))];
-  var folderNames = await resolveFolderNames(parentIds, token);
-
+  // Étape 2 : collecter les IDs de dossiers uniques
+  var parentIds = [];
+  var pidSet = {};
   videos.forEach(function(v) {
-    if (v.parents && v.parents.length > 0) {
-      v._category = folderNames[v.parents[0]] || 'Autres';
-    } else {
-      v._category = 'Autres';
-    }
+    (v.parents||[]).forEach(function(pid) {
+      if (!pidSet[pid]) { pidSet[pid]=true; parentIds.push(pid); }
+    });
+  });
+
+  // Étape 3 : résoudre TOUS les noms en UN SEUL appel batch
+  var folderMap = {};
+  if (parentIds.length > 0) {
+    // Drive API accepte OR entre IDs — on fait par batch de 30 max
+    var batches = [];
+    for (var i=0; i<parentIds.length; i+=30) batches.push(parentIds.slice(i,i+30));
+
+    var batchResults = await Promise.all(batches.map(function(batch) {
+      var q = batch.map(function(id){ return "id='" + id + "'"; }).join(' or ');
+      var burl = 'https://www.googleapis.com/drive/v3/files'
+        + '?q=' + encodeURIComponent(q)
+        + '&fields=' + encodeURIComponent('files(id,name)')
+        + '&pageSize=100';
+      return fetch(burl, { headers: { Authorization: 'Bearer ' + token } })
+        .then(function(br){ return br.ok ? br.json() : {files:[]}; })
+        .catch(function(){ return {files:[]}; });
+    }));
+
+    batchResults.forEach(function(res) {
+      (res.files||[]).forEach(function(f) { folderMap[f.id] = f.name; });
+    });
+  }
+
+  // Étape 4 : assigner la catégorie
+  videos.forEach(function(v) {
+    v._category = (v.parents && v.parents[0] && folderMap[v.parents[0]])
+      ? folderMap[v.parents[0]] : 'Autres';
   });
 
   return videos;
-}
-
-// Résoudre les noms de dossiers en batch
-async function resolveFolderNames(ids, token) {
-  var names = {};
-  if (!ids || ids.length === 0) return names;
-
-  // Appels par batch de 10 (pour éviter les URL trop longues)
-  var BATCH = 10;
-  for (var i = 0; i < ids.length; i += BATCH) {
-    var batch = ids.slice(i, i + BATCH);
-    var q = batch.map(function(id){ return "id='" + id + "'"; }).join(' or ');
-    var url = 'https://www.googleapis.com/drive/v3/files'
-      + '?q=' + encodeURIComponent(q)
-      + '&fields=' + encodeURIComponent('files(id,name)')
-      + '&pageSize=100';
-
-    try {
-      var resp = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
-      if (resp.ok) {
-        var data = await resp.json();
-        (data.files || []).forEach(function(f){ names[f.id] = f.name; });
-      }
-    } catch(e) {}
-  }
-  return names;
-}
-
-async function fetchAndCacheVideos(showErr) {
-  return fetchVideosFromDrive(showErr);
 }
 
 
