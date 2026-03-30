@@ -890,6 +890,8 @@ function videoCard(v, isNew) {
   const date = v.modifiedTime
     ? new Date(v.modifiedTime).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}) : '';
   const newBadge = isNew ? '<div class="new-badge">Nouveau</div>' : '';
+  const vuBadge  = seen  ? '<div class="seen-badge">&#10003; Vu</div>' : '';
+  const ncBadge  = (currentUser&&currentUser.role==='admin'&&v._cat==='Autres') ? '<div class="new-badge" style="background:#ef4444;left:auto;right:.5rem;">Non classé</div>' : '';
   const durBadge = dur ? '<div class="duration-badge">' + dur + '</div>' : '';
   return '<div class="video-card" onclick="openVideo(\'' + v.id + '\')">'
     + '<div class="thumb-wrap">' + thumb
