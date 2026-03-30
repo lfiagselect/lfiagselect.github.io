@@ -546,7 +546,8 @@
         <!-- Desktop : bouton Drive simple -->
         <a class="modal-drive-btn desk-only" id="modalDriveLink" target="_blank">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          <span id="modalDriveLinkLabel">Ouvrir dans Google Drive ↗</span></a>
+          Ouvrir dans Google Drive
+        </a>
         <!-- Mobile : bouton unique Drive + plein écran -->
         <a class="modal-drive-btn mob-only" id="modalDriveLinkMob" target="_blank">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
@@ -602,22 +603,47 @@ function signIn(prompt_mode) {
     + '&prompt=' + prompt_mode;
 }
 function saveToken(t) {
+  var expiry = (Date.now() + 55*60*1000).toString();
+  // localStorage pour persistance iOS PWA
+  localStorage.setItem('lfiag_token', t);
+  localStorage.setItem('lfiag_expiry', expiry);
+  // sessionStorage pour compatibilité
   sessionStorage.setItem('lfiag_token', t);
-  sessionStorage.setItem('lfiag_expiry', (Date.now()+55*60*1000).toString());
+  sessionStorage.setItem('lfiag_expiry', expiry);
 }
 function getToken() {
-  var t=sessionStorage.getItem('lfiag_token'), e=+sessionStorage.getItem('lfiag_expiry')||0;
-  if(!t||Date.now()>e){sessionStorage.removeItem('lfiag_token');sessionStorage.removeItem('lfiag_expiry');return null;}
+  // Essayer sessionStorage d'abord, puis localStorage (persistance iOS PWA)
+  var t = sessionStorage.getItem('lfiag_token') || localStorage.getItem('lfiag_token');
+  var e = +(sessionStorage.getItem('lfiag_expiry') || localStorage.getItem('lfiag_expiry')) || 0;
+  if (!t || Date.now() > e) {
+    sessionStorage.removeItem('lfiag_token');
+    sessionStorage.removeItem('lfiag_expiry');
+    localStorage.removeItem('lfiag_token');
+    localStorage.removeItem('lfiag_expiry');
+    return null;
+  }
+  // Resynchroniser sessionStorage si on vient du localStorage
+  if (!sessionStorage.getItem('lfiag_token') && t) {
+    sessionStorage.setItem('lfiag_token', t);
+    sessionStorage.setItem('lfiag_expiry', String(e));
+  }
   return t;
 }
 function scheduleTokenRefresh() {
-  var delay=(+sessionStorage.getItem('lfiag_expiry')||0)-Date.now()-120000;
-  if(delay<=0)return;
-  setTimeout(function(){toast('Session expire bientôt…');setTimeout(function(){signIn('none');},2000);},delay);
+  var e = +(sessionStorage.getItem('lfiag_expiry') || localStorage.getItem('lfiag_expiry')) || 0;
+  var delay = e - Date.now() - 120000;
+  if (delay <= 0) return;
+  setTimeout(function(){
+    toast('Session expire bientôt…');
+    setTimeout(function(){ signIn('none'); }, 2000);
+  }, delay);
 }
 
 function signOut() {
   sessionStorage.clear();
+  localStorage.removeItem('lfiag_token');
+  localStorage.removeItem('lfiag_expiry');
+  localStorage.removeItem('lfiag_user');
   try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
   currentUser = null;
   showScreen('auth');
@@ -700,7 +726,7 @@ function injectLogo(){['logoImgHeader','logoImgAuth'].forEach(function(id){var e
 async function handleCallback() {
   // Récupérer le token depuis le hash
   const hash = location.hash;
-  let accessToken = sessionStorage.getItem('lfiag_token');
+  let accessToken = sessionStorage.getItem('lfiag_token') || localStorage.getItem('lfiag_token');
 
   if (hash.includes('access_token=')) {
     const params = new URLSearchParams(hash.slice(1));
@@ -739,6 +765,7 @@ async function handleCallback() {
     const info = await res.json();
     currentUser = { email: info.email, name: info.name || info.email, token: accessToken };
     sessionStorage.setItem('lfiag_user', JSON.stringify(currentUser));
+    localStorage.setItem('lfiag_user', JSON.stringify(currentUser));
 
     setLoadingMsg('Vérification de votre accès…');
 
