@@ -617,6 +617,7 @@ function scheduleTokenRefresh() {
 
 function signOut() {
   sessionStorage.clear();
+  try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
   currentUser = null;
   showScreen('auth');
   document.getElementById('userBadge').style.display = 'none';
@@ -775,13 +776,59 @@ function callScript(action, params, retry) {
 // LOAD VIDEOS
 // ============================================
 async function loadVideos() {
-  showLoading();
+  // Afficher le cache immédiatement si disponible
+  var cached = null;
   try {
-    const data = await callScript('videos', { email: currentUser.email });
-    allVideos = (data.videos || []).map(v => ({ ...v, _cat: categorize(v) }));
+    var raw = localStorage.getItem('lfiag_videos_cache');
+    if (raw) {
+      var parsed = JSON.parse(raw);
+      if (parsed && parsed.videos && (Date.now() - parsed.ts) < 21600000) {
+        cached = parsed.videos;
+      }
+    }
+  } catch(e) {}
+
+  if (cached && cached.length > 0) {
+    // Afficher le cache instantanément
+    allVideos = cached.map(function(v) { return Object.assign({}, v, {_cat: categorize(v)}); });
+    renderAll();
+    // Recharger en arrière-plan (silencieux)
+    refreshVideosBackground();
+  } else {
+    // Pas de cache : chargement normal avec skeleton
+    showLoading();
+    await fetchAndCacheVideos(true);
+  }
+}
+
+async function refreshVideosBackground() {
+  try {
+    var data = await callScript('videos', { email: currentUser.email });
+    var fresh = (data.videos || []);
+    // Mettre à jour le cache
+    try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: fresh, ts: Date.now()})); } catch(e) {}
+    // Mettre à jour l'UI seulement si des changements
+    if (JSON.stringify(fresh.map(function(v){return v.id;})) !==
+        JSON.stringify(allVideos.map(function(v){return v.id;}))) {
+      allVideos = fresh.map(function(v) { return Object.assign({}, v, {_cat: categorize(v)}); });
+      renderAll();
+    }
+  } catch(e) { /* silencieux */ }
+}
+
+async function fetchAndCacheVideos(showError) {
+  try {
+    var data = await callScript('videos', { email: currentUser.email });
+    var videos = data.videos || [];
+    try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: videos, ts: Date.now()})); } catch(e) {}
+    allVideos = videos.map(function(v) { return Object.assign({}, v, {_cat: categorize(v)}); });
     renderAll();
   } catch(e) {
-    document.getElementById('content').innerHTML = `<div class="empty-state"><h3>Erreur</h3><p>${escHtml(e.message)}</p><br><button class="btn btn-ghost" onclick="loadVideos()" style="margin:0 auto;">Réessayer</button></div>`;
+    if (showError) {
+      document.getElementById('content').innerHTML =
+        '<div class="empty-state"><h3>Erreur</h3><p>' + escHtml(e.message) + '</p>' +
+        '<br><button class="btn btn-ghost" onclick="loadVideos()" style="margin:0 auto;">Réessayer</button></div>';
+    }
   }
 }
 
@@ -1072,7 +1119,11 @@ document.getElementById('searchInput').addEventListener('input', function(e) {
   var v=e.target.value.trim();
   window._st=setTimeout(function(){ searchQuery=v; if(allVideos.length) renderVideos(); },250);
 });
-document.getElementById('refreshBtn').addEventListener('click', loadVideos);
+document.getElementById('refreshBtn').addEventListener('click', function() {
+  try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
+  showLoading();
+  fetchAndCacheVideos(true);
+});
 document.getElementById('settingsBtn').addEventListener('click', ()=>document.getElementById('settingsPanel').classList.toggle('open'));
 
 // ============================================
@@ -1161,7 +1212,11 @@ document.getElementById('searchInput').addEventListener('input', function(e) {
   var v=e.target.value.trim();
   window._st=setTimeout(function(){ searchQuery=v; if(allVideos.length) renderVideos(); },250);
 });
-document.getElementById('refreshBtn').addEventListener('click', loadVideos);
+document.getElementById('refreshBtn').addEventListener('click', function() {
+  try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
+  showLoading();
+  fetchAndCacheVideos(true);
+});
 document.getElementById('settingsBtn').addEventListener('click', ()=>document.getElementById('settingsPanel').classList.toggle('open'));
 
 // ============================================
