@@ -617,6 +617,7 @@ function scheduleTokenRefresh() {
 
 function signOut() {
   sessionStorage.clear();
+  try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
   currentUser = null;
   showScreen('auth');
   document.getElementById('userBadge').style.display = 'none';
@@ -755,9 +756,9 @@ function callScript(action, params, retry) {
     var timer=setTimeout(function(){
       if(done)return; done=true; delete window[cb];
       var el=document.getElementById(cb); if(el)el.remove();
-      if(retry<1) callScript(action,params,retry+1).then(resolve).catch(reject);
-      else reject(new Error('Chargement trop long. Appuyez sur Actualiser.'));
-    },30000);
+      if(retry<2) callScript(action,params,retry+1).then(resolve).catch(reject);
+      else reject(new Error('Serveur introuvable. Réessayez.'));
+    },10000);
     window[cb]=function(data){
       if(done)return; done=true; clearTimeout(timer); delete window[cb];
       var el=document.getElementById(cb); if(el)el.remove();
@@ -775,13 +776,58 @@ function callScript(action, params, retry) {
 // LOAD VIDEOS
 // ============================================
 async function loadVideos() {
-  showLoading();
+  // Afficher le cache instantanément si disponible (< 6h)
+  var cached = null;
   try {
-    const data = await callScript('videos', { email: currentUser.email });
-    allVideos = (data.videos || []).map(v => ({ ...v, _cat: categorize(v) }));
+    var raw = localStorage.getItem('lfiag_videos_cache');
+    if (raw) {
+      var parsed = JSON.parse(raw);
+      if (parsed && parsed.videos && (Date.now() - parsed.ts) < 21600000) {
+        cached = parsed.videos;
+      }
+    }
+  } catch(e) {}
+
+  if (cached && cached.length > 0) {
+    allVideos = dedup(cached).map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
+    renderAll();
+    refreshVideosBackground();
+  } else {
+    showLoading();
+    await fetchAndCacheVideos(true);
+  }
+}
+
+function dedup(videos) {
+  var seen = {};
+  return videos.filter(function(v){ if(seen[v.id]) return false; seen[v.id]=true; return true; });
+}
+
+async function refreshVideosBackground() {
+  try {
+    var data = await callScript('videos', { email: currentUser.email });
+    var fresh = dedup(data.videos || []);
+    try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: fresh, ts: Date.now()})); } catch(e) {}
+    var freshIds = fresh.map(function(v){return v.id;}).join(',');
+    var curIds   = allVideos.map(function(v){return v.id;}).join(',');
+    if (freshIds !== curIds) {
+      allVideos = fresh.map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
+      renderAll();
+    }
+  } catch(e) {}
+}
+
+async function fetchAndCacheVideos(showErr) {
+  try {
+    var data = await callScript('videos', { email: currentUser.email });
+    var videos = dedup(data.videos || []);
+    try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: videos, ts: Date.now()})); } catch(e) {}
+    allVideos = videos.map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
     renderAll();
   } catch(e) {
-    document.getElementById('content').innerHTML = `<div class="empty-state"><h3>Erreur</h3><p>${escHtml(e.message)}</p><br><button class="btn btn-ghost" onclick="loadVideos()" style="margin:0 auto;">Réessayer</button></div>`;
+    if (showErr) document.getElementById('content').innerHTML =
+      '<div class="empty-state"><h3>Chargement lent</h3><p>' + escHtml(e.message) + '</p>' +
+      '<br><button class="btn btn-ghost" onclick="fetchAndCacheVideos(true)" style="margin:0 auto;">↺ Réessayer</button></div>';
   }
 }
 
@@ -882,9 +928,18 @@ function videoCard(v, isNew) {
   var _h={}; try{_h=JSON.parse(localStorage.getItem('lfiag_history')||'{}')}catch(e){}
   var _v={}; try{_v=JSON.parse(localStorage.getItem('lfiag_views')||'{}')}catch(e){}
   var seen=!!_h[v.id], vc_count=_v[v.id]||0;
-  const thumb = v.thumbnailLink
-    ? '<img src="' + v.thumbnailLink.replace('=s220', isMobile() ? '=s320' : '=s560') + '" alt="' + escHtml(v.name) + '" loading="lazy" onerror="this.style.display=&quot;none&quot;"/>'
-    : '<div class="thumb-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.878v6.244a1 1 0 0 1-1.447.894L15 14"/><rect x="3" y="7" width="12" height="10" rx="2"/></svg></div>';
+  var _cleanN = v.name.replace(/\.[^.]+$/,'');
+  var _words  = _cleanN.split(/[\s\-_]+/).filter(function(w){return w.length>0;});
+  var _init   = (_words.length>=2 ? _words[0][0]+_words[1][0] : _cleanN.substring(0,2)).toUpperCase();
+  var _hue    = _cleanN.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0)%360;
+  var _bg     = 'hsl('+_hue+',35%,22%)';
+  var _fg     = 'hsl('+_hue+',60%,70%)';
+  var _fbk    = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:'+_bg+';">'
+    +'<span style="font-family:var(--font-display);font-size:2rem;font-weight:700;color:'+_fg+';letter-spacing:-.02em;">'+_init+'</span></div>';
+  var _thumbUrl = v.thumbnailLink ? v.thumbnailLink.replace('=s220', isMobile()?'=s320':'=s560') : null;
+  var thumb = _fbk + (_thumbUrl
+    ? '<img src="'+_thumbUrl+'" alt="'+escHtml(v.name)+'" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">'
+    : '');
   const dur = v.videoMediaMetadata && v.videoMediaMetadata.durationMillis
     ? formatDuration(parseInt(v.videoMediaMetadata.durationMillis)) : '';
   const date = v.modifiedTime
@@ -1072,7 +1127,11 @@ document.getElementById('searchInput').addEventListener('input', function(e) {
   var v=e.target.value.trim();
   window._st=setTimeout(function(){ searchQuery=v; if(allVideos.length) renderVideos(); },250);
 });
-document.getElementById('refreshBtn').addEventListener('click', loadVideos);
+document.getElementById('refreshBtn').addEventListener('click', function() {
+  try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
+  showLoading();
+  fetchAndCacheVideos(true);
+});
 document.getElementById('settingsBtn').addEventListener('click', ()=>document.getElementById('settingsPanel').classList.toggle('open'));
 
 // ============================================
@@ -1161,7 +1220,11 @@ document.getElementById('searchInput').addEventListener('input', function(e) {
   var v=e.target.value.trim();
   window._st=setTimeout(function(){ searchQuery=v; if(allVideos.length) renderVideos(); },250);
 });
-document.getElementById('refreshBtn').addEventListener('click', loadVideos);
+document.getElementById('refreshBtn').addEventListener('click', function() {
+  try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
+  showLoading();
+  fetchAndCacheVideos(true);
+});
 document.getElementById('settingsBtn').addEventListener('click', ()=>document.getElementById('settingsPanel').classList.toggle('open'));
 
 // ============================================
