@@ -1006,7 +1006,7 @@ function renderRules() {
 }
 function addRule() { const kw=document.getElementById('ruleKeyword').value.trim(),cat=document.getElementById('ruleCat').value.trim(); if(!kw||!cat){toast('⚠ Remplissez les deux champs.');return;} settings.rules.push({keyword:kw,cat}); document.getElementById('ruleKeyword').value=''; document.getElementById('ruleCat').value=''; renderRules(); }
 function deleteRule(i) { settings.rules.splice(i,1); renderRules(); }
-function saveSettings() { localStorage.setItem('lfiag_settings_v2',JSON.stringify(settings)); allVideos.forEach(v=>{v._cat=categorize(v.name);}); renderAll(); document.getElementById('settingsPanel').classList.remove('open'); toast('✓ Paramètres enregistrés'); }
+function saveSettings() { localStorage.setItem('lfiag_settings_v2',JSON.stringify(settings)); allVideos.forEach(v=>{v._cat=categorize(v);}); renderAll(); document.getElementById('settingsPanel').classList.remove('open'); toast('✓ Paramètres enregistrés'); }
 
 // ============================================
 // HELPERS
@@ -1083,7 +1083,7 @@ function renderRules() {
 }
 function addRule() { const kw=document.getElementById('ruleKeyword').value.trim(),cat=document.getElementById('ruleCat').value.trim(); if(!kw||!cat){toast('⚠ Remplissez les deux champs.');return;} settings.rules.push({keyword:kw,cat}); document.getElementById('ruleKeyword').value=''; document.getElementById('ruleCat').value=''; renderRules(); }
 function deleteRule(i) { settings.rules.splice(i,1); renderRules(); }
-function saveSettings() { localStorage.setItem('lfiag_settings_v2',JSON.stringify(settings)); allVideos.forEach(v=>{v._cat=categorize(v.name);}); renderAll(); document.getElementById('settingsPanel').classList.remove('open'); toast('✓ Paramètres enregistrés'); }
+function saveSettings() { localStorage.setItem('lfiag_settings_v2',JSON.stringify(settings)); allVideos.forEach(v=>{v._cat=categorize(v);}); renderAll(); document.getElementById('settingsPanel').classList.remove('open'); toast('✓ Paramètres enregistrés'); }
 
 // ============================================
 // HELPERS
