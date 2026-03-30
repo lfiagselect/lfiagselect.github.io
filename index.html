@@ -603,47 +603,22 @@ function signIn(prompt_mode) {
     + '&prompt=' + prompt_mode;
 }
 function saveToken(t) {
-  var expiry = (Date.now() + 55*60*1000).toString();
-  // localStorage pour persistance iOS PWA
-  localStorage.setItem('lfiag_token', t);
-  localStorage.setItem('lfiag_expiry', expiry);
-  // sessionStorage pour compatibilité
   sessionStorage.setItem('lfiag_token', t);
-  sessionStorage.setItem('lfiag_expiry', expiry);
+  sessionStorage.setItem('lfiag_expiry', (Date.now()+55*60*1000).toString());
 }
 function getToken() {
-  // Essayer sessionStorage d'abord, puis localStorage (persistance iOS PWA)
-  var t = sessionStorage.getItem('lfiag_token') || localStorage.getItem('lfiag_token');
-  var e = +(sessionStorage.getItem('lfiag_expiry') || localStorage.getItem('lfiag_expiry')) || 0;
-  if (!t || Date.now() > e) {
-    sessionStorage.removeItem('lfiag_token');
-    sessionStorage.removeItem('lfiag_expiry');
-    localStorage.removeItem('lfiag_token');
-    localStorage.removeItem('lfiag_expiry');
-    return null;
-  }
-  // Resynchroniser sessionStorage si on vient du localStorage
-  if (!sessionStorage.getItem('lfiag_token') && t) {
-    sessionStorage.setItem('lfiag_token', t);
-    sessionStorage.setItem('lfiag_expiry', String(e));
-  }
+  var t=sessionStorage.getItem('lfiag_token'), e=+sessionStorage.getItem('lfiag_expiry')||0;
+  if(!t||Date.now()>e){sessionStorage.removeItem('lfiag_token');sessionStorage.removeItem('lfiag_expiry');return null;}
   return t;
 }
 function scheduleTokenRefresh() {
-  var e = +(sessionStorage.getItem('lfiag_expiry') || localStorage.getItem('lfiag_expiry')) || 0;
-  var delay = e - Date.now() - 120000;
-  if (delay <= 0) return;
-  setTimeout(function(){
-    toast('Session expire bientôt…');
-    setTimeout(function(){ signIn('none'); }, 2000);
-  }, delay);
+  var delay=(+sessionStorage.getItem('lfiag_expiry')||0)-Date.now()-120000;
+  if(delay<=0)return;
+  setTimeout(function(){toast('Session expire bientôt…');setTimeout(function(){signIn('none');},2000);},delay);
 }
 
 function signOut() {
   sessionStorage.clear();
-  localStorage.removeItem('lfiag_token');
-  localStorage.removeItem('lfiag_expiry');
-  localStorage.removeItem('lfiag_user');
   try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
   currentUser = null;
   showScreen('auth');
@@ -726,7 +701,7 @@ function injectLogo(){['logoImgHeader','logoImgAuth'].forEach(function(id){var e
 async function handleCallback() {
   // Récupérer le token depuis le hash
   const hash = location.hash;
-  let accessToken = sessionStorage.getItem('lfiag_token') || localStorage.getItem('lfiag_token');
+  let accessToken = sessionStorage.getItem('lfiag_token');
 
   if (hash.includes('access_token=')) {
     const params = new URLSearchParams(hash.slice(1));
@@ -765,7 +740,6 @@ async function handleCallback() {
     const info = await res.json();
     currentUser = { email: info.email, name: info.name || info.email, token: accessToken };
     sessionStorage.setItem('lfiag_user', JSON.stringify(currentUser));
-    localStorage.setItem('lfiag_user', JSON.stringify(currentUser));
 
     setLoadingMsg('Vérification de votre accès…');
 
@@ -820,64 +794,87 @@ function callScript(action, params, retry) {
 // LOAD VIDEOS
 // ============================================
 async function loadVideos() {
-  // Afficher le cache instantanément si disponible (< 6h)
   var cached = null;
   try {
     var raw = localStorage.getItem('lfiag_videos_cache');
     if (raw) {
-      var parsed = JSON.parse(raw);
-      if (parsed && parsed.videos && (Date.now() - parsed.ts) < 21600000) {
-        cached = parsed.videos;
-      }
+      var p = JSON.parse(raw);
+      if (p && p.videos && (Date.now() - p.ts) < 21600000) cached = p.videos;
     }
   } catch(e) {}
 
   if (cached && cached.length > 0) {
     allVideos = dedup(cached).map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
     renderAll();
-    refreshVideosBackground();
+    setTimeout(refreshVideosBackground, 300);
   } else {
     showLoading();
     await fetchAndCacheVideos(true);
   }
 }
 
-function dedup(videos) {
-  var seen = {};
-  return videos.filter(function(v){ if(seen[v.id]) return false; seen[v.id]=true; return true; });
+function dedup(arr) {
+  var s = {};
+  return (arr||[]).filter(function(v){ if(!v||!v.id||s[v.id]) return false; s[v.id]=true; return true; });
+}
+
+async function enrichThumbnails(videos) {
+  var token = localStorage.getItem('lfiag_token') || sessionStorage.getItem('lfiag_token');
+  if (!token) return videos;
+  var missing = videos.filter(function(v){ return !v.thumbnailLink && v.type !== 'audio'; });
+  if (!missing.length) return videos;
+  var BATCH = 10, thumbMap = {};
+  for (var i = 0; i < missing.length; i += BATCH) {
+    var batch = missing.slice(i, i + BATCH);
+    var results = await Promise.all(batch.map(function(v) {
+      return fetch('https://www.googleapis.com/drive/v3/files/' + v.id + '?fields=id%2CthumbnailLink',
+        { headers: { Authorization: 'Bearer ' + token } })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .catch(function(){ return null; });
+    }));
+    results.forEach(function(res) {
+      if (res && res.id && res.thumbnailLink) thumbMap[res.id] = res.thumbnailLink;
+    });
+  }
+  return videos.map(function(v) {
+    if (!v.thumbnailLink && thumbMap[v.id]) return Object.assign({}, v, { thumbnailLink: thumbMap[v.id] });
+    return v;
+  });
 }
 
 async function refreshVideosBackground() {
   try {
     var data = await callScript('videos', { email: currentUser.email });
     var fresh = dedup(data.videos || []);
+    fresh = await enrichThumbnails(fresh);
     try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: fresh, ts: Date.now()})); } catch(e) {}
-    var freshIds = fresh.map(function(v){return v.id;}).join(',');
-    var curIds   = allVideos.map(function(v){return v.id;}).join(',');
-    if (freshIds !== curIds) {
-      allVideos = fresh.map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
+    var a = fresh.map(function(v){return v.id;}).sort().join(',');
+    var b = allVideos.map(function(v){return v.id;}).sort().join(',');
+    if (a !== b) {
+      allVideos = dedup(fresh).map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
       renderAll();
     }
-  } catch(e) {}
+  } catch(e) { console.warn('bg refresh:', e.message); }
 }
 
-async function fetchAndCacheVideos(showErr) {
+async function fetchAndCacheVideos(showErr, bustCache) {
   try {
-    var data = await callScript('videos', { email: currentUser.email });
+    var params = { email: currentUser.email };
+    if (bustCache) params.ts = Date.now();
+    var data = await callScript('videos', params);
     var videos = dedup(data.videos || []);
+    videos = await enrichThumbnails(videos);
     try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: videos, ts: Date.now()})); } catch(e) {}
     allVideos = videos.map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
     renderAll();
   } catch(e) {
     if (showErr) document.getElementById('content').innerHTML =
       '<div class="empty-state"><h3>Chargement lent</h3><p>' + escHtml(e.message) + '</p>' +
-      '<br><button class="btn btn-ghost" onclick="fetchAndCacheVideos(true)" style="margin:0 auto;">↺ Réessayer</button></div>';
+      '<br><button class="btn btn-ghost" onclick="fetchAndCacheVideos(true)" style="margin:0 auto;">&#8635; Réessayer</button></div>';
   }
 }
 
-// ============================================
-// ACCESS REQUEST
-// ============================================
+
 async function sendAccessRequest() {
   const name = document.getElementById('requestName').value.trim() || currentUser?.email;
   try {
