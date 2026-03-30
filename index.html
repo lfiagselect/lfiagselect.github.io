@@ -8,6 +8,7 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7d1e2e">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LFIAGtube">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -566,7 +567,7 @@ const LOGO_SRC='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUDBAQEA
 const CLIENT_ID = '770493413843-ovgjb1u0hnc3lcgab6otfs92q8hm2knn.apps.googleusercontent.com';
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxnNSmAUGIuzBJ2s2f5MmnqZrMjZO9VqNjd7kCyELD-KdZ2XBjWTrW7qpl4HcLgk4bB/exec'; // URL du Apps Script déployé
 const REDIRECT_URI = 'https://lfiagselect.github.io';
-const SCOPES = 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
+const SCOPES = 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/drive.readonly';
 
 // ============================================
 // STATE
@@ -710,7 +711,21 @@ async function handleCallback() {
 
   if (!accessToken) { showScreen('auth'); return; }
 
-
+  // Vérifier que le token a le scope drive.readonly
+  // (les anciens tokens n'ont que userinfo — ils retournent 403 sur Drive API)
+  try {
+    var scopeTest = await fetch(
+      'https://www.googleapis.com/drive/v3/files?pageSize=1&fields=files(id)',
+      { headers: { Authorization: 'Bearer ' + accessToken } }
+    );
+    if (scopeTest.status === 403) {
+      // Token sans scope Drive — forcer reconnexion avec les bons scopes
+      sessionStorage.removeItem('lfiag_token');
+      sessionStorage.removeItem('lfiag_expiry');
+      signIn('consent');
+      return;
+    }
+  } catch(e) {}
 
   showScreen('loading');
   setLoadingMsg('Identification en cours…');
@@ -760,7 +775,7 @@ function callScript(action, params, retry) {
       var el=document.getElementById(cb); if(el)el.remove();
       if(retry<2) callScript(action,params,retry+1).then(resolve).catch(reject);
       else reject(new Error('Serveur introuvable. Réessayez.'));
-    },35000);
+    },10000);
     window[cb]=function(data){
       if(done)return; done=true; clearTimeout(timer); delete window[cb];
       var el=document.getElementById(cb); if(el)el.remove();
@@ -783,24 +798,26 @@ async function loadVideos() {
   try {
     var raw = localStorage.getItem('lfiag_videos_cache');
     if (raw) {
-      var p = JSON.parse(raw);
-      if (p && p.videos && (Date.now() - p.ts) < 21600000) cached = p.videos;
+      var parsed = JSON.parse(raw);
+      if (parsed && parsed.videos && (Date.now() - parsed.ts) < 21600000) {
+        cached = parsed.videos;
+      }
     }
   } catch(e) {}
 
   if (cached && cached.length > 0) {
     allVideos = dedup(cached).map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
     renderAll();
-    setTimeout(refreshVideosBackground, 300);
+    refreshVideosBackground();
   } else {
     showLoading();
     await fetchAndCacheVideos(true);
   }
 }
 
-function dedup(arr) {
-  var s = {};
-  return (arr||[]).filter(function(v){ if(!v||!v.id||s[v.id]) return false; s[v.id]=true; return true; });
+function dedup(videos) {
+  var seen = {};
+  return videos.filter(function(v){ if(seen[v.id]) return false; seen[v.id]=true; return true; });
 }
 
 async function refreshVideosBackground() {
@@ -808,13 +825,13 @@ async function refreshVideosBackground() {
     var data = await callScript('videos', { email: currentUser.email });
     var fresh = dedup(data.videos || []);
     try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: fresh, ts: Date.now()})); } catch(e) {}
-    var a = fresh.map(function(v){return v.id;}).sort().join(',');
-    var b = allVideos.map(function(v){return v.id;}).sort().join(',');
-    if (a !== b) {
-      allVideos = dedup(fresh).map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
+    var freshIds = fresh.map(function(v){return v.id;}).join(',');
+    var curIds   = allVideos.map(function(v){return v.id;}).join(',');
+    if (freshIds !== curIds) {
+      allVideos = fresh.map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
       renderAll();
     }
-  } catch(e) { console.warn('bg refresh:', e.message); }
+  } catch(e) {}
 }
 
 async function fetchAndCacheVideos(showErr) {
@@ -831,7 +848,9 @@ async function fetchAndCacheVideos(showErr) {
   }
 }
 
-
+// ============================================
+// ACCESS REQUEST
+// ============================================
 async function sendAccessRequest() {
   const name = document.getElementById('requestName').value.trim() || currentUser?.email;
   try {
