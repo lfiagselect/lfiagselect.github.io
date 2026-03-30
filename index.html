@@ -816,6 +816,28 @@ function renderToolbar() {
 
 function setCategory(c) { activeCategory = c; renderToolbar(); renderVideos(); }
 
+function videoCard(v, isNew) {
+  isNew = !!isNew;
+  const thumb = v.thumbnailLink
+    ? '<img src="' + v.thumbnailLink.replace('=s220','=s640') + '" alt="' + escHtml(v.name) + '" loading="lazy" onerror="this.style.display=&quot;none&quot;"/>'
+    : '<div class="thumb-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.878v6.244a1 1 0 0 1-1.447.894L15 14"/><rect x="3" y="7" width="12" height="10" rx="2"/></svg></div>';
+  const dur = v.videoMediaMetadata && v.videoMediaMetadata.durationMillis
+    ? formatDuration(parseInt(v.videoMediaMetadata.durationMillis)) : '';
+  const date = v.modifiedTime
+    ? new Date(v.modifiedTime).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}) : '';
+  const newBadge = isNew ? '<div class="new-badge">Nouveau</div>' : '';
+  const durBadge = dur ? '<div class="duration-badge">' + dur + '</div>' : '';
+  return '<div class="video-card" onclick="openVideo(\'' + v.id + '\')">'
+    + '<div class="thumb-wrap">' + thumb
+    + '<div class="play-overlay"><div class="play-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>'
+    + newBadge + durBadge + '</div>'
+    + '<div class="card-body">'
+    + '<div class="card-category">' + escHtml(v._cat) + '</div>'
+    + '<div class="card-title">' + escHtml(v.name.replace(/\.[^.]+$/, '')) + '</div>'
+    + '<div class="card-meta">' + (date ? '<span>' + date + '</span>' : '') + '</div>'
+    + '</div></div>';
+}
+
 function getRecentVideos(n) {
   return allVideos.slice().sort(function(a,b) {
     return new Date(b.createdTime||0) - new Date(a.createdTime||0);
