@@ -193,13 +193,13 @@ main{max-width:1560px;margin:0 auto;padding:1.2rem 1.2rem 5rem}
 @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
 /* ── MOBILE ── */
-.mob-topbar,.mob-catbar,.mob-nav{display:none}
+.mob-topbar,.mob-catbar,.mob-nav,.mob-sheet,.mob-sheet-overlay{display:none}
 @media(max-width:900px){.video-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}}
 @media(max-width:640px){
   header{padding:0 .75rem}
-  .search-bar,#searchWrap,#refreshBtn,#settingsBtn,#signOutBtn,.user-chip{display:none!important}
-  main{padding:.75rem .72rem 5.5rem}
-  .hero{min-height:280px;padding:1rem .9rem 1rem;border-radius:18px;margin-bottom:.9rem}
+  .search-bar,#searchWrap,#refreshBtn,#settingsBtn,#signOutBtn,.user-chip,.mob-nav{display:none!important}
+  main{padding:.75rem .72rem 1.25rem}
+  .hero{min-height:260px;padding:1rem .9rem 1rem;border-radius:18px;margin-bottom:.85rem}
   .hero h1{font-size:1.95rem}
   .hero p{font-size:.88rem}
   .toolbar{display:none}
@@ -211,19 +211,34 @@ main{max-width:1560px;margin:0 auto;padding:1.2rem 1.2rem 5rem}
   .section-title{font-size:.98rem}
   .modal-backdrop{padding:0;align-items:flex-end}
   .modal{max-height:100dvh;height:100dvh;width:100%;border-radius:20px 20px 0 0;border-bottom:none}
-  .mob-topbar{display:flex;position:sticky;top:var(--nav-h);z-index:98;align-items:center;gap:.45rem;padding:.5rem .72rem;background:rgba(0,0,0,.9);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.07)}
+  .mob-topbar{display:flex;position:sticky;top:var(--nav-h);z-index:98;align-items:center;gap:.55rem;padding:.58rem .72rem;background:rgba(0,0,0,.92);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.07)}
+  .mob-brand-mini{display:flex;align-items:center;gap:.52rem;min-width:0;flex-shrink:0}
+  .mob-brand-copy{display:flex;flex-direction:column;line-height:1}
+  .mob-brand-copy strong{font-size:.84rem;letter-spacing:-.02em}
+  .mob-brand-copy span{font-size:.68rem;color:var(--text3);margin-top:.18rem;white-space:nowrap;max-width:86px;overflow:hidden;text-overflow:ellipsis}
   .mob-search-wrap{flex:1;position:relative}
   .mob-search-wrap svg{position:absolute;left:.7rem;top:50%;transform:translateY(-50%);color:var(--text3)}
-  .mob-search-wrap input{width:100%;padding:.65rem .82rem .65rem 2rem;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);color:var(--text);outline:none;font-size:.84rem}
-  .mob-search-wrap input:focus{background:rgba(255,255,255,.1)}
-  .mob-user-dot{width:30px;height:30px;flex-shrink:0;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700}
-  .mob-catbar{display:flex;position:sticky;top:calc(var(--nav-h) + 47px);z-index:97;gap:.38rem;overflow-x:auto;padding:.48rem .72rem;background:rgba(0,0,0,.9);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.07);scrollbar-width:none}
+  .mob-search-wrap input{width:100%;padding:.72rem .86rem .72rem 2rem;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);color:var(--text);outline:none;font-size:.84rem}
+  .mob-search-wrap input:focus{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.16)}
+  .mob-filter-btn{width:40px;height:40px;flex-shrink:0;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);color:var(--text);display:flex;align-items:center;justify-content:center}
+  .mob-user-dot{width:32px;height:32px;flex-shrink:0;border-radius:50%;background:linear-gradient(135deg,var(--gold),#f1d2a2);color:#111;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;box-shadow:0 8px 20px rgba(0,0,0,.24)}
+  .mob-catbar{display:flex;position:sticky;top:calc(var(--nav-h) + 56px);z-index:97;gap:.45rem;overflow-x:auto;padding:.5rem .72rem .72rem;background:rgba(0,0,0,.92);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.06);scrollbar-width:none}
   .mob-catbar::-webkit-scrollbar{display:none}
-  .mob-nav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:150;height:60px;background:rgba(0,0,0,.95);backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.08);justify-content:space-around;align-items:center;padding-bottom:env(safe-area-inset-bottom,0)}
-  .mob-nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:var(--text3);font-size:.56rem;font-weight:600;padding:.4rem .6rem;border-radius:8px;transition:.12s}
-  .mob-nav-btn svg{flex-shrink:0}
-  .mob-nav-btn.active{color:var(--text)}
-  .toast-container{left:.75rem;right:.75rem;bottom:68px}
+  .mob-catbar .cat-pill{flex:0 0 auto;padding:.52rem .82rem}
+  .mob-sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.46);backdrop-filter:blur(4px);z-index:180}
+  .mob-sheet{position:fixed;left:0;right:0;bottom:0;z-index:181;padding:.55rem .78rem calc(.9rem + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;background:rgba(14,14,18,.98);border-top:1px solid rgba(255,255,255,.08);box-shadow:0 -16px 40px rgba(0,0,0,.35);transform:translateY(105%);opacity:0;transition:transform .24s var(--ease),opacity .24s var(--ease);display:block}
+  .mob-sheet.open{transform:translateY(0);opacity:1}
+  .mob-sheet-overlay.open{display:block}
+  .mob-sheet-handle{width:42px;height:4px;border-radius:999px;background:rgba(255,255,255,.18);margin:0 auto .7rem}
+  .mob-sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+  .mob-sheet-close{width:34px;height:34px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--text)}
+  .mob-sheet-body{display:flex;flex-direction:column;gap:1rem;max-height:65vh;overflow:auto;padding-bottom:.2rem}
+  .mob-sheet-label{font-size:.76rem;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:.5rem}
+  .mob-sheet-row,.mob-sheet-grid{display:flex;gap:.5rem;flex-wrap:wrap}
+  .mob-sheet-grid .cat-pill,.mob-sheet-row .cat-pill{font-size:.78rem}
+  .mob-sheet-actions{display:flex;gap:.6rem;position:sticky;bottom:0;padding-top:.5rem;background:linear-gradient(180deg,rgba(14,14,18,.1),rgba(14,14,18,.98) 28%)}
+  .mob-sheet-actions .btn{flex:1}
+  .toast-container{left:.75rem;right:.75rem;bottom:20px}
   .admin-panel,.settings-panel{border-radius:12px}
 }
 </style>
@@ -268,33 +283,46 @@ if('serviceWorker' in navigator){
 
 <!-- MOBILE TOPBAR -->
 <div class="mob-topbar" id="mobTopbar">
+  <div class="mob-brand-mini">
+    <div class="mob-user-dot" id="mobUserDot" aria-hidden="true">?</div>
+    <div class="mob-brand-copy">
+      <strong>LFIAGtube</strong>
+      <span id="mobActiveLabel">Tout</span>
+    </div>
+  </div>
   <div class="mob-search-wrap">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     <input type="search" id="mobSearchInput" placeholder="Rechercher…" aria-label="Rechercher">
   </div>
-  <div class="mob-user-dot" id="mobUserDot" aria-hidden="true">?</div>
+  <button class="mob-filter-btn" id="mobFilterBtn" onclick="openMobileFilters()" aria-label="Ouvrir les filtres">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 5h18"/><path d="M6 12h12"/><path d="M10 19h4"/></svg>
+  </button>
 </div>
 <!-- MOBILE CATBAR -->
 <div class="mob-catbar" id="mobCatbar" role="navigation" aria-label="Catégories"></div>
-<!-- MOBILE BOTTOM NAV -->
-<nav class="mob-nav" id="mobNav" aria-label="Navigation principale">
-  <button class="mob-nav-btn active" id="mnHome" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Accueil">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    Accueil
-  </button>
-  <button class="mob-nav-btn" id="mnSearch" onclick="document.getElementById('mobSearchInput').focus()" aria-label="Rechercher">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    Recherche
-  </button>
-  <button class="mob-nav-btn" id="mnRefresh" onclick="fetchAndCacheVideos(true,true)" aria-label="Actualiser">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0 0 20.49 15"/></svg>
-    Actualiser
-  </button>
-  <button class="mob-nav-btn" onclick="signOut()" aria-label="Quitter">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-    Quitter
-  </button>
-</nav>
+<div class="mob-sheet-overlay" id="mobSheetOverlay" onclick="closeMobileFilters()"></div>
+<div class="mob-sheet" id="mobSheet" aria-hidden="true">
+  <div class="mob-sheet-handle"></div>
+  <div class="mob-sheet-head">
+    <strong>Filtres</strong>
+    <button class="mob-sheet-close" onclick="closeMobileFilters()" aria-label="Fermer les filtres">✕</button>
+  </div>
+  <div class="mob-sheet-body">
+    <div class="mob-sheet-group">
+      <div class="mob-sheet-label">Trier</div>
+      <div class="mob-sheet-row" id="mobSortRow"></div>
+    </div>
+    <div class="mob-sheet-group">
+      <div class="mob-sheet-label">Catégories</div>
+      <div class="mob-sheet-grid" id="mobCatGrid"></div>
+    </div>
+    <div class="mob-sheet-actions">
+      <button class="btn" onclick="resetMobileFilters()">Réinitialiser</button>
+      <button class="btn btn-primary" onclick="closeMobileFilters()">Appliquer</button>
+    </div>
+  </div>
+</div>
+<nav class="mob-nav" id="mobNav" aria-label="Navigation principale"></nav>
 
 <!-- SCREEN: AUTH -->
 <div id="screen-auth" class="screen active visible" role="main">
@@ -522,28 +550,21 @@ function isMobile() { return window.innerWidth <= 640; }
 
 function setupMobileUI() {
   var on = isMobile();
-  ['mobTopbar','mobCatbar','mobNav'].forEach(function(id) {
+  ['mobTopbar','mobCatbar'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.style.display = on ? 'flex' : 'none';
   });
-  if (on) initSwipeCategories();
+  var nav = document.getElementById('mobNav');
+  if (nav) nav.style.display = 'none';
+  var sheet = document.getElementById('mobSheet');
+  if (sheet) sheet.style.display = on ? 'block' : 'none';
+  var overlay = document.getElementById('mobSheetOverlay');
+  if (overlay) overlay.style.display = 'none';
+  if (on && typeof window.syncMobileHeader === 'function') window.syncMobileHeader();
 }
 
-function openCatDrawer() {
-  renderCatDrawer();
-  document.getElementById('catDrawer').classList.add('open');
-  document.getElementById('catDrawerOverlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  setTimeout(function() {
-    var a = document.querySelector('#catDrawerList .cat-drawer-item.active');
-    if (a) a.scrollIntoView({ block:'center', behavior:'smooth' });
-  }, 340);
-}
-function closeCatDrawer() {
-  document.getElementById('catDrawer').classList.remove('open');
-  document.getElementById('catDrawerOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
+function openCatDrawer() { if (typeof window.openMobileFilters === 'function') window.openMobileFilters(); }
+function closeCatDrawer() { if (typeof window.closeMobileFilters === 'function') window.closeMobileFilters(); }
 function renderCatDrawer() {
   var list = document.getElementById('catDrawerList');
   if (!list) return;
@@ -577,32 +598,7 @@ function restoreSearch() {
   var b=document.getElementById('searchInput');    if(b) b.value=s;
 }
 
-function initSwipeCategories() {
-  var content_el = document.getElementById('content');
-  if (!content_el || content_el._swipeInit) return;
-  content_el._swipeInit = true;
-
-  var startX = 0, startY = 0, startTime = 0;
-
-  content_el.addEventListener('touchstart', function(e) {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    startTime = Date.now();
-  }, { passive: true });
-
-  content_el.addEventListener('touchend', function(e) {
-    var dx = e.changedTouches[0].clientX - startX;
-    var dy = e.changedTouches[0].clientY - startY;
-    var dt = Date.now() - startTime;
-    // Swipe horizontal rapide (> 60px, < 350ms, pas trop vertical)
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 350) {
-      swipeCategoryBy(dx < 0 ? 1 : -1);
-    }
-    if (dy > 80 && Math.abs(dy) > Math.abs(dx)*2 && dt < 400 && startY < 160) {
-      openCatDrawer();
-    }
-  }, { passive: true });
-}
+function initSwipeCategories() { return; }
 
 function swipeCategoryBy(dir) {
   // Construire la liste ordonnée des catégories
@@ -1223,6 +1219,8 @@ handleCallback();
     _origRenderAll();
     buildToolbar();
     buildMobCatbar();
+    window.buildMobileSheet();
+    window.syncMobileHeader();
   };
 
   /* Override setCategory / setSort to keep toolbar in sync */
@@ -1231,11 +1229,16 @@ handleCallback();
     _origSetCategory(c);
     buildToolbar();
     buildMobCatbar();
+    window.buildMobileSheet();
+    window.syncMobileHeader();
   };
   var _origSetSort = setSort;
   setSort = function(s) {
     _origSetSort(s);
     buildToolbar();
+    buildMobCatbar();
+    window.buildMobileSheet();
+    window.syncMobileHeader();
   };
 
   /* Build desktop toolbar */
@@ -1244,7 +1247,7 @@ handleCallback();
     if (!tb) return;
     var cats = getCatList();
     var pillsCat = cats.map(function(c) {
-      var label = c === '__new__' ? 'Nouveau' : c;
+      var label = c === '__new__' ? 'Derniers ajouts' : c;
       var count = c === 'Tout' ? allVideos.length
         : c === '__new__' ? getRecentVideos(20).length
         : allVideos.filter(function(v) { return v._cat === c; }).length;
@@ -1265,9 +1268,60 @@ handleCallback();
     if (!bar) return;
     var cats = getCatList();
     bar.innerHTML = cats.map(function(c) {
-      var label = c === '__new__' ? 'Nouveau' : c;
+      var label = c === '__new__' ? 'Derniers ajouts' : c;
       return '<button class="cat-pill' + (activeCategory === c ? ' active' : '') + (c === '__new__' ? ' new-pill' : '') + '" data-cat="' + escAttr(c) + '" onclick="setCategory(this.dataset.cat)">'  + escHtml(label) + '</button>';
     }).join('');
+  };
+
+
+  window.syncMobileHeader = function() {
+    var label = activeCategory === '__new__' ? 'Derniers ajouts' : (activeCategory || 'Tout');
+    var el = document.getElementById('mobActiveLabel');
+    if (el) el.textContent = label;
+  };
+
+  window.buildMobileSheet = function() {
+    var sort = document.getElementById('mobSortRow'), cats = document.getElementById('mobCatGrid');
+    if (!sort || !cats) return;
+    var labels = {date_desc:'↓ Récent', date_asc:'↑ Ancien', name_asc:'A–Z'};
+    sort.innerHTML = ['date_desc','date_asc','name_asc'].map(function(s) {
+      return '<button class="cat-pill sort-pill' + (sortOrder === s ? ' active' : '') + '" data-sort="' + escAttr(s) + '" onclick="setSort(this.dataset.sort)">' + labels[s] + '</button>';
+    }).join('');
+    var catsList = getCatList();
+    cats.innerHTML = catsList.map(function(c) {
+      var label = c === '__new__' ? 'Derniers ajouts' : c;
+      return '<button class="cat-pill' + (activeCategory === c ? ' active' : '') + (c === '__new__' ? ' new-pill' : '') + '" data-cat="' + escAttr(c) + '" onclick="setCategory(this.dataset.cat);closeMobileFilters();">' + escHtml(label) + '</button>';
+    }).join('');
+    window.syncMobileHeader();
+  };
+
+  window.openMobileFilters = function() {
+    if (!isMobile()) return;
+    window.buildMobileSheet();
+    var s = document.getElementById('mobSheet'), o = document.getElementById('mobSheetOverlay');
+    if (s) s.classList.add('open');
+    if (o) { o.style.display = 'block'; o.classList.add('open'); }
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeMobileFilters = function() {
+    var s = document.getElementById('mobSheet'), o = document.getElementById('mobSheetOverlay');
+    if (s) s.classList.remove('open');
+    if (o) { o.classList.remove('open'); setTimeout(function(){ if (!o.classList.contains('open')) o.style.display = 'none'; }, 220); }
+    document.body.style.overflow = '';
+  };
+
+  window.resetMobileFilters = function() {
+    searchQuery = '';
+    activeCategory = 'Tout';
+    sortOrder = 'date_desc';
+    sessionStorage.removeItem('lfiag_search');
+    var a = document.getElementById('mobSearchInput'), b = document.getElementById('searchInput');
+    if (a) a.value = '';
+    if (b) b.value = '';
+    renderAll();
+    window.syncMobileHeader();
+    window.closeMobileFilters();
   };
 
   function getCatList() {
