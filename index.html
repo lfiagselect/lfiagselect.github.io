@@ -492,7 +492,7 @@ if ('serviceWorker' in navigator) {
 </nav>
 
 <!-- ÉCRAN : CONNEXION --><!-- ÉCRAN : CONNEXION -->
-<div id="screen-auth" class="screen active">
+<div id="screen-auth" class="screen active visible">
   <div class="auth-card">
     <div class="auth-logo-wrap">
       <img id="logoImgAuth" src="" alt="LFIAGtube" />
@@ -1061,7 +1061,9 @@ async function sendAccessRequest() {
 function showScreen(name) {
   var current = document.querySelector('.screen.active');
   var el = document.getElementById('screen-' + name);
-  if (!el || (current === el)) return;
+  if (!el) return;
+  // Écran déjà actif : s'assurer juste qu'il est visible
+  if (current === el) { el.classList.add('visible'); return; }
   if (current) {
     current.classList.remove('visible');
     setTimeout(function() {
