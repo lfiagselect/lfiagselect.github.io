@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="20260330">
+<meta name="cache-version" content="20260331">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com https://script.google.com; connect-src 'self' https://apis.googleapis.com https://www.googleapis.com https://script.google.com https://accounts.google.com; frame-src https://drive.google.com; img-src 'self' data: https://lh3.googleusercontent.com https://*.googleusercontent.com https://drive.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com;">
 <meta name="google-site-verification" content="vRxTIr6P54ttUmHbdP36Os2glmlJfTgEb8QEq59-UNM" />
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7d1e2e">
@@ -15,6 +16,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
   :root {
     --bg: #0d0a0b; --bg2: #17100f; --bg3: #211613;
     --border: rgba(196,155,100,0.12); --border-hover: rgba(196,155,100,0.35);
@@ -128,7 +130,7 @@
 
   /* GRID */
   .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; }
-  .video-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--card-radius); overflow: hidden; cursor: pointer; transition: all 0.22s; }
+  .video-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--card-radius); overflow: hidden; cursor: pointer; transition: all 0.22s; content-visibility: auto; contain-intrinsic-size: 0 280px; }
   .video-card:hover { border-color: var(--border-hover); transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
   .thumb-wrap { position: relative; aspect-ratio: 16/9; background: var(--bg3); overflow: hidden; }
   .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
@@ -418,9 +420,17 @@
     .mob-nav-btn:active { background: rgba(196,155,100,0.08); }
   }
 </style>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
 </head>
 <body>
 
+<a href="#screen-app" class="sr-only" style="position:absolute;left:-9999px;">Aller au contenu principal</a>
 <header>
   <div class="logo">
     <img class="logo-img" id="logoImgHeader" src="" alt="LFIAGtube" />
@@ -435,10 +445,10 @@
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <span id="userEmail"></span>
     </div>
-    <button class="btn btn-ghost" id="settingsBtn" style="padding:0.5rem 0.75rem;display:none;" title="Paramètres">
+    <button class="btn btn-ghost" id="settingsBtn" style="padding:0.5rem 0.75rem;display:none;" title="Paramètres" aria-label="Paramètres">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
     </button>
-    <button class="btn btn-ghost" id="refreshBtn" style="padding:0.5rem 0.75rem;display:none;" title="Actualiser">
+    <button class="btn btn-ghost" id="refreshBtn" style="padding:0.5rem 0.75rem;display:none;" title="Actualiser" aria-label="Actualiser la bibliothèque">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
     </button>
     <button class="btn btn-ghost" id="signOutBtn" style="display:none;" onclick="signOut()">Déconnexion</button>
@@ -449,7 +459,7 @@
 <div class="mob-topbar" id="mobTopbar">
   <button class="mob-cats-btn" id="mobCatsBtn" onclick="openCatDrawer()" title="Catégories">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-    <span id="mobCatLabel2" class="mob-cat-label">Tout</span>
+    <span id="mobCatLabel" class="mob-cat-label" style="display:none;"></span><span id="mobCatLabel2" class="mob-cat-label">Tout</span>
   </button>
   <div class="mob-search-wrap">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -532,7 +542,7 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       Mode administrateur
       <button onclick="toggleAdminPanel()" class="btn btn-ghost" style="font-size:.75rem;padding:.3rem .75rem;">Gérer les accès ▾</button>
-      <a href="__SHEET_URL__" target="_blank" class="btn btn-ghost" style="font-size:.75rem;padding:.3rem .75rem;">Sheet ↗</a>
+      <a href="https://docs.google.com/spreadsheets/d/1vAvsH8PELYs-Z2G4n0gtVzdT9Ra96AJk9H9qgGFH3-M/edit?usp=drivesdk" target="_blank" class="btn btn-ghost" style="font-size:.75rem;padding:.3rem .75rem;">Sheet ↗</a>
     </div>
     <div id="adminPanel" style="display:none;background:var(--bg2);border:1px solid rgba(196,155,100,.25);border-radius:var(--card-radius);padding:1.5rem;margin-bottom:1.5rem;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
@@ -576,7 +586,7 @@
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title" id="modalTitle"></div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+      <button class="modal-close" onclick="closeModal()" aria-label="Fermer la vidéo">✕</button>
     </div>
     <div class="modal-player" id="modalPlayer"></div>
     <div class="modal-body">
@@ -1049,10 +1059,22 @@ async function sendAccessRequest() {
 // UI
 // ============================================
 function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active','visible');});
-  var el=document.getElementById('screen-'+name);
-  el.classList.add('active');
-  requestAnimationFrame(function(){el.classList.add('visible');});
+  var current = document.querySelector('.screen.active');
+  var el = document.getElementById('screen-' + name);
+  if (!el || (current === el)) return;
+  if (current) {
+    current.classList.remove('visible');
+    setTimeout(function() {
+      current.classList.remove('active');
+      current.style.display = '';
+      el.classList.add('active');
+      requestAnimationFrame(function() { requestAnimationFrame(function() { el.classList.add('visible'); }); });
+    }, 200);
+  } else {
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active','visible'); s.style.display=''; });
+    el.classList.add('active');
+    requestAnimationFrame(function() { requestAnimationFrame(function() { el.classList.add('visible'); }); });
+  }
 }
 
 function setLoadingMsg(msg) { document.getElementById('loadingMsg').textContent = msg; }
@@ -1340,100 +1362,9 @@ document.getElementById('settingsBtn').addEventListener('click', ()=>document.ge
 // ============================================
 handleCallback();
 
-function openVideo(id) {
-  var v = allVideos.find(function(x){ return x.id === id; });
-  if (!v) return;
 
-  var title     = v.name.replace(/\.[^.]+$/, '');
-  var driveLink = v.webViewLink || ('https://drive.google.com/file/d/' + id + '/view');
-  window._currentDriveLink = driveLink;
-
-  document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalDriveLink').href = driveLink;
-  var mobLink = document.getElementById('modalDriveLinkMob');
-  if (mobLink) mobLink.href = driveLink;
-
-  var dur  = v.videoMediaMetadata && v.videoMediaMetadata.durationMillis
-    ? formatDuration(parseInt(v.videoMediaMetadata.durationMillis)) : null;
-  var date = v.modifiedTime
-    ? new Date(v.modifiedTime).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}) : null;
-  var meta = '<span class="pill">' + escHtml(v._cat) + '</span>';
-  if (dur)  meta += '<span>&#9201; ' + dur + '</span>';
-  if (date) meta += '<span>&#128197; ' + date + '</span>';
-  document.getElementById('modalMeta').innerHTML = meta;
-
-  var _mp = document.getElementById('modalPlayer');
-  _mp.style.position = 'relative';
-  _mp.innerHTML = '';
-  var _sp = document.createElement('div');
-  _sp.id = 'playerSpinner';
-  _sp.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;gap:.75rem;z-index:2;';
-  _sp.innerHTML = '<div style="width:36px;height:36px;border:3px solid rgba(196,155,100,.2);border-top-color:#c49b64;border-radius:50%;animation:spin .7s linear infinite;"></div><p style="color:#8a7060;font-size:.78rem;">Chargement…</p>';
-  var _if = document.createElement('iframe');
-  _if.id = 'videoIframe';
-  _if.src = 'https://drive.google.com/file/d/' + id + '/preview';
-  _if.setAttribute('allow','autoplay; encrypted-media');
-  _if.allowFullscreen = true;
-  _if.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;opacity:0;transition:opacity .3s;';
-  _if.addEventListener('load', function(){ var s=document.getElementById('playerSpinner');if(s)s.style.display='none';_if.style.opacity='1'; });
-  _mp.appendChild(_sp);
-  _mp.appendChild(_if);
-
-  var _m=document.getElementById('modal');
-  _m._currentVideoId=id;
-  try{ var vw=JSON.parse(localStorage.getItem('lfiag_views')||'{}'); vw[id]=(vw[id]||0)+1; localStorage.setItem('lfiag_views',JSON.stringify(vw)); }catch(e){}
-  _m.classList.add('open');
-  document.body.style.overflow='hidden';
-}
-
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-  document.getElementById('modalPlayer').innerHTML = '';
-  document.body.style.overflow = '';
-}
-
-
-
-
-
-document.getElementById('modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
-
-// ============================================
-// SETTINGS
-// ============================================
-function renderRules() {
-  document.getElementById('ruleList').innerHTML = settings.rules.map((r,i)=>`<div class="tag-rule"><span class="keyword">${escHtml(r.keyword)}</span><span class="arrow">→</span><span class="cat">${escHtml(r.cat)}</span><button class="tag-rule-delete" onclick="deleteRule(${i})">×</button></div>`).join('')||'<span style="color:var(--muted);font-size:.82rem;">Aucune règle</span>';
-}
-function addRule() { const kw=document.getElementById('ruleKeyword').value.trim(),cat=document.getElementById('ruleCat').value.trim(); if(!kw||!cat){toast('⚠ Remplissez les deux champs.');return;} settings.rules.push({keyword:kw,cat}); document.getElementById('ruleKeyword').value=''; document.getElementById('ruleCat').value=''; renderRules(); }
-function deleteRule(i) { settings.rules.splice(i,1); renderRules(); }
-function saveSettings() { localStorage.setItem('lfiag_settings_v2',JSON.stringify(settings)); allVideos.forEach(v=>{v._cat=categorize(v);}); renderAll(); document.getElementById('settingsPanel').classList.remove('open'); toast('✓ Paramètres enregistrés'); }
-
-// ============================================
-// HELPERS
-// ============================================
-function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-function formatDuration(ms) { const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60; return h>0?`${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${m}:${String(sec).padStart(2,'0')}`; }
-function toast(msg,dur=3500) { const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.getElementById('toasts').appendChild(t); setTimeout(()=>t.remove(),dur); }
-
-document.getElementById('searchInput').addEventListener('input', function(e) {
-  clearTimeout(window._st);
-  var v=e.target.value.trim();
-  window._st=setTimeout(function(){ searchQuery=v; if(allVideos.length) renderVideos(); },250);
-});
-document.getElementById('refreshBtn').addEventListener('click', function() {
-  try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
-  showLoading();
-  fetchAndCacheVideos(true);
-});
-document.getElementById('settingsBtn').addEventListener('click', ()=>document.getElementById('settingsPanel').classList.toggle('open'));
-
-// ============================================
-// INIT
-// ============================================
-handleCallback();
 </script>
+
   <!-- Drawer catégories mobile -->
   <div class="cat-drawer-overlay" id="catDrawerOverlay" onclick="closeCatDrawer()"></div>
   <div class="cat-drawer" id="catDrawer">
