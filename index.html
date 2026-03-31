@@ -249,6 +249,8 @@
       border-bottom: 1px solid var(--border);
       align-items: center;
     }
+    .mob-cats-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: .35rem .5rem; cursor: pointer; color: var(--gold2); flex-shrink: 0; min-width: 48px; }
+    .mob-cat-label { font-size: .52rem; font-weight: 600; color: var(--gold); max-width: 46px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1; }
     .mob-search-wrap { position: relative; flex: 1; }
     .mob-search-wrap svg {
       position: absolute; left: 0.7rem; top: 50%;
@@ -445,6 +447,10 @@
 
 <!-- ── MOBILE UI ── -->
 <div class="mob-topbar" id="mobTopbar">
+  <button class="mob-cats-btn" id="mobCatsBtn" onclick="openCatDrawer()" title="Catégories">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    <span id="mobCatLabel2" class="mob-cat-label">Tout</span>
+  </button>
   <div class="mob-search-wrap">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
@@ -465,9 +471,9 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     Recherche
   </button>
-  <button class="mob-nav-btn" id="mnCats" onclick="openCatDrawer()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-    <span id="mobCatLabel" class="mob-cat-badge">Tout</span>
+  <button class="mob-nav-btn" id="mnRefresh" onclick="loadVideos()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    Actualiser
   </button>
   <button class="mob-nav-btn" onclick="signOut()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -707,8 +713,9 @@ function selectCatFromDrawer(c) {
   closeCatDrawer();
   renderToolbar(); renderVideos();
   window.scrollTo({top:0,behavior:'smooth'});
-  var b = document.getElementById('mobCatLabel');
-  if (b) b.textContent = c==='__new__'?'Récents':c==='Tout'?'Tout':c.split(/[\s\-]/)[0];
+  var label = c==='__new__'?'Récents':c==='Tout'?'Tout':c.split(/[\s\-]/)[0];
+  var b  = document.getElementById('mobCatLabel');  if (b)  b.textContent = label;
+  var b2 = document.getElementById('mobCatLabel2'); if (b2) b2.textContent = label;
 }
 function initHeaderShrink() {
   var hdr = document.querySelector('header');
