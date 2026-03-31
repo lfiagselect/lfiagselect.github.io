@@ -184,6 +184,10 @@
   .mob-only  { display: none; }
   .desk-only { display: inline-flex; }
   @media (max-width: 640px) {
+    .cat-drawer { display: flex !important; }
+    .cat-drawer-overlay { display: none; }
+    .cat-drawer-overlay.open { display: block !important; }
+
     .mob-only  { display: inline-flex; }
     .desk-only { display: none; }
   }
@@ -216,6 +220,8 @@
   .mob-topbar { display: none; }
   .mob-nav    { display: none; }
   .mob-catbar { display: none; }
+  .cat-drawer { display: none !important; }
+  .cat-drawer-overlay { display: none !important; }
 
   /* ══════════════════════════════════════════
      MOBILE  (≤ 640 px)

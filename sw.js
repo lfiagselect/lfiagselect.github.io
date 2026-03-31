@@ -1,5 +1,5 @@
-// LFIAGtube — Service Worker v1
-const CACHE_NAME = 'lfiag-shell-v1';
+// LFIAGtube — Service Worker v2
+const CACHE_NAME = 'lfiag-shell-v2';
 const SHELL_ASSETS = [
   '/',
   '/index.html',
