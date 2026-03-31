@@ -89,11 +89,13 @@ main{max-width:1560px;margin:0 auto;padding:1.2rem 1.2rem 5rem}
 .hero{position:relative;overflow:hidden;border-radius:24px;min-height:340px;padding:2rem;background:linear-gradient(135deg,rgba(255,255,255,.06) 0%,rgba(10,132,255,.22) 72%,rgba(15,32,64,.34) 100%),#0b0b0f;border:1px solid rgba(255,255,255,.09);box-shadow:0 24px 80px rgba(0,0,0,.35);display:flex;align-items:flex-end;margin-bottom:1.1rem}
 .hero::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(0,0,0,.65) 100%);pointer-events:none}
 .hero-glow{position:absolute;top:-80px;right:-80px;width:400px;height:400px;background:radial-gradient(circle,rgba(10,132,255,.22),transparent 65%);pointer-events:none}
-.hero-content{position:relative;z-index:2;max-width:640px}
-.hero-kicker{display:inline-flex;align-items:center;gap:.3rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.6);background:rgba(255,255,255,.07);padding:.38rem .65rem;border-radius:999px;border:1px solid rgba(255,255,255,.09);margin-bottom:.85rem}
-.hero h1{font-size:clamp(2rem,5vw,4.2rem);line-height:.97;letter-spacing:-.06em;margin-bottom:.7rem}
-.hero p{font-size:.95rem;line-height:1.65;color:rgba(255,255,255,.62);max-width:50ch}
-.hero-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.2rem}
+.hero-content{position:relative;z-index:2;max-width:700px;padding:.15rem 0}
+.hero-kicker{display:inline-flex;align-items:center;gap:.3rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.6);background:rgba(255,255,255,.07);padding:.38rem .65rem;border-radius:999px;border:1px solid rgba(255,255,255,.09);margin-bottom:1rem}
+.hero h1{font-size:clamp(2.15rem,5vw,4.4rem);line-height:.95;letter-spacing:-.065em;margin-bottom:.9rem;max-width:11.5ch;text-wrap:balance}
+.hero-copy{max-width:58ch}
+.hero-copy p{font-size:1rem;line-height:1.75;color:rgba(255,255,255,.7);max-width:52ch;margin:0}
+.hero-signoff{display:block;margin-top:.55rem;color:rgba(255,255,255,.9);font-weight:600;letter-spacing:-.01em}
+.hero-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.35rem}
 
 /* ── BANNERS ── */
 .admin-banner{display:none;align-items:center;gap:.5rem;padding:.7rem 1rem;background:rgba(255,214,10,.07);border:1px solid rgba(255,214,10,.15);border-radius:12px;color:var(--gold);font-size:.79rem;margin-bottom:1rem;flex-wrap:wrap}
@@ -224,9 +226,10 @@ main{max-width:1560px;margin:0 auto;padding:1.2rem 1.2rem 5rem}
   header{padding:0 .75rem}
   .search-bar,#searchWrap,#refreshBtn,#settingsBtn,#signOutBtn,.user-chip,.mob-nav{display:none!important}
   main{padding:.75rem .72rem 1.25rem}
-  .hero{min-height:260px;padding:1rem .9rem 1rem;border-radius:18px;margin-bottom:.85rem}
-  .hero h1{font-size:1.95rem}
-  .hero p{font-size:.88rem}
+  .hero{min-height:250px;padding:1rem .92rem 1.05rem;border-radius:18px;margin-bottom:.85rem;align-items:flex-end}
+  .hero h1{font-size:2.02rem;max-width:10.8ch;margin-bottom:.78rem}
+  .hero-copy p{font-size:.92rem;line-height:1.62}
+  .hero-signoff{margin-top:.48rem;font-size:.96em}
   .toolbar{display:none}
   .video-grid{grid-template-columns:1fr;gap:.6rem}
   .video-card{display:flex;min-height:88px}
@@ -388,7 +391,9 @@ if('serviceWorker' in navigator){
           Streaming privé
         </div>
         <h1>Vos vidéos LFIAG, dans une vraie plateforme dédiée.</h1>
-        <p>Navigation immersive, lecture instantanée, catégories intelligentes. Le meilleur reste à venir 🤍</p>
+        <div class="hero-copy">
+          <p>Navigation immersive, lecture instantanée, catégories intelligentes.<span class="hero-signoff">Le meilleur reste à venir 🤍</span></p>
+        </div>
         <div class="hero-actions">
           <button class="btn btn-primary" onclick="window.scrollTo({top:420,behavior:'smooth'})">Explorer la bibliothèque</button>
           <button class="btn" onclick="fetchAndCacheVideos(true,true)">
