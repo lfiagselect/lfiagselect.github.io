@@ -297,13 +297,13 @@
     .mob-catbar .cat-pill.active { transform: scale(1.05); box-shadow: 0 0 0 1.5px var(--gold); }
 
     /* Layout horizontal des cards sur mobile */
-    .video-card { display: flex; flex-direction: row; height: 88px; }
-    .thumb-wrap { width: 148px; min-width: 148px; aspect-ratio: unset; height: 88px; }
+    .video-card { display: flex; flex-direction: row; min-height: 88px; height: auto; }
+    .thumb-wrap { width: 130px; min-width: 130px; aspect-ratio: unset; min-height: 88px; align-self: stretch; }
     .thumb-wrap img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
     .play-overlay { opacity: 0; }
     .video-card:active .play-overlay { opacity: 1; }
     .card-body { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: 0.5rem 0.75rem; }
-    .card-title { font-size: 0.85rem; -webkit-line-clamp: 2; line-height: 1.35; }
+    .card-title { font-size: 0.82rem; -webkit-line-clamp: unset; line-height: 1.3; margin-bottom: 0.2rem; }
     .new-badge, .seen-badge, .type-badge { font-size: 0.52rem; padding: 1px 5px; }
     .duration-badge { font-size: 0.52rem; padding: 1px 5px; bottom: .3rem; right: .3rem; }
 
@@ -1233,7 +1233,6 @@ function saveSettings() { localStorage.setItem('lfiag_settings_v2',JSON.stringif
 // HELPERS
 // ============================================
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function formatDuration(ms) { const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60; return h>0?`${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${m}:${String(sec).padStart(2,'0')}`; }
 function toast(msg,dur=3500) { const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.getElementById('toasts').appendChild(t); setTimeout(()=>t.remove(),dur); }
 
@@ -1333,7 +1332,6 @@ function saveSettings() { localStorage.setItem('lfiag_settings_v2',JSON.stringif
 // HELPERS
 // ============================================
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function formatDuration(ms) { const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60; return h>0?`${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${m}:${String(sec).padStart(2,'0')}`; }
 function toast(msg,dur=3500) { const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.getElementById('toasts').appendChild(t); setTimeout(()=>t.remove(),dur); }
 
