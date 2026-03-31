@@ -293,7 +293,19 @@
       border-bottom: 1px solid var(--border);
     }
     .mob-catbar::-webkit-scrollbar { display: none; }
-    .mob-catbar .cat-pill { font-size: 0.7rem; padding: 0.3rem 0.7rem; }
+    .mob-catbar .cat-pill { font-size: 0.7rem; padding: 0.3rem 0.7rem; transition: all .2s; white-space: nowrap; }
+    .mob-catbar .cat-pill.active { transform: scale(1.05); box-shadow: 0 0 0 1.5px var(--gold); }
+
+    /* Layout horizontal des cards sur mobile */
+    .video-card { display: flex; flex-direction: row; height: 88px; }
+    .thumb-wrap { width: 148px; min-width: 148px; aspect-ratio: unset; height: 88px; }
+    .thumb-wrap img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .play-overlay { opacity: 0; }
+    .video-card:active .play-overlay { opacity: 1; }
+    .card-body { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: 0.5rem 0.75rem; }
+    .card-title { font-size: 0.85rem; -webkit-line-clamp: 2; line-height: 1.35; }
+    .new-badge, .seen-badge, .type-badge { font-size: 0.52rem; padding: 1px 5px; }
+    .duration-badge { font-size: 0.52rem; padding: 1px 5px; bottom: .3rem; right: .3rem; }
 
     /* Cacher la toolbar desktop */
     .toolbar { display: none !important; }
@@ -305,13 +317,13 @@
     .admin-banner   { font-size: 0.75rem; padding: 0.6rem 1rem; }
 
     /* Grille 2 colonnes */
-    .video-grid { grid-template-columns: repeat(2, 1fr); gap: 0.55rem; }
-    .card-body      { padding: 0.45rem 0.55rem 0.55rem; }
-    .card-title     { font-size: 0.78rem; -webkit-line-clamp: 2; }
-    .card-category  { font-size: 0.58rem; margin-bottom: 0.2rem; }
-    .card-meta      { font-size: 0.6rem; }
-    .play-btn       { width: 34px; height: 34px; }
-    .play-btn svg   { width: 11px; height: 11px; }
+    .video-grid { grid-template-columns: 1fr; gap: 0.65rem; }
+    .card-body      { padding: 0.6rem 0.75rem 0.7rem; }
+    .card-title     { font-size: 0.88rem; -webkit-line-clamp: 2; }
+    .card-category  { font-size: 0.65rem; margin-bottom: 0.25rem; }
+    .card-meta      { font-size: 0.68rem; }
+    .play-btn       { width: 42px; height: 42px; }
+    .play-btn svg   { width: 14px; height: 14px; }
     .duration-badge { font-size: 0.58rem; padding: 1px 4px; }
     .cat-section    { margin-bottom: 1.75rem; }
     .section-title  { font-size: 1rem; }
@@ -638,8 +650,62 @@ function setupMobileUI() {
   var on = isMobile();
   ['mobTopbar','mobCatbar','mobNav'].forEach(function(id) {
     var el = document.getElementById(id);
-    if (el) el.style.display = on ? (id === 'mobCatbar' ? 'flex' : 'flex') : 'none';
+    if (el) el.style.display = on ? 'flex' : 'none';
   });
+  if (on) initSwipeCategories();
+}
+
+function initSwipeCategories() {
+  var content_el = document.getElementById('content');
+  if (!content_el || content_el._swipeInit) return;
+  content_el._swipeInit = true;
+
+  var startX = 0, startY = 0, startTime = 0;
+
+  content_el.addEventListener('touchstart', function(e) {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    startTime = Date.now();
+  }, { passive: true });
+
+  content_el.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - startX;
+    var dy = e.changedTouches[0].clientY - startY;
+    var dt = Date.now() - startTime;
+    // Swipe horizontal rapide (> 60px, < 350ms, pas trop vertical)
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 350) {
+      swipeCategoryBy(dx < 0 ? 1 : -1);
+    }
+  }, { passive: true });
+}
+
+function swipeCategoryBy(dir) {
+  // Construire la liste ordonnée des catégories
+  var cats = ['__new__', 'Tout'].concat(
+    [...new Set(allVideos.map(function(v){ return v._cat; }))].sort()
+  );
+  var idx = cats.indexOf(activeCategory);
+  if (idx < 0) idx = 1; // défaut: Tout
+  var next = Math.max(0, Math.min(cats.length - 1, idx + dir));
+  if (next === idx) return;
+  var nextCat = cats[next];
+  activeCategory = nextCat;
+  renderToolbar();
+  renderMobCatbar();
+  renderVideos();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Scroller la pill au centre
+  setTimeout(function() {
+    var bar = document.getElementById('mobCatbar');
+    var active = bar && bar.querySelector('.cat-pill.active');
+    if (active && bar) {
+      var barRect = bar.getBoundingClientRect();
+      var pillRect = active.getBoundingClientRect();
+      bar.scrollTo({ left: bar.scrollLeft + pillRect.left - barRect.left - barRect.width/2 + pillRect.width/2, behavior: 'smooth' });
+    }
+  }, 50);
+  // Feedback haptic si dispo
+  if (navigator.vibrate) navigator.vibrate(8);
 }
 
 function mobNavGo(tab) {
@@ -668,16 +734,29 @@ function renderMobCatbar() {
   bar.innerHTML = cats.map(function(c) {
     var count = c === 'Tout' ? allVideos.length : allVideos.filter(function(v) { return v._cat === c; }).length;
     var cls = c === activeCategory ? 'active' : '';
-    return '<div class="cat-pill ' + cls + '" onclick="mobSetCat(\'' + escHtml(c) + '\')">'
+    return '<div class="cat-pill ' + cls + '" data-cat="' + escAttr(c) + '" onclick="mobSetCat(this.dataset.cat)">'
       + escHtml(c) + ' <span style="opacity:.55;font-size:.7em;">' + count + '</span></div>';
   }).join('');
 }
+
 
 function mobSetCat(c) {
   activeCategory = c;
   renderMobCatbar();
   renderVideos();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Scroller la pill active au centre de la catbar
+  setTimeout(function() {
+    var bar = document.getElementById('mobCatbar');
+    var active = bar && bar.querySelector('.cat-pill.active');
+    if (active && bar) {
+      var barRect = bar.getBoundingClientRect();
+      var pillRect = active.getBoundingClientRect();
+      var scrollLeft = bar.scrollLeft + pillRect.left - barRect.left
+        - (barRect.width / 2) + (pillRect.width / 2);
+      bar.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+    }
+  }, 50);
 }
 
 var _mob = document.getElementById('mobSearchInput');
