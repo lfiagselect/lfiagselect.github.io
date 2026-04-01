@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604011930">
+<meta name="cache-version" content="202604011946">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -229,11 +229,11 @@ main{max-width:1560px;margin:0 auto;padding:1.2rem 1.2rem 5rem}
   .modal-backdrop{padding:0;align-items:flex-end}
   .modal{max-height:100dvh;height:100dvh;width:100%;border-radius:20px 20px 0 0;border-bottom:none}
   .mob-topbar{display:flex;position:sticky;top:var(--nav-h);z-index:98;align-items:center;gap:.55rem;padding:.58rem .72rem;background:rgba(6,12,24,.92);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.07)}
-  .mob-search-wrap{flex:1;position:relative}
+  .mob-search-wrap{flex:1;min-width:0;position:relative}
   .mob-search-wrap svg{position:absolute;left:.7rem;top:50%;transform:translateY(-50%);color:var(--text3)}
   .mob-search-wrap input{width:100%;padding:.72rem .86rem .72rem 2rem;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);color:var(--text);outline:none;font-size:.84rem}
   .mob-search-wrap input:focus{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.16)}
-  .mob-filter-btn{width:40px;height:40px;flex-shrink:0;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);color:var(--text);display:flex;align-items:center;justify-content:center}
+  .mob-filter-btn{height:40px;flex-shrink:0;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);color:var(--text);display:flex;align-items:center;justify-content:center;gap:.35rem;padding:0 .75rem;font-size:.75rem;font-weight:600;white-space:nowrap}
   .mob-catbar{display:none!important}
   .mob-catbar::-webkit-scrollbar{display:none}
   .mob-catbar .cat-pill{flex:0 0 auto;padding:.52rem .82rem}
@@ -316,7 +316,8 @@ if('serviceWorker' in navigator){
     <input type="search" id="mobSearchInput" placeholder="Rechercher…" aria-label="Rechercher">
   </div>
   <button class="mob-filter-btn" id="mobFilterBtn" onclick="openCatDrawer()" aria-label="Ouvrir les catégories">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 5h18"/><path d="M6 12h12"/><path d="M10 19h4"/></svg>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    Cat&#xe9;gories
   </button>
 </div>
 <div class="mob-catbar" id="mobCatbar" role="navigation" aria-label="Catégories"></div>
