@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604021438">
+<meta name="cache-version" content="202604021442">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -150,7 +150,7 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
   .desk-sort-group{display:flex;gap:.35rem;margin-left:auto}
   .desk-drawer-overlay{display:none;position:fixed;inset:0;z-index:150;background:transparent}
   .desk-drawer-overlay.open{display:block}
-  .desk-drawer{position:absolute;top:calc(100% + .5rem);left:0;width:280px;max-height:70vh;z-index:151;background:rgba(4,12,28,.52);backdrop-filter:saturate(200%) blur(36px);-webkit-backdrop-filter:saturate(200%) blur(36px);border:1px solid rgba(255,255,255,.12);border-radius:16px;display:flex;flex-direction:column;transform:translateY(-8px);opacity:0;pointer-events:none;transition:transform .22s var(--ease),opacity .22s var(--ease);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .desk-drawer{position:fixed;top:0;left:0;width:280px;max-height:70vh;z-index:500;background:rgba(4,12,28,.52);backdrop-filter:saturate(200%) blur(36px);-webkit-backdrop-filter:saturate(200%) blur(36px);border:1px solid rgba(255,255,255,.12);border-radius:16px;display:flex;flex-direction:column;transform:translateY(-8px);opacity:0;pointer-events:none;transition:transform .22s var(--ease),opacity .22s var(--ease);box-shadow:0 20px 60px rgba(0,0,0,.5)}
   .desk-drawer.open{transform:translateY(0);opacity:1;pointer-events:auto}
   .desk-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem .5rem;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
   .desk-drawer-title{font-size:1rem;font-weight:700;color:var(--gold)}
@@ -1238,9 +1238,15 @@ function toggleDeskDrawer() {
 
 function openDeskDrawer() {
   renderDeskDrawerList();
-  document.getElementById('deskDrawer').classList.add('open');
+  var btn = document.getElementById('deskCatBtn');
+  var drawer = document.getElementById('deskDrawer');
+  if (btn && drawer) {
+    var rect = btn.getBoundingClientRect();
+    drawer.style.top  = (rect.bottom + 6) + 'px';
+    drawer.style.left = rect.left + 'px';
+  }
+  drawer.classList.add('open');
   document.getElementById('deskDrawerOverlay').classList.add('open');
-  // Scroller sur l'item actif
   setTimeout(function(){
     var a = document.querySelector('#deskDrawerList .desk-drawer-item.active');
     if (a) a.scrollIntoView({block:'center', behavior:'smooth'});
