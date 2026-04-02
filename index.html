@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604020945">
+<meta name="cache-version" content="202604021407">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -42,13 +42,13 @@ header.shrunk{height:calc(40px + env(safe-area-inset-top))!important;padding:env
 .logo-img{width:28px;height:28px;border-radius:8px;object-fit:cover;box-shadow:0 4px 12px rgba(0,0,0,.4)}
 .logo-text{font-size:1rem;font-weight:700;letter-spacing:-.03em;white-space:nowrap}
 .logo-text .dim{color:var(--text2);font-weight:400}
-.search-bar{flex:1;max-width:400px;position:relative;display:none}
+.search-bar{flex:1;max-width:400px;position:relative}
 .search-bar input{width:100%;padding:.56rem .9rem .56rem 2.2rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);border-radius:999px;color:var(--text);outline:none;font-size:.84rem;transition:.15s}
 .search-bar input::placeholder{color:var(--text3)}
 .search-bar input:focus{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)}
 .search-icon{position:absolute;left:.72rem;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text3)}
 .header-right{display:flex;align-items:center;gap:.4rem}
-.user-chip{display:none;align-items:center;gap:.45rem;padding:.28rem .65rem .28rem .3rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);border-radius:999px;font-size:.74rem;color:var(--text2)}
+.user-chip{display:none;align-items:center;gap:.45rem;padding:.28rem .65rem .28rem .3rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);border-radius:999px;font-size:.74rem;color:var(--text2);transition:.15s}
 .user-avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#2c2c2e,#1a1a1c);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0}
 #userEmail{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .icon-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:var(--text2);transition:.15s background,.15s color}
@@ -1031,22 +1031,26 @@ function setLoadingMsg(msg) { document.getElementById('loadingMsg').textContent 
 
 function showAppUI() {
   showScreen('loading');
+  // Avatar initiale
+  var initial = currentUser.email ? currentUser.email.charAt(0).toUpperCase() : '?';
+  var avatar = document.getElementById('userAvatar');
+  if (avatar) avatar.textContent = initial;
   document.getElementById('userBadge').style.display = 'flex';
   document.getElementById('userEmail').textContent = currentUser.email;
   document.getElementById('signOutBtn').style.display = 'flex';
   document.getElementById('refreshBtn').style.display = 'flex';
   document.getElementById('settingsBtn').style.display = 'flex';
-  document.getElementById('searchWrap').style.display = 'block';
+  document.getElementById('searchWrap').style.display = isMobile() ? 'none' : 'block';
   if (currentUser.role === 'admin') {
     document.getElementById('adminBanner').style.display = 'flex';
   }
   renderRules();
   setupMobileUI();
   scheduleTokenRefresh();
-  // Initiale du compte dans le dot mobile
+  // Initiale mobile
   var dot = document.getElementById('mobUserDot');
-  if (dot && currentUser && currentUser.email) {
-    dot.textContent = currentUser.email.charAt(0).toUpperCase();
+  if (dot && currentUser.email) {
+    dot.textContent = initial;
     dot.title = currentUser.email;
   }
 }
@@ -1125,17 +1129,23 @@ function getFiltered() {
 }
 
 function renderToolbar() {
-  const cats = ['Tout', ...new Set(allVideos.map(v => v._cat))].sort((a,b) => a==='Tout'?-1:b==='Tout'?1:a.localeCompare(b));
-  const newActive = activeCategory === '__new__' ? 'active' : '';
-  let html = '<div style="width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:.25rem;"><span class="toolbar-label" style="margin:0;">Catégories</span><div style="display:flex;gap:.35rem;"><span style="font-size:.7rem;color:var(--muted);">Trier&nbsp;:</span><div class="cat-pill sort-pill" id="sort_date_desc" onclick="setSort(&quot;date_desc&quot;)">&#8595;&nbsp;Date</div><div class="cat-pill sort-pill" id="sort_date_asc" onclick="setSort(&quot;date_asc&quot;)">&#8593;&nbsp;Date</div><div class="cat-pill sort-pill" id="sort_name_asc" onclick="setSort(&quot;name_asc&quot;)">A&#8211;Z</div></div></div>';
-  html += '<div class="cat-pill new-pill ' + newActive + '" onclick="setCategory(\'__new__\')">✦ Derniers ajouts</div>';
-  html += cats.map(c => {
-    const count = c==='Tout' ? allVideos.length : allVideos.filter(v=>v._cat===c).length;
-    const cls = c===activeCategory ? 'active' : '';
-    return '<div class="cat-pill ' + cls + '" onclick="setCategory(\'' + escHtml(c) + '\')">' + escHtml(c) + ' <span style="opacity:.55;font-size:.72em;">' + count + '</span></div>';
+  var cats = ['Tout', ...new Set(allVideos.map(function(v){return v._cat;}))].sort(function(a,b){return a==='Tout'?-1:b==='Tout'?1:a.localeCompare(b,'fr');});
+  var newActive = activeCategory === '__new__' ? 'active' : '';
+  var sortLabels = {date_desc:'&#8595; R&#xe9;cent', date_asc:'&#8593; Ancien', name_asc:'A&#8211;Z'};
+  var sortPills = ['date_desc','date_asc','name_asc'].map(function(s){
+    return '<div class="cat-pill sort-pill'+(sortOrder===s?' active':'')+'" data-sort="'+s+'" onclick="setSort(this.dataset.sort)">'+sortLabels[s]+'</div>';
   }).join('');
-  document.getElementById('toolbar').innerHTML = html;
-  ['date_desc','date_asc','name_asc'].forEach(function(id){var el=document.getElementById('sort_'+id);if(el)el.classList.toggle('active',id===sortOrder);});
+  var h = '<div style="width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem;">'
+    +'<span class="toolbar-label" style="margin:0;">Cat&#xe9;gories</span>'
+    +'<div style="display:flex;gap:.35rem;align-items:center;"><span style="font-size:.65rem;color:var(--text3);">Trier&nbsp;:</span>'+sortPills+'</div>'
+    +'</div>';
+  h += '<div class="cat-pill new-pill '+newActive+'" data-cat="__new__" onclick="setCategory(this.dataset.cat)">&#x2736; Derniers ajouts</div>';
+  h += cats.map(function(c) {
+    var count = c==='Tout' ? allVideos.length : allVideos.filter(function(v){return v._cat===c;}).length;
+    var cls = c===activeCategory ? 'active' : '';
+    return '<div class="cat-pill '+cls+'" data-cat="'+escAttr(c)+'" onclick="setCategory(this.dataset.cat)">'+escHtml(c)+' <span style="opacity:.5;font-size:.72em;">'+count+'</span></div>';
+  }).join('');
+  document.getElementById('toolbar').innerHTML = h;
 }
 
 function setCategory(c) { activeCategory = c; renderToolbar(); renderVideos(); }
@@ -1352,13 +1362,18 @@ function adminAddUser(){var e=(document.getElementById('newUserEmail').value||''
 function adminToggleUser(i){var u=_au[i];if(!u)return;var on=!(u.active!==false&&u.active!=='FALSE');callScript('toggle_user',{email:u.email,active:on.toString(),admin_email:currentUser.email}).then(function(){_au[i].active=on;renderAdminUsers();toast((on?'✓ Activé : ':'✗ Désactivé : ')+u.email);}).catch(function(e){toast('Erreur : '+e.message);});}
 document.getElementById('searchInput').addEventListener('input', function(e) {
   clearTimeout(window._st);
-  var v=e.target.value.trim();
-  window._st=setTimeout(function(){ searchQuery=v; if(allVideos.length) renderVideos(); },250);
+  var v = e.target.value.trim();
+  window._st = setTimeout(function() {
+    searchQuery = v;
+    // Sync avec la recherche mobile
+    var mob = document.getElementById('mobSearchInput');
+    if (mob && mob.value !== v) mob.value = v;
+    if (allVideos.length) renderVideos();
+  }, 250);
 });
 document.getElementById('refreshBtn').addEventListener('click', function() {
   try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
-  showLoading();
-  fetchAndCacheVideos(true);
+  fetchAndCacheVideos(true, true);
 });
 document.getElementById('settingsBtn').addEventListener('click', ()=>document.getElementById('settingsPanel').classList.toggle('open'));
 
@@ -1454,13 +1469,18 @@ function toast(msg,dur=3500) { const t=document.createElement('div'); t.classNam
 
 document.getElementById('searchInput').addEventListener('input', function(e) {
   clearTimeout(window._st);
-  var v=e.target.value.trim();
-  window._st=setTimeout(function(){ searchQuery=v; if(allVideos.length) renderVideos(); },250);
+  var v = e.target.value.trim();
+  window._st = setTimeout(function() {
+    searchQuery = v;
+    // Sync avec la recherche mobile
+    var mob = document.getElementById('mobSearchInput');
+    if (mob && mob.value !== v) mob.value = v;
+    if (allVideos.length) renderVideos();
+  }, 250);
 });
 document.getElementById('refreshBtn').addEventListener('click', function() {
   try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
-  showLoading();
-  fetchAndCacheVideos(true);
+  fetchAndCacheVideos(true, true);
 });
 document.getElementById('settingsBtn').addEventListener('click', ()=>document.getElementById('settingsPanel').classList.toggle('open'));
 
