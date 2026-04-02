@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604021442">
+<meta name="cache-version" content="202604021447">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -141,28 +141,50 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
 
 /* ── TOOLBAR ── */
 .toolbar{display:flex;flex-wrap:wrap;gap:.6rem;margin:0 0 1.2rem}
-  /* ── Desktop category drawer ── */
+  /* ── Desktop category dropdown premium ── */
   .desk-cat-bar{display:flex;align-items:center;gap:.75rem;margin:0 0 1.1rem;position:relative;width:100%}
-  .desk-cat-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1rem;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text);font-size:.82rem;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
-  .desk-cat-btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18)}
-  .desk-cat-btn .desk-cat-active{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gold)}
-  .desk-cat-btn svg{flex-shrink:0;color:var(--text3)}
+  .desk-cat-btn{display:inline-flex;align-items:center;gap:.55rem;padding:.58rem 1.1rem;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:var(--text);font-size:.84rem;font-weight:600;cursor:pointer;user-select:none;transition:background .15s,border-color .15s;white-space:nowrap}
+  .desk-cat-btn:hover{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.2)}
+  .desk-cat-btn.open{background:rgba(10,132,255,.1);border-color:rgba(10,132,255,.3)}
+  .desk-cat-active{color:var(--gold);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .desk-cat-chevron{transition:transform .22s cubic-bezier(.34,1.56,.64,1);flex-shrink:0;opacity:.5}
+  .desk-cat-btn.open .desk-cat-chevron{transform:rotate(180deg)}
   .desk-sort-group{display:flex;gap:.35rem;margin-left:auto}
-  .desk-drawer-overlay{display:none;position:fixed;inset:0;z-index:150;background:transparent}
+  .desk-drawer-overlay{display:none;position:fixed;inset:0;z-index:498;background:transparent}
   .desk-drawer-overlay.open{display:block}
-  .desk-drawer{position:fixed;top:0;left:0;width:280px;max-height:70vh;z-index:500;background:rgba(4,12,28,.52);backdrop-filter:saturate(200%) blur(36px);-webkit-backdrop-filter:saturate(200%) blur(36px);border:1px solid rgba(255,255,255,.12);border-radius:16px;display:flex;flex-direction:column;transform:translateY(-8px);opacity:0;pointer-events:none;transition:transform .22s var(--ease),opacity .22s var(--ease);box-shadow:0 20px 60px rgba(0,0,0,.5)}
-  .desk-drawer.open{transform:translateY(0);opacity:1;pointer-events:auto}
-  .desk-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem .5rem;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
-  .desk-drawer-title{font-size:1rem;font-weight:700;color:var(--gold)}
-  .desk-drawer-close{background:none;border:none;color:var(--text3);font-size:1.4rem;cursor:pointer;line-height:1;padding:.2rem .4rem}
-  .desk-drawer-close:hover{color:var(--text)}
-  .desk-drawer-list{overflow-y:auto;flex:1;padding:.35rem 0 .6rem;-webkit-overflow-scrolling:touch}
-  .desk-drawer-item{position:relative;display:flex;align-items:center;justify-content:space-between;padding:.78rem 1.25rem;font-size:.88rem;color:var(--text);cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05)}
-  .desk-drawer-item:hover{background:rgba(255,255,255,.05)}
-  .desk-drawer-item.active{color:var(--gold);background:rgba(255,214,10,.08)}
-  .desk-drawer-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold);border-radius:0 2px 2px 0}
-  .desk-drawer-count{font-size:.7rem;color:var(--text3);background:rgba(255,255,255,.07);padding:2px 7px;border-radius:100px;flex-shrink:0}
-  .desk-drawer-item.active .desk-drawer-count{color:var(--gold)}
+  .desk-drawer{position:fixed;top:0;left:0;width:300px;max-height:72vh;z-index:499;
+    background:rgba(4,12,28,.68);
+    backdrop-filter:saturate(180%) blur(36px);
+    -webkit-backdrop-filter:saturate(180%) blur(36px);
+    border:1px solid rgba(255,255,255,.13);
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 8px 40px rgba(0,0,8,.65),inset 0 1px 0 rgba(255,255,255,.06);
+    display:flex;flex-direction:column;
+    transform-origin:top left;
+    transform:scaleY(.88) translateY(-8px);
+    opacity:0;pointer-events:none;
+    transition:transform .24s cubic-bezier(.34,1.56,.64,1),opacity .18s ease}
+  .desk-drawer.open{transform:scaleY(1) translateY(0);opacity:1;pointer-events:auto}
+  .desk-drawer-search{padding:.6rem .75rem;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;position:relative}
+  .desk-drawer-search svg{position:absolute;left:1.2rem;top:50%;transform:translateY(-50%);opacity:.35;pointer-events:none}
+  .desk-drawer-search input{width:100%;padding:.42rem .75rem .42rem 2rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:8px;color:var(--text);font-size:.82rem;outline:none;font-family:var(--font);transition:border-color .15s,background .15s}
+  .desk-drawer-search input::placeholder{color:rgba(255,255,255,.28)}
+  .desk-drawer-search input:focus{background:rgba(255,255,255,.09);border-color:rgba(10,132,255,.45)}
+  .desk-drawer-list{overflow-y:auto;flex:1;padding:.35rem 0}
+  .desk-drawer-list::-webkit-scrollbar{width:3px}
+  .desk-drawer-list::-webkit-scrollbar-track{background:transparent}
+  .desk-drawer-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:999px}
+  .desk-drawer-sep{height:1px;background:rgba(255,255,255,.07);margin:.3rem .9rem}
+  .desk-drawer-item{display:flex;align-items:center;gap:.65rem;padding:.62rem .9rem;cursor:pointer;transition:background .1s;position:relative;font-size:.85rem;color:rgba(255,255,255,.75)}
+  .desk-drawer-item:hover{background:rgba(255,255,255,.06);color:var(--text)}
+  .desk-drawer-item.active{color:var(--gold)}
+  .desk-drawer-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:2.5px;background:var(--gold);border-radius:0 2px 2px 0}
+  .desk-drawer-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.18);flex-shrink:0;transition:background .15s}
+  .desk-drawer-item.active .desk-drawer-dot{background:var(--gold);box-shadow:0 0 6px rgba(255,214,10,.45)}
+  .desk-drawer-count{margin-left:auto;font-size:.7rem;color:rgba(255,255,255,.28);background:rgba(255,255,255,.06);padding:2px 7px;border-radius:100px;flex-shrink:0}
+  .desk-drawer-item.active .desk-drawer-count{color:rgba(255,214,10,.6)}
+  .desk-drawer-empty{font-size:.8rem;color:var(--text3);text-align:center;padding:1.2rem}
 .toolbar-group{display:flex;flex-wrap:wrap;gap:.38rem;align-items:center;width:100%}
 .toolbar-label{font-size:.65rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--text3);margin-right:.3rem}
 .cat-pill{display:inline-flex;align-items:center;gap:.3rem;padding:.42rem .82rem;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:var(--text2);font-size:.76rem;font-weight:600;white-space:nowrap;cursor:pointer;transition:.15s background,.15s color,.15s border-color}
@@ -521,14 +543,15 @@ if ('serviceWorker' in navigator) {
       <button class="desk-cat-btn" id="deskCatBtn" onclick="toggleDeskDrawer()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
         Cat&#xe9;gories&nbsp;<span class="desk-cat-active" id="deskCatActive">Tout</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        <svg class="desk-cat-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       <div class="desk-sort-group" id="deskSortGroup"></div>
     </div>
     <div class="desk-drawer-overlay" id="deskDrawerOverlay" onclick="closeDeskDrawer()"></div>
     <div class="desk-drawer" id="deskDrawer">
-      <div class="desk-drawer-header">
-        <span class="desk-drawer-title">Cat&#xe9;gories</span>
+      <div class="desk-drawer-search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="deskDrawerSearch" placeholder="Filtrer les cat&#xe9;gories&#x2026;" autocomplete="off">
       </div>
       <div class="desk-drawer-list" id="deskDrawerList"></div>
     </div>
@@ -722,6 +745,19 @@ function initPullToRefresh() {
 function setupMobileUI() {
   var on = isMobile();
   if (on) initPullToRefresh();
+  // Brancher la recherche du dropdown desktop
+  var dsi = document.getElementById('deskDrawerSearch');
+  if (dsi && !dsi._bound) {
+    dsi._bound = true;
+    dsi.addEventListener('input', function() { renderDeskDrawerList(this.value); });
+    dsi.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') { closeDeskDrawer(); return; }
+      if (e.key === 'Enter') {
+        var first = document.querySelector('#deskDrawerList .desk-drawer-item');
+        if (first) first.click();
+      }
+    });
+  }
   ['mobTopbar','mobCatbar','mobNav'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.style.display = on ? 'flex' : 'none';
@@ -1213,21 +1249,37 @@ function renderDeskCatBar() {
   renderDeskDrawerList();
 }
 
-function renderDeskDrawerList() {
+function renderDeskDrawerList(query) {
   var list = document.getElementById('deskDrawerList');
   if (!list) return;
-  var cats = [
-    {id:'__new__', label:'✦ Derniers ajouts', count: Math.min(allVideos.length, 20)},
-    {id:'Tout',    label:'Tout',                     count: allVideos.length}
+  query = (query === undefined ? (document.getElementById('deskDrawerSearch')||{}).value||'' : query).toLowerCase().trim();
+
+  var allCats = [
+    {id:'__new__', label:'✦ Derniers ajouts', count:Math.min(allVideos.length,20), special:true},
+    {id:'Tout',    label:'Tout',                   count:allVideos.length, special:true}
   ].concat([...new Set(allVideos.map(function(v){return v._cat;}))].sort()
-    .map(function(c){return {id:c, label:c, count:allVideos.filter(function(v){return v._cat===c;}).length};}));
-  list.innerHTML = cats.map(function(cat){
+    .map(function(c){return {id:c,label:c,count:allVideos.filter(function(v){return v._cat===c;}).length};}));
+
+  var filtered = query ? allCats.filter(function(c){return c.label.toLowerCase().includes(query);}) : allCats;
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="desk-drawer-empty">Aucune catégorie trouvée</div>';
+    return;
+  }
+
+  var html = '', prevSpecial = null;
+  filtered.forEach(function(cat, i) {
+    // Séparateur entre items spéciaux et normaux
+    if (prevSpecial === true && !cat.special && !query) html += '<div class="desk-drawer-sep"></div>';
+    prevSpecial = !!cat.special;
     var act = cat.id === activeCategory ? 'active' : '';
-    return '<div class="desk-drawer-item '+act+'" data-cat="'+escAttr(cat.id)+'" onclick="selectDeskCat(this.dataset.cat)">'
-      +'<span>'+escHtml(cat.label)+'</span>'
+    html += '<div class="desk-drawer-item '+act+'" data-cat="'+escAttr(cat.id)+'" onclick="selectDeskCat(this.dataset.cat)">'
+      +'<span class="desk-drawer-dot"></span>'
+      +'<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(cat.label)+'</span>'
       +'<span class="desk-drawer-count">'+cat.count+'</span>'
       +'</div>';
-  }).join('');
+  });
+  list.innerHTML = html;
 }
 
 function toggleDeskDrawer() {
@@ -1237,25 +1289,45 @@ function toggleDeskDrawer() {
 }
 
 function openDeskDrawer() {
-  renderDeskDrawerList();
-  var btn = document.getElementById('deskCatBtn');
+  var btn    = document.getElementById('deskCatBtn');
   var drawer = document.getElementById('deskDrawer');
-  if (btn && drawer) {
-    var rect = btn.getBoundingClientRect();
-    drawer.style.top  = (rect.bottom + 6) + 'px';
-    drawer.style.left = rect.left + 'px';
+  var overlay = document.getElementById('deskDrawerOverlay');
+  if (!btn || !drawer) return;
+
+  // Positionner exactement sous le bouton
+  var rect = btn.getBoundingClientRect();
+  drawer.style.top  = (rect.bottom + 5) + 'px';
+  drawer.style.left = rect.left + 'px';
+  // Vérifier débordement à droite
+  var dw = 300;
+  if (rect.left + dw > window.innerWidth - 12) {
+    drawer.style.left = Math.max(8, window.innerWidth - dw - 12) + 'px';
   }
+
+  // Rendre et ouvrir
+  renderDeskDrawerList('');
   drawer.classList.add('open');
-  document.getElementById('deskDrawerOverlay').classList.add('open');
-  setTimeout(function(){
-    var a = document.querySelector('#deskDrawerList .desk-drawer-item.active');
-    if (a) a.scrollIntoView({block:'center', behavior:'smooth'});
-  }, 300);
+  btn.classList.add('open');
+  if (overlay) overlay.classList.add('open');
+
+  // Focus sur la recherche
+  setTimeout(function() {
+    var inp = document.getElementById('deskDrawerSearch');
+    if (inp) inp.focus();
+    var actEl = document.querySelector('#deskDrawerList .desk-drawer-item.active');
+    if (actEl) actEl.scrollIntoView({block:'nearest'});
+  }, 60);
 }
 
 function closeDeskDrawer() {
-  document.getElementById('deskDrawer').classList.remove('open');
-  document.getElementById('deskDrawerOverlay').classList.remove('open');
+  var drawer  = document.getElementById('deskDrawer');
+  var overlay = document.getElementById('deskDrawerOverlay');
+  var btn     = document.getElementById('deskCatBtn');
+  var inp     = document.getElementById('deskDrawerSearch');
+  if (drawer)  drawer.classList.remove('open');
+  if (overlay) overlay.classList.remove('open');
+  if (btn)     btn.classList.remove('open');
+  if (inp)     inp.value = '';
 }
 
 function selectDeskCat(c) {
