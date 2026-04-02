@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604021412">
+<meta name="cache-version" content="202604021417">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -142,21 +142,21 @@ main{max-width:1560px;margin:0 auto;padding:1.2rem 1.2rem 5rem}
 /* ── TOOLBAR ── */
 .toolbar{display:none}
   /* ── Desktop category drawer ── */
-  .desk-cat-bar{display:flex;align-items:center;gap:.75rem;margin:0 0 1.1rem;flex-wrap:wrap}
+  .desk-cat-bar{display:flex;align-items:center;gap:.75rem;margin:0 0 1.1rem;flex-wrap:wrap;position:relative}
   .desk-cat-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1rem;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text);font-size:.82rem;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
   .desk-cat-btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18)}
   .desk-cat-btn .desk-cat-active{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gold)}
   .desk-cat-btn svg{flex-shrink:0;color:var(--text3)}
   .desk-sort-group{display:flex;gap:.35rem;margin-left:auto}
-  .desk-drawer-overlay{display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,8,.35)}
+  .desk-drawer-overlay{display:none;position:fixed;inset:0;z-index:150;background:transparent}
   .desk-drawer-overlay.open{display:block}
-  .desk-drawer{position:fixed;top:calc(var(--nav-h) + env(safe-area-inset-top));left:0;bottom:0;width:300px;z-index:151;background:rgba(4,12,28,.52);backdrop-filter:saturate(200%) blur(36px);-webkit-backdrop-filter:saturate(200%) blur(36px);border-right:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;transform:translateX(-100%);transition:transform .28s cubic-bezier(.32,.72,0,1)}
-  .desk-drawer.open{transform:translateX(0)}
-  .desk-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.25rem .75rem;border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0}
+  .desk-drawer{position:absolute;top:calc(100% + .5rem);left:0;width:280px;max-height:70vh;z-index:151;background:rgba(4,12,28,.52);backdrop-filter:saturate(200%) blur(36px);-webkit-backdrop-filter:saturate(200%) blur(36px);border:1px solid rgba(255,255,255,.12);border-radius:16px;display:flex;flex-direction:column;transform:translateY(-8px);opacity:0;pointer-events:none;transition:transform .22s var(--ease),opacity .22s var(--ease);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .desk-drawer.open{transform:translateY(0);opacity:1;pointer-events:auto}
+  .desk-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem .5rem;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
   .desk-drawer-title{font-size:1rem;font-weight:700;color:var(--gold)}
   .desk-drawer-close{background:none;border:none;color:var(--text3);font-size:1.4rem;cursor:pointer;line-height:1;padding:.2rem .4rem}
   .desk-drawer-close:hover{color:var(--text)}
-  .desk-drawer-list{overflow-y:auto;flex:1;padding:.4rem 0 1rem}
+  .desk-drawer-list{overflow-y:auto;flex:1;padding:.35rem 0 .6rem;-webkit-overflow-scrolling:touch}
   .desk-drawer-item{position:relative;display:flex;align-items:center;justify-content:space-between;padding:.78rem 1.25rem;font-size:.88rem;color:var(--text);cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05)}
   .desk-drawer-item:hover{background:rgba(255,255,255,.05)}
   .desk-drawer-item.active{color:var(--gold);background:rgba(255,214,10,.08)}
@@ -527,7 +527,6 @@ if ('serviceWorker' in navigator) {
     <div class="desk-drawer" id="deskDrawer">
       <div class="desk-drawer-header">
         <span class="desk-drawer-title">Cat&#xe9;gories</span>
-        <button class="desk-drawer-close" onclick="closeDeskDrawer()">&#x2715;</button>
       </div>
       <div class="desk-drawer-list" id="deskDrawerList"></div>
     </div>
