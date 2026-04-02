@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604021508">
+<meta name="cache-version" content="202604021512">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -646,7 +646,7 @@ if ('serviceWorker' in navigator) {
           <svg width="13" height="13" viewBox="0 0 87.3 78" fill="currentColor" aria-hidden="true"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="M43.65 25 29.9 1.2C28.55 2 27.4 3.1 26.6 4.5L1.2 48.75C.4 50.15 0 51.7 0 53.25h27.5z" fill="#00ac47"/><path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.8l5.85 11.5z" fill="#ea4335"/><path d="M43.65 25 57.4 1.2C56.05.4 54.5 0 52.95 0H34.35c-1.55 0-3.1.45-4.45 1.2z" fill="#00832d"/><path d="M59.8 53.25H27.5L13.75 77.05c1.35.8 2.9 1.2 4.45 1.2h50.9c1.55 0 3.1-.4 4.45-1.2z" fill="#2684fc"/><path d="M73.4 26.5l-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3L43.65 25 59.8 53.25h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
           Ouvrir dans Drive
         </a>
-        <a class="modal-drive-btn" id="modalDriveLinkMob" target="_blank" rel="noopener noreferrer">
+        <a class="modal-drive-btn mob-only-flex" id="modalDriveLinkMob" target="_blank" rel="noopener noreferrer">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
           Plein &#xe9;cran
         </a>
@@ -1583,19 +1583,32 @@ function openVideo(id) {
   var _mp = document.getElementById('modalPlayer');
   _mp.style.position = 'relative';
   _mp.innerHTML = '';
-  var _sp = document.createElement('div');
-  _sp.id = 'playerSpinner';
-  _sp.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;gap:.75rem;z-index:2;';
-  _sp.innerHTML = '<div style="width:36px;height:36px;border:3px solid rgba(196,155,100,.2);border-top-color:#c49b64;border-radius:50%;animation:spin .7s linear infinite;"></div><p style="color:#8a7060;font-size:.78rem;">Chargement…</p>';
-  var _if = document.createElement('iframe');
-  _if.id = 'videoIframe';
-  _if.src = 'https://drive.google.com/file/d/' + id + '/preview';
-  _if.setAttribute('allow','autoplay; encrypted-media');
-  _if.allowFullscreen = true;
-  _if.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;opacity:0;transition:opacity .3s;';
-  _if.addEventListener('load', function(){ var s=document.getElementById('playerSpinner');if(s)s.style.display='none';_if.style.opacity='1'; });
-  _mp.appendChild(_sp);
-  _mp.appendChild(_if);
+
+  if (!isMobile() && v.type !== 'pdf') {
+    // ── Desktop : lecteur HTML5 natif ──────────────────────────
+    var streamUrl = 'https://drive.google.com/uc?export=download&id=' + id;
+    var _vid = document.createElement('video');
+    _vid.id = 'desktopPlayer';
+    _vid.controls = true;
+    _vid.autoplay = true;
+    _vid.preload = 'auto';
+    _vid.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;background:#000;';
+    var _src = document.createElement('source');
+    _src.src = streamUrl;
+    _src.type = v.mimeType || 'video/mp4';
+    _vid.appendChild(_src);
+    // Fallback : si le lecteur HTML5 ne peut pas streamer Drive directement,
+    // basculer sur l'iframe
+    _vid.addEventListener('error', function() {
+      _mp.innerHTML = '';
+      _mp.style.position = 'relative';
+      buildIframePlayer(_mp, id);
+    });
+    _mp.appendChild(_vid);
+  } else {
+    // ── Mobile ou PDF : iframe Google Drive ───────────────────
+    buildIframePlayer(_mp, id);
+  }
 
   var _m=document.getElementById('modal');
   _m._currentVideoId=id;
@@ -1610,6 +1623,22 @@ function openVideo(id) {
   } catch(e) {}
   // Rafraîchir le bouton hero (si on revenait sans avoir fermé proprement)
   setTimeout(function(){ updateHeroWidgets(); }, 100);
+}
+
+function buildIframePlayer(container, id) {
+  var _sp = document.createElement('div');
+  _sp.id = 'playerSpinner';
+  _sp.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;gap:.75rem;z-index:2;';
+  _sp.innerHTML = '<div style="width:36px;height:36px;border:3px solid rgba(196,155,100,.2);border-top-color:#c49b64;border-radius:50%;animation:spin .7s linear infinite;"></div><p style="color:#8a7060;font-size:.78rem;">Chargement…</p>';
+  var _if = document.createElement('iframe');
+  _if.id = 'videoIframe';
+  _if.src = 'https://drive.google.com/file/d/' + id + '/preview';
+  _if.setAttribute('allow','autoplay; encrypted-media');
+  _if.allowFullscreen = true;
+  _if.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;opacity:0;transition:opacity .3s;';
+  _if.addEventListener('load', function(){ var s=document.getElementById('playerSpinner');if(s)s.style.display='none';_if.style.opacity='1'; });
+  container.appendChild(_sp);
+  container.appendChild(_if);
 }
 
 function iframeLoaded() {
@@ -1705,19 +1734,32 @@ function openVideo(id) {
   var _mp = document.getElementById('modalPlayer');
   _mp.style.position = 'relative';
   _mp.innerHTML = '';
-  var _sp = document.createElement('div');
-  _sp.id = 'playerSpinner';
-  _sp.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;gap:.75rem;z-index:2;';
-  _sp.innerHTML = '<div style="width:36px;height:36px;border:3px solid rgba(196,155,100,.2);border-top-color:#c49b64;border-radius:50%;animation:spin .7s linear infinite;"></div><p style="color:#8a7060;font-size:.78rem;">Chargement…</p>';
-  var _if = document.createElement('iframe');
-  _if.id = 'videoIframe';
-  _if.src = 'https://drive.google.com/file/d/' + id + '/preview';
-  _if.setAttribute('allow','autoplay; encrypted-media');
-  _if.allowFullscreen = true;
-  _if.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;opacity:0;transition:opacity .3s;';
-  _if.addEventListener('load', function(){ var s=document.getElementById('playerSpinner');if(s)s.style.display='none';_if.style.opacity='1'; });
-  _mp.appendChild(_sp);
-  _mp.appendChild(_if);
+
+  if (!isMobile() && v.type !== 'pdf') {
+    // ── Desktop : lecteur HTML5 natif ──────────────────────────
+    var streamUrl = 'https://drive.google.com/uc?export=download&id=' + id;
+    var _vid = document.createElement('video');
+    _vid.id = 'desktopPlayer';
+    _vid.controls = true;
+    _vid.autoplay = true;
+    _vid.preload = 'auto';
+    _vid.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;background:#000;';
+    var _src = document.createElement('source');
+    _src.src = streamUrl;
+    _src.type = v.mimeType || 'video/mp4';
+    _vid.appendChild(_src);
+    // Fallback : si le lecteur HTML5 ne peut pas streamer Drive directement,
+    // basculer sur l'iframe
+    _vid.addEventListener('error', function() {
+      _mp.innerHTML = '';
+      _mp.style.position = 'relative';
+      buildIframePlayer(_mp, id);
+    });
+    _mp.appendChild(_vid);
+  } else {
+    // ── Mobile ou PDF : iframe Google Drive ───────────────────
+    buildIframePlayer(_mp, id);
+  }
 
   var _m=document.getElementById('modal');
   _m._currentVideoId=id;
