@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604021517">
+<meta name="cache-version" content="202604021521">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1239,10 +1239,10 @@ function updateAluneSection() {
 }
 
 function setAluneCategory(cat) {
-  activeCategory = cat;
-  if (isMobile()) { renderMobCatbar(); } else { renderDeskCatBar(); }
-  renderVideos();
-  // Scroller jusqu'aux vidéos (sous le hero + la section À la une)
+  // Afficher les vidéos du dossier SANS modifier la catégorie active
+  // On filtre temporairement via une variable dédiée
+  window._aluneFilter = cat;
+  renderVideosAlune(cat);
   setTimeout(function() {
     var target = document.getElementById('aluneSection');
     if (target) {
@@ -1251,6 +1251,24 @@ function setAluneCategory(cat) {
       window.scrollTo({ top: bottom + 16, behavior: 'smooth' });
     }
   }, 60);
+}
+
+function renderVideosAlune(cat) {
+  var el = document.getElementById('content');
+  var filtered = allVideos.filter(function(v) { return v._cat === cat; });
+  var sorted = applySortToVideos(filtered);
+  var catName = cat === 'L EFFET LARA - 2026' ? "L'Effet Lara" : cat;
+  if (!sorted.length) {
+    el.innerHTML = '<div class="empty-state"><h3>Aucune vidéo trouvée</h3></div>';
+    return;
+  }
+  el.innerHTML =
+    '<div class="section-header">'
+    + '<span class="section-title">' + escHtml(catName) + '</span>'
+    + '<span class="section-count">' + sorted.length + ' vidéo' + (sorted.length > 1 ? 's' : '') + '</span>'
+    + '<div class="section-divider"></div>'
+    + '</div>'
+    + '<div class="video-grid">' + sorted.map(function(v){ return videoCard(v); }).join('') + '</div>';
 }
 
 function updateHeroWidgets() {
