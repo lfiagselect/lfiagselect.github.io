@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604021447">
+<meta name="cache-version" content="202604021451">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1288,27 +1288,40 @@ function toggleDeskDrawer() {
   else openDeskDrawer();
 }
 
-function openDeskDrawer() {
+function _positionDeskDrawer() {
   var btn    = document.getElementById('deskCatBtn');
   var drawer = document.getElementById('deskDrawer');
+  if (!btn || !drawer) return;
+  var rect = btn.getBoundingClientRect();
+  var dw   = 300;
+  var top  = rect.bottom + 5;
+  var left = rect.left;
+  if (left + dw > window.innerWidth - 12) left = Math.max(8, window.innerWidth - dw - 12);
+  drawer.style.top  = top  + 'px';
+  drawer.style.left = left + 'px';
+}
+
+function openDeskDrawer() {
+  var btn     = document.getElementById('deskCatBtn');
+  var drawer  = document.getElementById('deskDrawer');
   var overlay = document.getElementById('deskDrawerOverlay');
   if (!btn || !drawer) return;
 
-  // Positionner exactement sous le bouton
-  var rect = btn.getBoundingClientRect();
-  drawer.style.top  = (rect.bottom + 5) + 'px';
-  drawer.style.left = rect.left + 'px';
-  // Vérifier débordement à droite
-  var dw = 300;
-  if (rect.left + dw > window.innerWidth - 12) {
-    drawer.style.left = Math.max(8, window.innerWidth - dw - 12) + 'px';
-  }
-
-  // Rendre et ouvrir
   renderDeskDrawerList('');
+  _positionDeskDrawer();
   drawer.classList.add('open');
   btn.classList.add('open');
   if (overlay) overlay.classList.add('open');
+
+  // Suivi au scroll — repositionner en temps réel
+  if (!window._deskScrollHandler) {
+    window._deskScrollHandler = function() {
+      if (document.getElementById('deskDrawer').classList.contains('open')) {
+        _positionDeskDrawer();
+      }
+    };
+    window.addEventListener('scroll', window._deskScrollHandler, { passive: true });
+  }
 
   // Focus sur la recherche
   setTimeout(function() {
