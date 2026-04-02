@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604020531">
+<meta name="cache-version" content="202604020945">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -215,6 +215,10 @@ main{max-width:1560px;margin:0 auto;padding:1.2rem 1.2rem 5rem}
 
 /* ── MOBILE ── */
 .mob-topbar,.mob-catbar,.mob-nav,.mob-sheet,.mob-sheet-overlay{display:none}
+  .ptr-indicator{position:fixed;top:calc(var(--nav-h) + env(safe-area-inset-top));left:50%;transform:translateX(-50%) translateY(-60px);z-index:97;display:flex;align-items:center;gap:.5rem;padding:.45rem .9rem;background:rgba(10,20,50,.75);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);border-radius:999px;font-size:.75rem;color:rgba(255,255,255,.7);transition:transform .25s var(--ease),opacity .25s;opacity:0;pointer-events:none}
+  .ptr-indicator.visible{opacity:1}
+  .ptr-indicator.releasing{color:var(--gold)}
+  .ptr-spinner{width:14px;height:14px;border:1.5px solid rgba(255,255,255,.2);border-top-color:currentColor;border-radius:50%;animation:spin .7s linear infinite}
 @media(max-width:900px){.video-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}}
 @media(max-width:640px){
   header{padding:0 .75rem}
@@ -340,6 +344,10 @@ if ('serviceWorker' in navigator) {
 </header>
 
 <!-- MOBILE TOPBAR -->
+<div class="ptr-indicator" id="ptrIndicator">
+  <div class="ptr-spinner" id="ptrSpinner"></div>
+  <span id="ptrLabel">Tirer pour actualiser</span>
+</div>
 <div class="mob-topbar" id="mobTopbar">
   <div class="mob-search-wrap">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -611,8 +619,68 @@ function signOut() {
 // ============================================
 function isMobile() { return window.innerWidth <= 640; }
 
+function initPullToRefresh() {
+  var startY = 0, currentY = 0, pulling = false, refreshing = false;
+  var THRESHOLD = 72; // px pour déclencher
+  var indicator  = document.getElementById('ptrIndicator');
+  var label      = document.getElementById('ptrLabel');
+  var spinner    = document.getElementById('ptrSpinner');
+
+  document.addEventListener('touchstart', function(e) {
+    if (window.scrollY > 0) return; // seulement si on est en haut
+    if (document.getElementById('modal').classList.contains('open')) return;
+    startY = e.touches[0].clientY;
+    pulling = true;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!pulling || refreshing) return;
+    currentY = e.touches[0].clientY;
+    var dy = currentY - startY;
+    if (dy <= 0) { indicator.style.transform = ''; indicator.classList.remove('visible','releasing'); return; }
+    // Résistance progressive
+    var pull = Math.min(dy * 0.45, 80);
+    indicator.style.transform = 'translateX(-50%) translateY(' + (pull - 60) + 'px)';
+    indicator.classList.toggle('visible', pull > 12);
+    indicator.classList.toggle('releasing', pull >= THRESHOLD * 0.45);
+    label.textContent = pull >= THRESHOLD * 0.45 ? 'Relâcher pour actualiser' : 'Tirer pour actualiser';
+  }, { passive: true });
+
+  document.addEventListener('touchend', function() {
+    if (!pulling) return;
+    pulling = false;
+    var dy = currentY - startY;
+    var pull = dy * 0.45;
+
+    if (pull >= THRESHOLD * 0.45 && !refreshing) {
+      // Déclencher l'actualisation
+      refreshing = true;
+      indicator.style.transform = 'translateX(-50%) translateY(8px)';
+      indicator.classList.add('visible', 'releasing');
+      label.textContent = 'Actualisation…';
+      spinner.style.animation = 'spin .5s linear infinite';
+      if (navigator.vibrate) navigator.vibrate(10);
+
+      setTimeout(function() {
+        try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
+        fetchAndCacheVideos(true, true).finally(function() {
+          refreshing = false;
+          indicator.classList.remove('visible', 'releasing');
+          indicator.style.transform = '';
+        });
+      }, 300);
+    } else {
+      // Annuler
+      indicator.classList.remove('visible', 'releasing');
+      indicator.style.transform = '';
+    }
+    currentY = 0;
+  }, { passive: true });
+}
+
 function setupMobileUI() {
   var on = isMobile();
+  if (on) initPullToRefresh();
   ['mobTopbar','mobCatbar','mobNav'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.style.display = on ? 'flex' : 'none';
