@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604021417">
+<meta name="cache-version" content="202604021419">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -140,9 +140,9 @@ main{max-width:1560px;margin:0 auto;padding:1.2rem 1.2rem 5rem}
 .settings-actions{display:flex;gap:.5rem;margin-top:.9rem}
 
 /* ── TOOLBAR ── */
-.toolbar{display:none}
+.toolbar{display:flex;flex-wrap:wrap;gap:.6rem;margin:0 0 1.2rem}
   /* ── Desktop category drawer ── */
-  .desk-cat-bar{display:flex;align-items:center;gap:.75rem;margin:0 0 1.1rem;flex-wrap:wrap;position:relative}
+  .desk-cat-bar{display:none}
   .desk-cat-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1rem;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text);font-size:.82rem;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
   .desk-cat-btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18)}
   .desk-cat-btn .desk-cat-active{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gold)}
@@ -530,7 +530,7 @@ if ('serviceWorker' in navigator) {
       </div>
       <div class="desk-drawer-list" id="deskDrawerList"></div>
     </div>
-    <div class="toolbar" id="toolbar" style="display:none"></div>
+    <div class="toolbar" id="toolbar" role="navigation" aria-label="Filtres"></div>
     <div id="content" role="region" aria-live="polite" aria-label="Biblioth&#xe8;que vid&#xe9;o"></div>
   </main>
 </div>
@@ -1168,27 +1168,27 @@ function getFiltered() {
 }
 
 function renderToolbar() {
-  if (isMobile()) return; // mobile géré par renderMobCatbar
-  renderDeskCatBar();
-}
-
-function renderDeskCatBar() {
-  // Bouton catégorie actif
-  var activeLabel = activeCategory === '__new__' ? 'Derniers ajouts'
-    : activeCategory === 'Tout' ? 'Tout' : activeCategory;
-  var el = document.getElementById('deskCatActive');
-  if (el) el.textContent = activeLabel;
-
-  // Pills de tri
-  var sortLabels = {date_desc:'&#8595; R&#xe9;cent', date_asc:'&#8593; Ancien', name_asc:'A&#8211;Z'};
-  var sg = document.getElementById('deskSortGroup');
-  if (sg) sg.innerHTML = ['date_desc','date_asc','name_asc'].map(function(s){
-    return '<div class="cat-pill sort-pill'+(sortOrder===s?' active':'')+'" data-sort="'+s+'" onclick="setSort(this.dataset.sort)">'+sortLabels[s]+'</div>';
+  if (isMobile()) return;
+  var tb = document.getElementById('toolbar');
+  if (!tb) return;
+  var activeLabel = activeCategory==='__new__'?'Derniers ajouts':activeCategory==='Tout'?'Tout':activeCategory;
+  var sortLabels = {date_desc:'&#8595;&nbsp;R&#xe9;cent',date_asc:'&#8593;&nbsp;Ancien',name_asc:'A&#8211;Z'};
+  var sortPills = ['date_desc','date_asc','name_asc'].map(function(s){
+    return '<div class="cat-pill sort-pill'+(sortOrder===s?' active':'')+'" data-sort="'+escAttr(s)+'" onclick="setSort(this.dataset.sort)">'+sortLabels[s]+'</div>';
   }).join('');
-
-  // Contenu du drawer
+  tb.innerHTML =
+    '<div style="width:100%;display:flex;align-items:center;gap:.5rem;">'
+    +'<button class="desk-cat-btn" onclick="toggleDeskDrawer()">'
+    +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>'
+    +'Cat&#xe9;gories&ensp;<span style="color:var(--gold);font-weight:700;">'+escHtml(activeLabel)+'</span>'
+    +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:.5"><polyline points="6 9 12 15 18 9"/></svg>'
+    +'</button>'
+    +'<div style="margin-left:auto;display:flex;gap:.35rem;">'+sortPills+'</div>'
+    +'</div>';
   renderDeskDrawerList();
 }
+
+function renderDeskCatBar() { renderToolbar(); }
 
 function renderDeskDrawerList() {
   var list = document.getElementById('deskDrawerList');
