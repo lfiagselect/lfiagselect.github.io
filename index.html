@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604020523">
+<meta name="cache-version" content="202604020526">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -276,9 +276,34 @@ main{max-width:1560px;margin:0 auto;padding:1.2rem 1.2rem 5rem}
 }
 </style>
 <script>
-if('serviceWorker' in navigator){
-  window.addEventListener('load',function(){
-    navigator.serviceWorker.register('sw.js').catch(function(){});
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').then(function(reg) {
+
+      // Vérifier immédiatement s'il y a une mise à jour
+      reg.update();
+
+      // Quand un nouveau SW est installé et en attente
+      reg.addEventListener('updatefound', function() {
+        var newWorker = reg.installing;
+        newWorker.addEventListener('statechange', function() {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // Nouvelle version disponible — activer immédiatement
+            newWorker.postMessage('SKIP_WAITING');
+          }
+        });
+      });
+
+    }).catch(function() {});
+
+    // Quand le SW prend le contrôle (après activation) → recharger
+    var refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
+    });
   });
 }
 </script>
