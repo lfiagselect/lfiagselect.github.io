@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604020517">
+<meta name="cache-version" content="202604020523">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -99,7 +99,12 @@ main{max-width:1560px;margin:0 auto;padding:1.2rem 1.2rem 5rem}
 .hero-copy{max-width:58ch}
 .hero-copy p{font-size:1rem;line-height:1.75;color:rgba(255,255,255,.7);max-width:52ch;margin:0}
 .hero-signoff{display:block;margin-top:.55rem;color:rgba(255,255,255,.9);font-weight:600;letter-spacing:-.01em}
-.hero-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.35rem}
+.hero-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.35rem;align-items:center}
+  .hero-counter{display:inline-flex;align-items:baseline;gap:.3rem;font-size:.82rem;color:rgba(255,255,255,.55)}
+  .hero-counter-num{font-size:1.55rem;font-weight:800;letter-spacing:-.04em;color:#fff;font-variant-numeric:tabular-nums}
+  .hero-counter-label{font-size:.75rem;color:rgba(255,255,255,.45);letter-spacing:.04em}
+  @keyframes countUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .hero-counter-num{animation:countUp .5s var(--ease) both}
 
 /* ── BANNERS ── */
 .admin-banner{display:none;align-items:center;gap:.5rem;padding:.7rem 1rem;background:rgba(255,214,10,.07);border:1px solid rgba(255,214,10,.15);border-radius:12px;color:var(--gold);font-size:.79rem;margin-bottom:1rem;flex-wrap:wrap}
@@ -398,7 +403,16 @@ if('serviceWorker' in navigator){
           <p>Navigation immersive, lecture instantan&#xe9;e, cat&#xe9;gories intelligentes.<span class="hero-signoff">Le meilleur reste &#xe0; venir &#x1F90D;</span></p>
         </div>
         <div class="hero-actions">
-          <button class="btn btn-primary" onclick="window.scrollTo({top:420,behavior:'smooth'})">Explorer la biblioth&#xe8;que</button>
+          <div class="hero-counter" id="heroCounter" style="display:none">
+            <span class="hero-counter-num" id="heroCounterNum">0</span>
+            <div>
+              <div class="hero-counter-label">vid&#xe9;os</div>
+              <div class="hero-counter-label">disponibles</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="heroContinueBtn" style="display:none" onclick="heroContinueWatching()">
+            &#x25B6;&#xFE0F; Continuer &#xe0; regarder
+          </button>
           <button class="btn" onclick="fetchAndCacheVideos(true,true)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0 0 20.49 15"/></svg>
             Actualiser
@@ -963,7 +977,52 @@ function categorize(video) {
   return 'Divers';
 }
 
-function renderAll() { showScreen('app'); renderToolbar(); renderMobCatbar(); renderVideos(); }
+function renderAll() { showScreen('app'); renderToolbar(); renderMobCatbar(); renderVideos(); updateHeroWidgets(); }
+
+function updateHeroWidgets() {
+  // Compteur animé
+  var counter = document.getElementById('heroCounter');
+  var numEl   = document.getElementById('heroCounterNum');
+  if (counter && numEl && allVideos.length > 0) {
+    counter.style.display = 'inline-flex';
+    animateCounter(numEl, 0, allVideos.length, 800);
+  }
+  // Bouton Continuer à regarder
+  var btn = document.getElementById('heroContinueBtn');
+  if (btn) {
+    var lastId = getLastWatchedId();
+    btn.style.display = lastId ? 'inline-flex' : 'none';
+  }
+}
+
+function animateCounter(el, from, to, duration) {
+  var start = null;
+  function step(ts) {
+    if (!start) start = ts;
+    var progress = Math.min((ts - start) / duration, 1);
+    var ease = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    el.textContent = Math.floor(from + (to - from) * ease);
+    if (progress < 1) requestAnimationFrame(step);
+    else el.textContent = to;
+  }
+  requestAnimationFrame(step);
+}
+
+function getLastWatchedId() {
+  try {
+    var h = JSON.parse(localStorage.getItem('lfiag_history') || '{}');
+    var entries = Object.entries(h);
+    if (!entries.length) return null;
+    entries.sort(function(a, b) { return (b[1].ts||0) - (a[1].ts||0); });
+    var id = entries[0][0];
+    return allVideos.find(function(v){ return v.id === id; }) ? id : null;
+  } catch(e) { return null; }
+}
+
+function heroContinueWatching() {
+  var id = getLastWatchedId();
+  if (id) openVideo(id);
+}
 
 function getFiltered() {
   let v = allVideos;
