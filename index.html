@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604021434">
+<meta name="cache-version" content="202604021438">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -178,7 +178,7 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
 .section-count{font-size:.75rem;color:var(--text3)}
 .section-divider{height:1px;flex:1;min-width:48px;background:linear-gradient(90deg,rgba(255,255,255,.1),transparent)}
 .cat-section{margin-bottom:2rem}
-.video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.85rem}
+.video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.85rem}
 
 /* ── VIDEO CARD ── */
 .video-card{background:rgba(20,20,22,.8);border:1px solid rgba(255,255,255,.07);border-radius:18px;overflow:hidden;cursor:pointer;transition:.25s transform var(--ease),.25s box-shadow var(--ease),.2s border-color;content-visibility:auto}
@@ -241,8 +241,9 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
   .ptr-indicator.visible{opacity:1}
   .ptr-indicator.releasing{color:var(--gold)}
   .ptr-spinner{width:14px;height:14px;border:1.5px solid rgba(255,255,255,.2);border-top-color:currentColor;border-radius:50%;animation:spin .7s linear infinite}
-@media(max-width:900px){.video-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}}
-@media(min-width:1400px){.video-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem}}
+@media(min-width:900px){.video-grid{grid-template-columns:repeat(5,1fr);gap:.85rem}}
+  @media(max-width:900px){.video-grid{grid-template-columns:repeat(2,1fr);gap:.6rem}}
+
 @media(max-width:640px){
   header{padding:0 .75rem}
   .desk-cat-bar,.desk-drawer,.desk-drawer-overlay{display:none!important}
@@ -1216,7 +1217,7 @@ function renderDeskDrawerList() {
   var list = document.getElementById('deskDrawerList');
   if (!list) return;
   var cats = [
-    {id:'__new__', label:'&#x2726; Derniers ajouts', count: Math.min(allVideos.length, 20)},
+    {id:'__new__', label:'✦ Derniers ajouts', count: Math.min(allVideos.length, 20)},
     {id:'Tout',    label:'Tout',                     count: allVideos.length}
   ].concat([...new Set(allVideos.map(function(v){return v._cat;}))].sort()
     .map(function(c){return {id:c, label:c, count:allVideos.filter(function(v){return v._cat===c;}).length};}));
