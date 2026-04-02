@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604021407">
+<meta name="cache-version" content="202604021412">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -140,7 +140,29 @@ main{max-width:1560px;margin:0 auto;padding:1.2rem 1.2rem 5rem}
 .settings-actions{display:flex;gap:.5rem;margin-top:.9rem}
 
 /* ── TOOLBAR ── */
-.toolbar{display:flex;flex-wrap:wrap;gap:.6rem;margin:0 0 1.2rem}
+.toolbar{display:none}
+  /* ── Desktop category drawer ── */
+  .desk-cat-bar{display:flex;align-items:center;gap:.75rem;margin:0 0 1.1rem;flex-wrap:wrap}
+  .desk-cat-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1rem;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text);font-size:.82rem;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
+  .desk-cat-btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18)}
+  .desk-cat-btn .desk-cat-active{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gold)}
+  .desk-cat-btn svg{flex-shrink:0;color:var(--text3)}
+  .desk-sort-group{display:flex;gap:.35rem;margin-left:auto}
+  .desk-drawer-overlay{display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,8,.35)}
+  .desk-drawer-overlay.open{display:block}
+  .desk-drawer{position:fixed;top:calc(var(--nav-h) + env(safe-area-inset-top));left:0;bottom:0;width:300px;z-index:151;background:rgba(4,12,28,.52);backdrop-filter:saturate(200%) blur(36px);-webkit-backdrop-filter:saturate(200%) blur(36px);border-right:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;transform:translateX(-100%);transition:transform .28s cubic-bezier(.32,.72,0,1)}
+  .desk-drawer.open{transform:translateX(0)}
+  .desk-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.25rem .75rem;border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0}
+  .desk-drawer-title{font-size:1rem;font-weight:700;color:var(--gold)}
+  .desk-drawer-close{background:none;border:none;color:var(--text3);font-size:1.4rem;cursor:pointer;line-height:1;padding:.2rem .4rem}
+  .desk-drawer-close:hover{color:var(--text)}
+  .desk-drawer-list{overflow-y:auto;flex:1;padding:.4rem 0 1rem}
+  .desk-drawer-item{position:relative;display:flex;align-items:center;justify-content:space-between;padding:.78rem 1.25rem;font-size:.88rem;color:var(--text);cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05)}
+  .desk-drawer-item:hover{background:rgba(255,255,255,.05)}
+  .desk-drawer-item.active{color:var(--gold);background:rgba(255,214,10,.08)}
+  .desk-drawer-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold);border-radius:0 2px 2px 0}
+  .desk-drawer-count{font-size:.7rem;color:var(--text3);background:rgba(255,255,255,.07);padding:2px 7px;border-radius:100px;flex-shrink:0}
+  .desk-drawer-item.active .desk-drawer-count{color:var(--gold)}
 .toolbar-group{display:flex;flex-wrap:wrap;gap:.38rem;align-items:center;width:100%}
 .toolbar-label{font-size:.65rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--text3);margin-right:.3rem}
 .cat-pill{display:inline-flex;align-items:center;gap:.3rem;padding:.42rem .82rem;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:var(--text2);font-size:.76rem;font-weight:600;white-space:nowrap;cursor:pointer;transition:.15s background,.15s color,.15s border-color}
@@ -222,6 +244,7 @@ main{max-width:1560px;margin:0 auto;padding:1.2rem 1.2rem 5rem}
 @media(max-width:900px){.video-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}}
 @media(max-width:640px){
   header{padding:0 .75rem}
+  .desk-cat-bar,.desk-drawer,.desk-drawer-overlay{display:none!important}
   .search-bar,#searchWrap,#refreshBtn,#settingsBtn,#signOutBtn,.user-chip,.mob-nav{display:none!important}
   main{padding:.75rem .72rem 1.25rem}
   .hero{min-height:250px;padding:1rem .92rem 1.05rem;border-radius:18px;margin-bottom:.85rem;align-items:flex-end}
@@ -491,7 +514,24 @@ if ('serviceWorker' in navigator) {
       </div>
     </div>
 
-    <div class="toolbar" id="toolbar" role="navigation" aria-label="Filtres"></div>
+    <!-- Desktop cat bar + drawer -->
+    <div class="desk-cat-bar" id="deskCatBar">
+      <button class="desk-cat-btn" id="deskCatBtn" onclick="toggleDeskDrawer()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Cat&#xe9;gories&nbsp;<span class="desk-cat-active" id="deskCatActive">Tout</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="desk-sort-group" id="deskSortGroup"></div>
+    </div>
+    <div class="desk-drawer-overlay" id="deskDrawerOverlay" onclick="closeDeskDrawer()"></div>
+    <div class="desk-drawer" id="deskDrawer">
+      <div class="desk-drawer-header">
+        <span class="desk-drawer-title">Cat&#xe9;gories</span>
+        <button class="desk-drawer-close" onclick="closeDeskDrawer()">&#x2715;</button>
+      </div>
+      <div class="desk-drawer-list" id="deskDrawerList"></div>
+    </div>
+    <div class="toolbar" id="toolbar" style="display:none"></div>
     <div id="content" role="region" aria-live="polite" aria-label="Biblioth&#xe8;que vid&#xe9;o"></div>
   </main>
 </div>
@@ -1129,23 +1169,73 @@ function getFiltered() {
 }
 
 function renderToolbar() {
-  var cats = ['Tout', ...new Set(allVideos.map(function(v){return v._cat;}))].sort(function(a,b){return a==='Tout'?-1:b==='Tout'?1:a.localeCompare(b,'fr');});
-  var newActive = activeCategory === '__new__' ? 'active' : '';
+  if (isMobile()) return; // mobile géré par renderMobCatbar
+  renderDeskCatBar();
+}
+
+function renderDeskCatBar() {
+  // Bouton catégorie actif
+  var activeLabel = activeCategory === '__new__' ? 'Derniers ajouts'
+    : activeCategory === 'Tout' ? 'Tout' : activeCategory;
+  var el = document.getElementById('deskCatActive');
+  if (el) el.textContent = activeLabel;
+
+  // Pills de tri
   var sortLabels = {date_desc:'&#8595; R&#xe9;cent', date_asc:'&#8593; Ancien', name_asc:'A&#8211;Z'};
-  var sortPills = ['date_desc','date_asc','name_asc'].map(function(s){
+  var sg = document.getElementById('deskSortGroup');
+  if (sg) sg.innerHTML = ['date_desc','date_asc','name_asc'].map(function(s){
     return '<div class="cat-pill sort-pill'+(sortOrder===s?' active':'')+'" data-sort="'+s+'" onclick="setSort(this.dataset.sort)">'+sortLabels[s]+'</div>';
   }).join('');
-  var h = '<div style="width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem;">'
-    +'<span class="toolbar-label" style="margin:0;">Cat&#xe9;gories</span>'
-    +'<div style="display:flex;gap:.35rem;align-items:center;"><span style="font-size:.65rem;color:var(--text3);">Trier&nbsp;:</span>'+sortPills+'</div>'
-    +'</div>';
-  h += '<div class="cat-pill new-pill '+newActive+'" data-cat="__new__" onclick="setCategory(this.dataset.cat)">&#x2736; Derniers ajouts</div>';
-  h += cats.map(function(c) {
-    var count = c==='Tout' ? allVideos.length : allVideos.filter(function(v){return v._cat===c;}).length;
-    var cls = c===activeCategory ? 'active' : '';
-    return '<div class="cat-pill '+cls+'" data-cat="'+escAttr(c)+'" onclick="setCategory(this.dataset.cat)">'+escHtml(c)+' <span style="opacity:.5;font-size:.72em;">'+count+'</span></div>';
+
+  // Contenu du drawer
+  renderDeskDrawerList();
+}
+
+function renderDeskDrawerList() {
+  var list = document.getElementById('deskDrawerList');
+  if (!list) return;
+  var cats = [
+    {id:'__new__', label:'&#x2736; Derniers ajouts', count: Math.min(allVideos.length, 20)},
+    {id:'Tout',    label:'Tout',                     count: allVideos.length}
+  ].concat([...new Set(allVideos.map(function(v){return v._cat;}))].sort()
+    .map(function(c){return {id:c, label:c, count:allVideos.filter(function(v){return v._cat===c;}).length};}));
+  list.innerHTML = cats.map(function(cat){
+    var act = cat.id === activeCategory ? 'active' : '';
+    return '<div class="desk-drawer-item '+act+'" data-cat="'+escAttr(cat.id)+'" onclick="selectDeskCat(this.dataset.cat)">'
+      +'<span>'+escHtml(cat.label)+'</span>'
+      +'<span class="desk-drawer-count">'+cat.count+'</span>'
+      +'</div>';
   }).join('');
-  document.getElementById('toolbar').innerHTML = h;
+}
+
+function toggleDeskDrawer() {
+  var drawer = document.getElementById('deskDrawer');
+  if (drawer.classList.contains('open')) closeDeskDrawer();
+  else openDeskDrawer();
+}
+
+function openDeskDrawer() {
+  renderDeskDrawerList();
+  document.getElementById('deskDrawer').classList.add('open');
+  document.getElementById('deskDrawerOverlay').classList.add('open');
+  // Scroller sur l'item actif
+  setTimeout(function(){
+    var a = document.querySelector('#deskDrawerList .desk-drawer-item.active');
+    if (a) a.scrollIntoView({block:'center', behavior:'smooth'});
+  }, 300);
+}
+
+function closeDeskDrawer() {
+  document.getElementById('deskDrawer').classList.remove('open');
+  document.getElementById('deskDrawerOverlay').classList.remove('open');
+}
+
+function selectDeskCat(c) {
+  activeCategory = c;
+  closeDeskDrawer();
+  renderDeskCatBar();
+  renderVideos();
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
 function setCategory(c) { activeCategory = c; renderToolbar(); renderVideos(); }
