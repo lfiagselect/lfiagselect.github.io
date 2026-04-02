@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604020528">
+<meta name="cache-version" content="202604020531">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1226,6 +1226,14 @@ function openVideo(id) {
   try{ var vw=JSON.parse(localStorage.getItem('lfiag_views')||'{}'); vw[id]=(vw[id]||0)+1; localStorage.setItem('lfiag_views',JSON.stringify(vw)); }catch(e){}
   _m.classList.add('open');
   document.body.style.overflow='hidden';
+  // Enregistrer immédiatement dans l'historique à l'ouverture
+  try {
+    var _hh = JSON.parse(localStorage.getItem('lfiag_history')||'{}');
+    _hh[id] = {ts: Date.now()};
+    localStorage.setItem('lfiag_history', JSON.stringify(_hh));
+  } catch(e) {}
+  // Rafraîchir le bouton hero (si on revenait sans avoir fermé proprement)
+  setTimeout(function(){ updateHeroWidgets(); }, 100);
 }
 
 function iframeLoaded() {
@@ -1239,6 +1247,8 @@ function closeModal() {
   modal.classList.remove('open');
   document.getElementById('modalPlayer').innerHTML='';
   document.body.style.overflow='';
+  // Mettre à jour le bouton "Continuer à regarder" après fermeture
+  updateHeroWidgets();
 }
 
 
@@ -1333,6 +1343,14 @@ function openVideo(id) {
   try{ var vw=JSON.parse(localStorage.getItem('lfiag_views')||'{}'); vw[id]=(vw[id]||0)+1; localStorage.setItem('lfiag_views',JSON.stringify(vw)); }catch(e){}
   _m.classList.add('open');
   document.body.style.overflow='hidden';
+  // Enregistrer immédiatement dans l'historique à l'ouverture
+  try {
+    var _hh = JSON.parse(localStorage.getItem('lfiag_history')||'{}');
+    _hh[id] = {ts: Date.now()};
+    localStorage.setItem('lfiag_history', JSON.stringify(_hh));
+  } catch(e) {}
+  // Rafraîchir le bouton hero (si on revenait sans avoir fermé proprement)
+  setTimeout(function(){ updateHeroWidgets(); }, 100);
 }
 
 function closeModal() {
