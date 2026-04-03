@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604030952">
+<meta name="cache-version" content="202604031100">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -129,8 +129,8 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
   .u-active{font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:999px;flex-shrink:0;white-space:nowrap}
   .u-active.on{background:rgba(48,209,88,.12);color:#30d158}
   .u-active.off{background:rgba(255,69,58,.12);color:#ff453a}
-  .admin-del-btn{background:none;border:1px solid rgba(255,69,58,.2);border-radius:8px;color:#ff453a;padding:.28rem .55rem;cursor:pointer;flex-shrink:0;transition:.15s;display:flex;align-items:center}
-  .admin-del-btn:hover{background:rgba(255,69,58,.1)}
+  .admin-del-btn{background:none;border:1px solid rgba(255,69,58,.25);border-radius:8px;color:#ff453a;padding:.28rem .65rem;cursor:pointer;flex-shrink:0;transition:.15s;font-size:.72rem;font-weight:600;white-space:nowrap}
+  .admin-del-btn:hover{background:rgba(255,69,58,.1);border-color:rgba(255,69,58,.5)}
 .admin-panel{display:none;background:rgba(14,14,16,.96);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1.1rem;margin-bottom:1rem}
 .settings-panel{display:none;background:rgba(14,14,16,.96);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1.1rem;margin-bottom:1rem}
 .settings-panel.open{display:block}
@@ -1788,9 +1788,8 @@ function renderAdminUsers() {
       + '<div class="u-info"><div class="u-email">' + escHtml(u.email) + '</div>'
       + '<div class="u-name">' + escHtml(u.name || '—') + '</div></div>'
       + '<span class="u-active ' + (on?'on':'off') + '">' + (on?'Actif':'Inactif') + '</span>'
-      + '<button class="admin-del-btn" onclick="adminDeleteUser(' + i + ')" title="Supprimer">'
-      + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>'
-      + '</button></div>';
+      + '<button class="admin-del-btn" onclick="adminDeleteUser(' + i + ')">Supprimer</button>'
+      + '</div>';
   }).join('');
 }
 function adminAddUser() {
@@ -1812,12 +1811,33 @@ function adminAddUser() {
 }
 function adminDeleteUser(i) {
   var u = _au[i]; if (!u) return;
-  if (!confirm('Supprimer l’accès de ' + u.email + ' ?')) return;
-  _au.splice(i, 1);
-  renderAdminUsers();
-  callScript('toggle_user', {email: u.email, active: 'false', admin_email: currentUser.email})
-    .then(function() { toast('✓ Accès supprimé : ' + u.email); })
-    .catch(function(err) { _au.splice(i, 0, u); renderAdminUsers(); toast('Erreur : ' + err.message); });
+  showAdminConfirm(
+    'Supprimer l’accès de ' + u.name + ' (' + u.email + ') ?',
+    function() {
+      _au.splice(i, 1);
+      renderAdminUsers();
+      callScript('toggle_user', {email: u.email, active: 'false', admin_email: currentUser.email})
+        .then(function() { toast('✓ Accès supprimé : ' + u.email); })
+        .catch(function(err) { _au.splice(i, 0, u); renderAdminUsers(); toast('Erreur : ' + err.message); });
+    }
+  );
+}
+
+function showAdminConfirm(message, onConfirm) {
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:1rem';
+  overlay.innerHTML =
+    '<div style="background:rgba(10,16,32,.95);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:1.6rem 1.5rem 1.3rem;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.6)">'
+    + '<p style="font-size:.9rem;font-weight:600;color:#f5f5f7;margin-bottom:.5rem">Confirmer la suppression</p>'
+    + '<p style="font-size:.8rem;color:rgba(255,255,255,.55);margin-bottom:1.3rem;line-height:1.55">' + escHtml(message) + '</p>'
+    + '<div style="display:flex;gap:.6rem;justify-content:flex-end">'
+    + '<button id="confirmCancel" style="padding:.52rem 1rem;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#f5f5f7;font-size:.82rem;cursor:pointer">Annuler</button>'
+    + '<button id="confirmOk" style="padding:.52rem 1rem;border-radius:10px;background:rgba(255,69,58,.15);border:1px solid rgba(255,69,58,.35);color:#ff453a;font-size:.82rem;font-weight:600;cursor:pointer">Supprimer</button>'
+    + '</div></div>';
+  document.body.appendChild(overlay);
+  overlay.querySelector('#confirmCancel').onclick = function() { overlay.remove(); };
+  overlay.querySelector('#confirmOk').onclick = function() { overlay.remove(); onConfirm(); };
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
 }
 function adminToggleUser(i) { adminDeleteUser(i); }
 document.getElementById('searchInput').addEventListener('input', function(e) {
