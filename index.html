@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604032020">
+<meta name="cache-version" content="202604032139">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -272,7 +272,15 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
 .card-body{padding:.82rem .88rem .9rem}
 .card-cat{font-size:.64rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:.35rem}
 .card-title{font-size:.92rem;font-weight:700;line-height:1.35;letter-spacing:-.02em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:.4rem}
-.card-meta{display:flex;gap:.3rem;flex-wrap:wrap;font-size:.72rem;color:var(--text3)}
+.card-meta{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap;font-size:.72rem;color:var(--text3)}
+  .progress-bar{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.12);z-index:3}
+  .progress-bar-fill{height:100%;background:#e50914;border-radius:0 2px 2px 0}
+  .modal-likes{display:flex;align-items:center;gap:.5rem}
+  .modal-like-btn{display:inline-flex;align-items:center;gap:.3rem;padding:.45rem .85rem;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:var(--text2);font-size:.78rem;cursor:pointer;transition:.15s}
+  .modal-like-btn:hover{background:rgba(255,255,255,.12)}
+  .modal-like-btn.active-like{background:rgba(48,209,88,.12);border-color:rgba(48,209,88,.3);color:#30d158}
+  .modal-like-btn.active-dislike{background:rgba(255,69,58,.12);border-color:rgba(255,69,58,.3);color:#ff453a}
+  .modal-views{font-size:.76rem;color:var(--text3)}
 
 /* ── SKELETONS ── */
 .skeleton-card{background:rgba(18,18,20,.9);border:1px solid rgba(255,255,255,.06);border-radius:18px;overflow:hidden}
@@ -684,6 +692,16 @@ if ('serviceWorker' in navigator) {
     <div class="modal-body">
       <div class="modal-meta" id="modalMeta"></div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <div class="modal-likes">
+          <button class="modal-like-btn" id="modalLikeBtn" onclick="toggleLike(document.getElementById('modal')._currentVideoId,1)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+            <span id="modalLikeCount">0</span>
+          </button>
+          <button class="modal-like-btn" id="modalDislikeBtn" onclick="toggleLike(document.getElementById('modal')._currentVideoId,-1)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>
+          </button>
+          <span class="modal-views" id="modalViews"></span>
+        </div>
         <a class="modal-drive-btn" id="modalDriveLink" target="_blank" rel="noopener noreferrer">
           <svg width="13" height="13" viewBox="0 0 87.3 78" fill="currentColor" aria-hidden="true"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="M43.65 25 29.9 1.2C28.55 2 27.4 3.1 26.6 4.5L1.2 48.75C.4 50.15 0 51.7 0 53.25h27.5z" fill="#00ac47"/><path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.8l5.85 11.5z" fill="#ea4335"/><path d="M43.65 25 57.4 1.2C56.05.4 54.5 0 52.95 0H34.35c-1.55 0-3.1.45-4.45 1.2z" fill="#00832d"/><path d="M59.8 53.25H27.5L13.75 77.05c1.35.8 2.9 1.2 4.45 1.2h50.9c1.55 0 3.1-.4 4.45-1.2z" fill="#2684fc"/><path d="M73.4 26.5l-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3L43.65 25 59.8 53.25h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
           Ouvrir dans Drive
@@ -1537,15 +1555,18 @@ function videoCard(v, isNew) {
   const vuBadge  = seen  ? '<div class="seen-badge">&#10003; Vu</div>' : '';
   const ncBadge  = (currentUser&&currentUser.role==='admin'&&v._cat==='Autres') ? '<div class="new-badge" style="background:#ef4444;left:auto;right:.5rem;">Non classé</div>' : '';
   const durBadge = dur ? '<div class="duration-badge">' + dur + '</div>' : '';
+  const progressBar = seen
+    ? '<div class="progress-bar"><div class="progress-bar-fill" style="width:100%"></div></div>'
+    : '';
   return '<div class="video-card" onclick="openVideo(\'' + v.id + '\')">'
     + '<div class="thumb-wrap">' + thumb
     + '<div class="play-overlay"><div class="play-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>'
-    + newBadge + vuBadge + ncBadge + durBadge + '</div>'
+    + newBadge + vuBadge + ncBadge + durBadge + progressBar + '</div>'
     + '<div class="card-body">'
     + '<div class="card-category">' + escHtml(v._cat) + '</div>'
     + '<div class="card-title">' + escHtml(v.name.replace(/\.[^.]+$/, '')) + '</div>'
     + '<div class="card-meta">' + (date?'<span>'+date+'</span>':'')
-    + (vc_count>0?'<span style="opacity:.6;">· '+vc_count+' vue'+(vc_count>1?'s':'')+'</span>':'')
+    + (vc_count>0?'<span style="opacity:.6;">\xb7 '+vc_count+' vue'+(vc_count>1?'s':'')+'</span>':'')
     + '</div>'
     + '</div></div>';
 }
@@ -1660,7 +1681,8 @@ function openVideo(id) {
     _hh[id] = {ts: Date.now()};
     localStorage.setItem('lfiag_history', JSON.stringify(_hh));
   } catch(e) {}
-  // Rafraîchir le bouton hero (si on revenait sans avoir fermé proprement)
+  setTimeout(function(){ updateModalLikes(id); }, 50);
+  // Rafraîchir le bouton hero
   setTimeout(function(){ updateHeroWidgets(); }, 100);
 }
 
@@ -1717,6 +1739,39 @@ function saveSettings() { localStorage.setItem('lfiag_settings_v2',JSON.stringif
 // ============================================
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function getLikes() {
+  try { return JSON.parse(localStorage.getItem('lfiag_likes')||'{}'); } catch(e) { return {}; }
+}
+function saveLikes(l) {
+  try { localStorage.setItem('lfiag_likes', JSON.stringify(l)); } catch(e) {}
+}
+function getViewsShared() {
+  try { return JSON.parse(localStorage.getItem('lfiag_views')||'{}'); } catch(e) { return {}; }
+}
+function toggleLike(id, val) {
+  if (!id) return;
+  var l = getLikes();
+  var prev = l[id]||0;
+  l[id] = (prev===val) ? 0 : val;
+  saveLikes(l);
+  updateModalLikes(id);
+}
+function updateModalLikes(id) {
+  var l = getLikes();
+  var v = getViewsShared();
+  var ml = l[id]||0;
+  var views = v[id]||0;
+  var lb=document.getElementById('modalLikeBtn');
+  var db=document.getElementById('modalDislikeBtn');
+  var mv=document.getElementById('modalViews');
+  if (lb) lb.className='modal-like-btn'+(ml===1?' active-like':'');
+  if (db) db.className='modal-like-btn'+(ml===-1?' active-dislike':'');
+  if (mv) mv.textContent=views>0?views+' vue'+(views>1?'s':''):'';
+  // Mettre à jour le count de likes dans le bouton
+  var lc=document.getElementById('modalLikeCount');
+  var likes = Object.values(getLikes()).filter(function(v){return v===1;}).length;
+  if (lc) lc.textContent = Object.keys(getLikes()).filter(function(k){return getLikes()[k]===1&&k===id;}).length || 0;
+}
 function formatDuration(ms) { const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60; return h>0?`${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${m}:${String(sec).padStart(2,'0')}`; }
 function toast(msg,dur=3500) { const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.getElementById('toasts').appendChild(t); setTimeout(()=>t.remove(),dur); }
 
@@ -1911,7 +1966,8 @@ function openVideo(id) {
     _hh[id] = {ts: Date.now()};
     localStorage.setItem('lfiag_history', JSON.stringify(_hh));
   } catch(e) {}
-  // Rafraîchir le bouton hero (si on revenait sans avoir fermé proprement)
+  setTimeout(function(){ updateModalLikes(id); }, 50);
+  // Rafraîchir le bouton hero
   setTimeout(function(){ updateHeroWidgets(); }, 100);
 }
 
@@ -1943,6 +1999,39 @@ function saveSettings() { localStorage.setItem('lfiag_settings_v2',JSON.stringif
 // ============================================
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function getLikes() {
+  try { return JSON.parse(localStorage.getItem('lfiag_likes')||'{}'); } catch(e) { return {}; }
+}
+function saveLikes(l) {
+  try { localStorage.setItem('lfiag_likes', JSON.stringify(l)); } catch(e) {}
+}
+function getViewsShared() {
+  try { return JSON.parse(localStorage.getItem('lfiag_views')||'{}'); } catch(e) { return {}; }
+}
+function toggleLike(id, val) {
+  if (!id) return;
+  var l = getLikes();
+  var prev = l[id]||0;
+  l[id] = (prev===val) ? 0 : val;
+  saveLikes(l);
+  updateModalLikes(id);
+}
+function updateModalLikes(id) {
+  var l = getLikes();
+  var v = getViewsShared();
+  var ml = l[id]||0;
+  var views = v[id]||0;
+  var lb=document.getElementById('modalLikeBtn');
+  var db=document.getElementById('modalDislikeBtn');
+  var mv=document.getElementById('modalViews');
+  if (lb) lb.className='modal-like-btn'+(ml===1?' active-like':'');
+  if (db) db.className='modal-like-btn'+(ml===-1?' active-dislike':'');
+  if (mv) mv.textContent=views>0?views+' vue'+(views>1?'s':''):'';
+  // Mettre à jour le count de likes dans le bouton
+  var lc=document.getElementById('modalLikeCount');
+  var likes = Object.values(getLikes()).filter(function(v){return v===1;}).length;
+  if (lc) lc.textContent = Object.keys(getLikes()).filter(function(k){return getLikes()[k]===1&&k===id;}).length || 0;
+}
 function formatDuration(ms) { const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60; return h>0?`${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${m}:${String(sec).padStart(2,'0')}`; }
 function toast(msg,dur=3500) { const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.getElementById('toasts').appendChild(t); setTimeout(()=>t.remove(),dur); }
 
