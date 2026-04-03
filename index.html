@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604030932">
+<meta name="cache-version" content="202604030939">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -110,7 +110,7 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
 .admin-banner{display:none}
   .admin-header-btn{display:none;align-items:center;gap:.4rem;padding:.28rem .65rem;background:rgba(255,214,10,.1);border:1px solid rgba(255,214,10,.25);border-radius:999px;color:var(--gold);font-size:.72rem;font-weight:600;cursor:pointer;white-space:nowrap}
   .admin-header-btn:hover{background:rgba(255,214,10,.18)}
-  .admin-dropdown{position:fixed;top:0;right:0;width:min(420px,100vw);max-height:82vh;z-index:500;background:rgba(4,12,28,.88);backdrop-filter:saturate(180%) blur(32px);-webkit-backdrop-filter:saturate(180%) blur(32px);border:1px solid rgba(255,255,255,.12);border-radius:0 0 20px 20px;display:flex;flex-direction:column;transform:translateY(-105%);opacity:0;pointer-events:none;transition:transform .28s cubic-bezier(.32,.72,0,1),opacity .2s ease;box-shadow:0 12px 48px rgba(0,0,0,.55)}
+  .admin-dropdown{position:fixed;top:calc(var(--nav-h) + env(safe-area-inset-top));right:0;width:min(420px,100vw);max-height:82vh;z-index:500;background:rgba(4,12,28,.88);backdrop-filter:saturate(180%) blur(32px);-webkit-backdrop-filter:saturate(180%) blur(32px);border:1px solid rgba(255,255,255,.12);border-radius:16px;display:flex;flex-direction:column;transform:translateY(-105%);opacity:0;pointer-events:none;transition:transform .28s cubic-bezier(.32,.72,0,1),opacity .2s ease;box-shadow:0 12px 48px rgba(0,0,0,.55)}
   .admin-dropdown.open{transform:translateY(0);opacity:1;pointer-events:auto}
   .admin-dropdown-head{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.1rem .7rem;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
   .admin-dropdown-title{font-size:.88rem;font-weight:700;color:var(--gold);letter-spacing:-.02em}
@@ -577,18 +577,7 @@ if ('serviceWorker' in navigator) {
 
 
 
-    <div id="adminPanel" class="admin-panel" role="region" aria-label="Gestion des acc&#xe8;s">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:.9rem">
-        <strong style="font-size:.9rem;letter-spacing:-.02em">Gestion des acc&#xe8;s</strong>
-        <button class="btn" onclick="refreshAdminUsers()">Actualiser</button>
-      </div>
-      <div class="admin-input-row">
-        <input type="email" id="newUserEmail" placeholder="email@exemple.com" aria-label="Email du nouvel utilisateur" style="flex:1;min-width:210px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:.7rem .8rem;color:var(--text);outline:none;font-size:.84rem">
-        <input type="text" id="newUserName" placeholder="Pr&#xe9;nom Nom" aria-label="Nom du nouvel utilisateur" style="flex:1;min-width:160px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:.7rem .8rem;color:var(--text);outline:none;font-size:.84rem">
-        <button class="btn" onclick="adminAddUser()">Ajouter</button>
-      </div>
-      <div id="adminUserList" class="admin-user-list"></div>
-    </div>
+
 
     <div class="settings-panel" id="settingsPanel" role="region" aria-label="Param&#xe8;tres">
       <h3>Param&#xe8;tres d'affichage</h3>
