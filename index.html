@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604031223">
+<meta name="cache-version" content="202604031228">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -100,7 +100,8 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
 .hero-copy{max-width:58ch}
 .hero-copy p{font-size:1rem;line-height:1.75;color:rgba(255,255,255,.7);max-width:52ch;margin:0}
 .hero-signoff{display:block;margin-top:.55rem;color:rgba(255,255,255,.9);font-weight:600;letter-spacing:-.01em}
-.hero-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.35rem;align-items:center}
+.hero-actions{display:flex;flex-direction:column;align-items:flex-start;gap:.6rem;margin-top:1.35rem}
+  .hero-btns{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
   .hero-counter{display:inline-flex;align-items:baseline;gap:.3rem;font-size:.82rem;color:rgba(255,255,255,.55)}
   .hero-counter-num{font-size:1.55rem;font-weight:800;letter-spacing:-.04em;color:#fff;font-variant-numeric:tabular-nums}
   .hero-counter-label{font-size:.75rem;color:rgba(255,255,255,.45);letter-spacing:.04em}
@@ -571,14 +572,16 @@ if ('serviceWorker' in navigator) {
               <div class="hero-counter-label">disponibles</div>
             </div>
           </div>
-          <button class="btn btn-ghost-hero" id="heroContinueBtn" style="display:none" onclick="heroContinueWatching()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            Continuer &#xe0; regarder
-          </button>
-          <button class="btn" onclick="refreshWithFeedback()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0 0 20.49 15"/></svg>
-            Actualiser
-          </button>
+          <div class="hero-btns">
+            <button class="btn btn-ghost-hero" id="heroContinueBtn" style="display:none" onclick="heroContinueWatching()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Continuer &#xe0; regarder
+            </button>
+            <button class="btn" onclick="refreshWithFeedback()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Actualiser
+            </button>
+          </div>
         </div>
       </div>
     </section>
