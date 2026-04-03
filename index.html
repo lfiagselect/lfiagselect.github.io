@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604031228">
+<meta name="cache-version" content="202604031518">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -133,6 +133,9 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
   .u-active.off{background:rgba(255,69,58,.12);color:#ff453a}
   .admin-del-btn{background:none;border:1px solid rgba(255,69,58,.25);border-radius:8px;color:#ff453a;padding:.28rem .65rem;cursor:pointer;flex-shrink:0;transition:.15s;font-size:.72rem;font-weight:600;white-space:nowrap}
   .admin-del-btn:hover{background:rgba(255,69,58,.1);border-color:rgba(255,69,58,.5)}
+  .admin-promote-btn{background:none;border:1px solid rgba(255,214,10,.2);border-radius:8px;color:var(--gold);padding:.28rem .65rem;cursor:pointer;flex-shrink:0;transition:.15s;font-size:.72rem;font-weight:600;white-space:nowrap}
+  .admin-promote-btn:hover{background:rgba(255,214,10,.08);border-color:rgba(255,214,10,.4)}
+  .admin-promote-btn[data-role="admin"]{border-color:rgba(255,214,10,.5);background:rgba(255,214,10,.1)}
 .admin-panel{display:none;background:rgba(14,14,16,.96);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1.1rem;margin-bottom:1rem}
 .settings-panel{display:none;background:rgba(14,14,16,.96);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1.1rem;margin-bottom:1rem}
 .settings-panel.open{display:block}
@@ -1799,6 +1802,7 @@ function renderAdminUsers() {
       + '<div class="u-info"><div class="u-email">' + escHtml(u.email) + '</div>'
       + '<div class="u-name">' + escHtml(u.name || '—') + '</div></div>'
       + '<span class="u-active ' + (on?'on':'off') + '">' + (on?'Actif':'Inactif') + '</span>'
+      + '<button class="admin-promote-btn" data-role="'+(u.role||'')+'" onclick="adminToggleRole('+i+')" title="'+(u.role==='admin'?'Retirer le rôle admin':'Promouvoir en admin')+'">'+(u.role==='admin'?'★ Admin':'☆ Admin')+'</button>'
       + '<button class="admin-del-btn" onclick="adminDeleteUser(' + i + ')">Supprimer</button>'
       + '</div>';
   }).join('');
@@ -1820,6 +1824,29 @@ function adminAddUser() {
     .catch(function(err) { toast('Erreur : ' + err.message); })
     .finally(function() { if (btn) { btn.textContent = 'Ajouter'; btn.disabled = false; } });
 }
+function adminToggleRole(i) {
+  var u = _au[i]; if (!u) return;
+  var isAdmin = u.role === 'admin';
+  var msg = isAdmin
+    ? 'Retirer le rôle administrateur à ' + (u.name || u.email) + ' ?'
+    : 'Promouvoir ' + (u.name || u.email) + ' en administrateur ?';
+  showAdminConfirm(msg, function() {
+    var newRole = isAdmin ? 'user' : 'admin';
+    // Mise à jour optimiste
+    _au[i].role = newRole;
+    renderAdminUsers();
+    callScript('set_role', {email: u.email, role: newRole, admin_email: currentUser.email})
+      .then(function() {
+        toast((newRole === 'admin' ? '★ ' : '☆ ') + (u.name || u.email) + ' — rôle ' + newRole);
+      })
+      .catch(function(err) {
+        _au[i].role = isAdmin ? 'admin' : 'user';
+        renderAdminUsers();
+        toast('Erreur : ' + err.message);
+      });
+  });
+}
+
 function adminDeleteUser(i) {
   var u = _au[i]; if (!u) return;
   showAdminConfirm(
