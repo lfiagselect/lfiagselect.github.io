@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604030729">
+<meta name="cache-version" content="202604030932">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -107,7 +107,30 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
   .hero-counter-num{animation:countUp .5s var(--ease) both}
 
 /* ── BANNERS ── */
-.admin-banner{display:none;align-items:center;gap:.5rem;padding:.7rem 1rem;background:rgba(255,214,10,.07);border:1px solid rgba(255,214,10,.15);border-radius:12px;color:var(--gold);font-size:.79rem;margin-bottom:1rem;flex-wrap:wrap}
+.admin-banner{display:none}
+  .admin-header-btn{display:none;align-items:center;gap:.4rem;padding:.28rem .65rem;background:rgba(255,214,10,.1);border:1px solid rgba(255,214,10,.25);border-radius:999px;color:var(--gold);font-size:.72rem;font-weight:600;cursor:pointer;white-space:nowrap}
+  .admin-header-btn:hover{background:rgba(255,214,10,.18)}
+  .admin-dropdown{position:fixed;top:0;right:0;width:min(420px,100vw);max-height:82vh;z-index:500;background:rgba(4,12,28,.88);backdrop-filter:saturate(180%) blur(32px);-webkit-backdrop-filter:saturate(180%) blur(32px);border:1px solid rgba(255,255,255,.12);border-radius:0 0 20px 20px;display:flex;flex-direction:column;transform:translateY(-105%);opacity:0;pointer-events:none;transition:transform .28s cubic-bezier(.32,.72,0,1),opacity .2s ease;box-shadow:0 12px 48px rgba(0,0,0,.55)}
+  .admin-dropdown.open{transform:translateY(0);opacity:1;pointer-events:auto}
+  .admin-dropdown-head{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.1rem .7rem;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
+  .admin-dropdown-title{font-size:.88rem;font-weight:700;color:var(--gold);letter-spacing:-.02em}
+  .admin-dropdown-close{background:none;border:none;color:var(--text3);font-size:1.3rem;cursor:pointer;padding:.2rem .4rem}
+  .admin-add-row{display:flex;gap:.5rem;padding:.7rem 1rem;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;flex-wrap:wrap}
+  .admin-add-row input{flex:1;min-width:110px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:.52rem .7rem;color:var(--text);font-size:.8rem;outline:none;font-family:var(--font)}
+  .admin-add-row input:focus{border-color:rgba(255,214,10,.35)}
+  .admin-user-list{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+  .admin-user-list::-webkit-scrollbar{width:3px}
+  .admin-user-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:999px}
+  .admin-user-row{display:flex;align-items:center;gap:.55rem;padding:.6rem 1rem;border-bottom:1px solid rgba(255,255,255,.05)}
+  .admin-user-row:hover{background:rgba(255,255,255,.03)}
+  .u-info{flex:1;min-width:0}
+  .u-email{font-size:.8rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .u-name{font-size:.68rem;color:var(--text3)}
+  .u-active{font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:999px;flex-shrink:0;white-space:nowrap}
+  .u-active.on{background:rgba(48,209,88,.12);color:#30d158}
+  .u-active.off{background:rgba(255,69,58,.12);color:#ff453a}
+  .admin-del-btn{background:none;border:1px solid rgba(255,69,58,.2);border-radius:8px;color:#ff453a;padding:.28rem .55rem;cursor:pointer;flex-shrink:0;transition:.15s;display:flex;align-items:center}
+  .admin-del-btn:hover{background:rgba(255,69,58,.1)}
 .admin-panel{display:none;background:rgba(14,14,16,.96);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1.1rem;margin-bottom:1rem}
 .settings-panel{display:none;background:rgba(14,14,16,.96);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1.1rem;margin-bottom:1rem}
 .settings-panel.open{display:block}
@@ -409,6 +432,10 @@ if ('serviceWorker' in navigator) {
       <div class="user-avatar" id="userAvatar" aria-hidden="true">?</div>
       <span id="userEmail"></span>
     </div>
+    <button class="admin-header-btn" id="adminHeaderBtn" onclick="toggleAdminDropdown()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Admin
+    </button>
     <button class="icon-btn" id="settingsBtn" title="Paramètres" aria-label="Paramètres">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1-.33H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.24.3.48.63.6 1 .08.32.11.65.1.9a1.65 1.65 0 0 0 .9.4H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6Z"/></svg>
     </button>
@@ -420,6 +447,22 @@ if ('serviceWorker' in navigator) {
     </button>
   </div>
 </header>
+
+<!-- Admin dropdown -->
+<div class="admin-dropdown" id="adminDropdown">
+  <div class="admin-dropdown-head">
+    <span class="admin-dropdown-title">&#x1F6E1; Gestion des acc&#xe8;s</span>
+    <button class="admin-dropdown-close" onclick="toggleAdminDropdown()">&#x2715;</button>
+  </div>
+  <div class="admin-add-row">
+    <input type="email" id="newUserEmail" placeholder="email@exemple.com" autocomplete="off">
+    <input type="text" id="newUserName" placeholder="Pr&#xe9;nom Nom" autocomplete="off">
+    <button class="btn btn-ghost" onclick="adminAddUser()" id="adminAddBtn" style="font-size:.78rem;padding:.52rem .85rem;white-space:nowrap">Ajouter</button>
+  </div>
+  <div class="admin-user-list" id="adminUserList">
+    <p style="padding:.75rem 1rem;color:var(--text3);font-size:.8rem">Chargement&#x2026;</p>
+  </div>
+</div>
 
 <!-- MOBILE TOPBAR -->
 <div class="ptr-indicator" id="ptrIndicator">
@@ -532,12 +575,7 @@ if ('serviceWorker' in navigator) {
       </div>
     </section>
 
-    <div id="adminBanner" class="admin-banner" role="region" aria-label="Mode administrateur">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      Mode administrateur
-      <button onclick="toggleAdminPanel()" class="btn" style="font-size:.72rem;padding:.32rem .7rem">G&#xe9;rer les acc&#xe8;s</button>
-      <a href="https://docs.google.com/spreadsheets/d/1vAvsH8PELYs-Z2G4n0gtVzdT9Ra96AJk9H9qgGFH3-M/edit?usp=drive_sdk" target="_blank" rel="noopener noreferrer" class="btn" style="font-size:.72rem;padding:.32rem .7rem">Feuille Sheet</a>
-    </div>
+
 
     <div id="adminPanel" class="admin-panel" role="region" aria-label="Gestion des acc&#xe8;s">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:.9rem">
@@ -1194,7 +1232,11 @@ function showAppUI() {
   document.getElementById('settingsBtn').style.display = 'flex';
   document.getElementById('searchWrap').style.display = isMobile() ? 'none' : 'block';
   if (currentUser.role === 'admin') {
-    document.getElementById('adminBanner').style.display = 'flex';
+    var _ab = document.getElementById('adminHeaderBtn');
+    if (_ab) _ab.style.display = 'flex';
+    callScript('list_users', {email: currentUser.email})
+      .then(function(d) { _au = d.users || []; })
+      .catch(function() {});
   }
   renderRules();
   setupMobileUI();
@@ -1706,11 +1748,78 @@ function refreshWithFeedback() {
 }
 
 var _au=[];
-function toggleAdminPanel(){var p=document.getElementById('adminPanel');if(!p)return;var o=p.style.display==='none';p.style.display=o?'block':'none';if(o&&!_au.length)refreshAdminUsers();}
-function refreshAdminUsers(){var l=document.getElementById('adminUserList');if(l)l.innerHTML='<p style="color:var(--muted);font-size:.82rem;">Chargement…</p>';callScript('list_users',{email:currentUser.email}).then(function(d){_au=d.users||[];renderAdminUsers();}).catch(function(e){if(l)l.innerHTML='<p style="color:#ef9f9f;font-size:.82rem;">'+escHtml(e.message)+'</p>';});}
-function renderAdminUsers(){var l=document.getElementById('adminUserList');if(!l)return;if(!_au.length){l.innerHTML='<p style="color:var(--muted);font-size:.82rem;">Aucun utilisateur.</p>';return;}l.innerHTML=_au.map(function(u,i){var on=u.active!==false&&u.active!=='FALSE';return'<div class="admin-user-row"><span class="u-email">'+escHtml(u.email)+'</span><span class="u-name">'+escHtml(u.name||'—')+'</span><span class="u-active '+(on?'on':'off')+'">'+(on?'Actif':'Inactif')+'</span><button onclick="adminToggleUser('+i+')" class="btn btn-ghost" style="font-size:.72rem;padding:.25rem .65rem;">'+(on?'Désactiver':'Activer')+'</button></div>';}).join('');}
-function adminAddUser(){var e=(document.getElementById('newUserEmail').value||'').trim(),n=(document.getElementById('newUserName').value||'').trim();if(!e){toast('⚠ Email requis');return;}callScript('add_user',{email:e,name:n,admin_email:currentUser.email}).then(function(){document.getElementById('newUserEmail').value='';document.getElementById('newUserName').value='';toast('✓ '+e+' ajouté');refreshAdminUsers();}).catch(function(e){toast('Erreur : '+e.message);});}
-function adminToggleUser(i){var u=_au[i];if(!u)return;var on=!(u.active!==false&&u.active!=='FALSE');callScript('toggle_user',{email:u.email,active:on.toString(),admin_email:currentUser.email}).then(function(){_au[i].active=on;renderAdminUsers();toast((on?'✓ Activé : ':'✗ Désactivé : ')+u.email);}).catch(function(e){toast('Erreur : '+e.message);});}
+function toggleAdminDropdown() {
+  var dd = document.getElementById('adminDropdown');
+  var isOpen = dd.classList.contains('open');
+  dd.classList.toggle('open', !isOpen);
+  if (!isOpen && !_au.length) refreshAdminUsers();
+  if (!isOpen) {
+    setTimeout(function() {
+      document.addEventListener('click', _closeAdminOut, true);
+    }, 50);
+  } else {
+    document.removeEventListener('click', _closeAdminOut, true);
+  }
+}
+function _closeAdminOut(e) {
+  var dd = document.getElementById('adminDropdown');
+  var btn = document.getElementById('adminHeaderBtn');
+  if (!dd) return;
+  if (!dd.contains(e.target) && btn && !btn.contains(e.target)) {
+    dd.classList.remove('open');
+    document.removeEventListener('click', _closeAdminOut, true);
+  }
+}
+function toggleAdminPanel() { toggleAdminDropdown(); }
+function refreshAdminUsers() {
+  var l = document.getElementById('adminUserList');
+  if (l) l.innerHTML = '<p style="padding:.75rem 1rem;color:var(--text3);font-size:.8rem">Chargement…</p>';
+  callScript('list_users', {email: currentUser.email})
+    .then(function(d) { _au = d.users || []; renderAdminUsers(); })
+    .catch(function(e) { if (l) l.innerHTML = '<p style="padding:.75rem 1rem;color:#ff453a;font-size:.8rem">' + escHtml(e.message) + '</p>'; });
+}
+function renderAdminUsers() {
+  var l = document.getElementById('adminUserList');
+  if (!l) return;
+  if (!_au.length) { l.innerHTML = '<p style="padding:.75rem 1rem;color:var(--text3);font-size:.8rem">Aucun utilisateur.</p>'; return; }
+  l.innerHTML = _au.map(function(u, i) {
+    var on = u.active !== false && u.active !== 'FALSE';
+    return '<div class="admin-user-row">'
+      + '<div class="u-info"><div class="u-email">' + escHtml(u.email) + '</div>'
+      + '<div class="u-name">' + escHtml(u.name || '—') + '</div></div>'
+      + '<span class="u-active ' + (on?'on':'off') + '">' + (on?'Actif':'Inactif') + '</span>'
+      + '<button class="admin-del-btn" onclick="adminDeleteUser(' + i + ')" title="Supprimer">'
+      + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>'
+      + '</button></div>';
+  }).join('');
+}
+function adminAddUser() {
+  var e = (document.getElementById('newUserEmail').value || '').trim();
+  var n = (document.getElementById('newUserName').value || '').trim();
+  if (!e) { toast('⚠ Email requis'); return; }
+  var btn = document.getElementById('adminAddBtn');
+  if (btn) { btn.textContent = '…'; btn.disabled = true; }
+  callScript('add_user', {email: e, name: n, admin_email: currentUser.email})
+    .then(function() {
+      document.getElementById('newUserEmail').value = '';
+      document.getElementById('newUserName').value = '';
+      toast('✓ ' + e + ' ajouté');
+      _au.push({email: e, name: n, active: true});
+      renderAdminUsers();
+    })
+    .catch(function(err) { toast('Erreur : ' + err.message); })
+    .finally(function() { if (btn) { btn.textContent = 'Ajouter'; btn.disabled = false; } });
+}
+function adminDeleteUser(i) {
+  var u = _au[i]; if (!u) return;
+  if (!confirm('Supprimer l’accès de ' + u.email + ' ?')) return;
+  _au.splice(i, 1);
+  renderAdminUsers();
+  callScript('toggle_user', {email: u.email, active: 'false', admin_email: currentUser.email})
+    .then(function() { toast('✓ Accès supprimé : ' + u.email); })
+    .catch(function(err) { _au.splice(i, 0, u); renderAdminUsers(); toast('Erreur : ' + err.message); });
+}
+function adminToggleUser(i) { adminDeleteUser(i); }
 document.getElementById('searchInput').addEventListener('input', function(e) {
   clearTimeout(window._st);
   var v = e.target.value.trim();
