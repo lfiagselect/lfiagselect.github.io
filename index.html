@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604030939">
+<meta name="cache-version" content="202604030949">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1103,9 +1103,9 @@ function callScript(action, params, retry) {
     var timer=setTimeout(function(){
       if(done)return; done=true; delete window[cb];
       var el=document.getElementById(cb); if(el)el.remove();
-      if(retry<2) callScript(action,params,retry+1).then(resolve).catch(reject);
+      if(retry<1) callScript(action,params,retry+1).then(resolve).catch(reject);
       else reject(new Error('Serveur introuvable. Réessayez.'));
-    },10000);
+    },25000);
     window[cb]=function(data){
       if(done)return; done=true; clearTimeout(timer); delete window[cb];
       var el=document.getElementById(cb); if(el)el.remove();
@@ -1223,9 +1223,7 @@ function showAppUI() {
   if (currentUser.role === 'admin') {
     var _ab = document.getElementById('adminHeaderBtn');
     if (_ab) _ab.style.display = 'flex';
-    callScript('list_users', {email: currentUser.email})
-      .then(function(d) { _au = d.users || []; })
-      .catch(function() {});
+
   }
   renderRules();
   setupMobileUI();
@@ -1741,7 +1739,7 @@ function toggleAdminDropdown() {
   var dd = document.getElementById('adminDropdown');
   var isOpen = dd.classList.contains('open');
   dd.classList.toggle('open', !isOpen);
-  if (!isOpen && !_au.length) refreshAdminUsers();
+  if (!isOpen) refreshAdminUsers(); // toujours recharger à l'ouverture
   if (!isOpen) {
     setTimeout(function() {
       document.addEventListener('click', _closeAdminOut, true);
@@ -1763,9 +1761,15 @@ function toggleAdminPanel() { toggleAdminDropdown(); }
 function refreshAdminUsers() {
   var l = document.getElementById('adminUserList');
   if (l) l.innerHTML = '<p style="padding:.75rem 1rem;color:var(--text3);font-size:.8rem">Chargement…</p>';
+  if (!currentUser || !currentUser.email) {
+    if (l) l.innerHTML = '<p style="padding:.75rem 1rem;color:#ff453a;font-size:.8rem">Non connecté</p>';
+    return;
+  }
   callScript('list_users', {email: currentUser.email})
     .then(function(d) { _au = d.users || []; renderAdminUsers(); })
-    .catch(function(e) { if (l) l.innerHTML = '<p style="padding:.75rem 1rem;color:#ff453a;font-size:.8rem">' + escHtml(e.message) + '</p>'; });
+    .catch(function(e) {
+      if (l) l.innerHTML = '<p style="padding:.75rem 1rem;color:#ff453a;font-size:.8rem">⚠ ' + escHtml(e.message) + ' — <button onclick="refreshAdminUsers()" style="background:none;border:none;color:#ff453a;text-decoration:underline;cursor:pointer;font-size:.8rem">Réessayer</button></p>';
+    });
 }
 function renderAdminUsers() {
   var l = document.getElementById('adminUserList');
