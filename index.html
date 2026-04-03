@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604030949">
+<meta name="cache-version" content="202604030952">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1765,10 +1765,17 @@ function refreshAdminUsers() {
     if (l) l.innerHTML = '<p style="padding:.75rem 1rem;color:#ff453a;font-size:.8rem">Non connecté</p>';
     return;
   }
-  callScript('list_users', {email: currentUser.email})
-    .then(function(d) { _au = d.users || []; renderAdminUsers(); })
+  // Utiliser fetch au lieu de JSONP pour list_users
+  var url = SCRIPT_URL + '?action=list_users&email=' + encodeURIComponent(currentUser.email) + '&t=' + Date.now();
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.status === 'error') throw new Error(d.message);
+      _au = d.users || [];
+      renderAdminUsers();
+    })
     .catch(function(e) {
-      if (l) l.innerHTML = '<p style="padding:.75rem 1rem;color:#ff453a;font-size:.8rem">⚠ ' + escHtml(e.message) + ' — <button onclick="refreshAdminUsers()" style="background:none;border:none;color:#ff453a;text-decoration:underline;cursor:pointer;font-size:.8rem">Réessayer</button></p>';
+      if (l) l.innerHTML = '<p style="padding:.75rem 1rem;color:#ff453a;font-size:.8rem">⚠ ' + escHtml(e.message || 'Erreur réseau') + ' — <button onclick="refreshAdminUsers()" style="background:none;border:none;color:#ff453a;text-decoration:underline;cursor:pointer;font-size:.8rem">Réessayer</button></p>';
     });
 }
 function renderAdminUsers() {
