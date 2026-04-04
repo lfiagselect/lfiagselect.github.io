@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604041641">
+<meta name="cache-version" content="202604041645">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1301,6 +1301,8 @@ function showAppUI() {
   // renderRules() — settings panel supprimé
   setupMobileUI();
   scheduleTokenRefresh();
+  // Afficher le bouton Reprendre dès l'ouverture si historique présent
+  updateHeroWidgets();
   // Initiale mobile
   var dot = document.getElementById('mobUserDot');
   if (dot && currentUser.email) {
@@ -1416,8 +1418,7 @@ function getLastWatchedId() {
     var entries = Object.entries(h);
     if (!entries.length) return null;
     entries.sort(function(a, b) { return (b[1].ts||0) - (a[1].ts||0); });
-    var id = entries[0][0];
-    return allVideos.find(function(v){ return v.id === id; }) ? id : null;
+    return entries[0][0]; // on fait confiance à l'historique sans vérifier allVideos
   } catch(e) { return null; }
 }
 
