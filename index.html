@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604041254">
+<meta name="cache-version" content="202604041256">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1305,7 +1305,7 @@ function showAppUI() {
     if (_ab) _ab.style.display = 'flex';
 
   }
-  renderRules();
+  // renderRules() — settings panel supprimé
   setupMobileUI();
   scheduleTokenRefresh();
   // Initiale mobile
@@ -1784,7 +1784,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
 // SETTINGS
 // ============================================
 function renderRules() {
-  document.getElementById('ruleList').innerHTML = settings.rules.map((r,i)=>`<div class="tag-rule"><span class="keyword">${escHtml(r.keyword)}</span><span class="arrow">→</span><span class="cat">${escHtml(r.cat)}</span><button class="tag-rule-delete" onclick="deleteRule(${i})">×</button></div>`).join('')||'<span style="color:var(--muted);font-size:.82rem;">Aucune règle</span>';
+  var el = document.getElementById('ruleList');
+  if (!el) return; // settings panel remplacé par infos compte
+  el.innerHTML = settings.rules.map((r,i)=>`<div class="tag-rule"><span class="keyword">${escHtml(r.keyword)}</span><span class="arrow">→</span><span class="cat">${escHtml(r.cat)}</span><button class="tag-rule-delete" onclick="deleteRule(${i})">×</button></div>`).join('')||'<span style="color:var(--muted);font-size:.82rem;">Aucune règle</span>';
 }
 function addRule() { const kw=document.getElementById('ruleKeyword').value.trim(),cat=document.getElementById('ruleCat').value.trim(); if(!kw||!cat){toast('⚠ Remplissez les deux champs.');return;} settings.rules.push({keyword:kw,cat}); document.getElementById('ruleKeyword').value=''; document.getElementById('ruleCat').value=''; renderRules(); }
 function deleteRule(i) { settings.rules.splice(i,1); renderRules(); }
