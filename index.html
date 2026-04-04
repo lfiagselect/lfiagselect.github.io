@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604041229">
+<meta name="cache-version" content="202604041231">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -425,11 +425,13 @@ if ('serviceWorker' in navigator) {
     }).catch(function() {});
 
     // Recharger uniquement si le SW change APRES le chargement initial
-    // (pas au premier install)
+    // Ne jamais recharger si un token OAuth est en cours de traitement
     var _swReady = false;
     setTimeout(function() { _swReady = true; }, 2000);
     var refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', function() {
+      // Protéger le flux OAuth : ne pas recharger si le hash contient un token
+      if (location.hash.includes('access_token')) return;
       if (_swReady && !refreshing) {
         refreshing = true;
         window.location.reload();
@@ -788,12 +790,30 @@ function signIn(prompt_mode) {
     + '&prompt=' + prompt_mode;
 }
 function saveToken(t) {
+  var expiry = (Date.now() + 55*60*1000).toString();
   sessionStorage.setItem('lfiag_token', t);
-  sessionStorage.setItem('lfiag_expiry', (Date.now()+55*60*1000).toString());
+  sessionStorage.setItem('lfiag_expiry', expiry);
+  // localStorage pour la persistance PWA iOS (sessionStorage vidé à la fermeture)
+  try {
+    localStorage.setItem('lfiag_token', t);
+    localStorage.setItem('lfiag_expiry', expiry);
+  } catch(e) {}
 }
 function getToken() {
-  var t=sessionStorage.getItem('lfiag_token'), e=+sessionStorage.getItem('lfiag_expiry')||0;
-  if(!t||Date.now()>e){sessionStorage.removeItem('lfiag_token');sessionStorage.removeItem('lfiag_expiry');return null;}
+  // Lire depuis sessionStorage en priorité, sinon localStorage (PWA iOS)
+  var t = sessionStorage.getItem('lfiag_token') || localStorage.getItem('lfiag_token');
+  var e = +(sessionStorage.getItem('lfiag_expiry') || localStorage.getItem('lfiag_expiry')) || 0;
+  if (!t || Date.now() > e) {
+    sessionStorage.removeItem('lfiag_token');
+    sessionStorage.removeItem('lfiag_expiry');
+    try { localStorage.removeItem('lfiag_token'); localStorage.removeItem('lfiag_expiry'); } catch(e2) {}
+    return null;
+  }
+  // Synchroniser sessionStorage si token vient du localStorage
+  if (!sessionStorage.getItem('lfiag_token') && t) {
+    sessionStorage.setItem('lfiag_token', t);
+    sessionStorage.setItem('lfiag_expiry', e.toString());
+  }
   return t;
 }
 function scheduleTokenRefresh() {
@@ -1101,7 +1121,8 @@ function injectLogo(){['logoImgHeader','logoImgAuth'].forEach(function(id){var e
 async function handleCallback() {
   // Récupérer le token depuis le hash
   const hash = location.hash;
-  let accessToken = sessionStorage.getItem('lfiag_token');
+  // Lire le token depuis sessionStorage ou localStorage (PWA iOS)
+  let accessToken = getToken();
 
   if (hash.includes('access_token=')) {
     const params = new URLSearchParams(hash.slice(1));
