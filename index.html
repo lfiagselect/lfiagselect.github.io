@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604041321">
+<meta name="cache-version" content="202604041323">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -54,6 +54,10 @@ header.shrunk{height:calc(40px + env(safe-area-inset-top))!important;padding:env
 .icon-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:var(--text2);transition:.15s background,.15s color}
   .quit-btn{display:none;align-items:center;gap:.35rem;padding:.3rem .7rem;border-radius:8px;background:rgba(255,69,58,.08);border:1px solid rgba(255,69,58,.2);color:rgba(255,69,58,.85);font-size:.74rem;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
   .quit-btn:hover{background:rgba(255,69,58,.15);border-color:rgba(255,69,58,.35);color:#ff453a}
+  .hdr-sep{width:1px;height:20px;background:rgba(255,255,255,.1);flex-shrink:0;margin:0 .15rem}
+  .profile-btn{border-radius:50% !important;background:rgba(255,214,10,.12) !important;border-color:rgba(255,214,10,.3) !important}
+  .profile-btn:hover{background:rgba(255,214,10,.22) !important}
+  .profile-initial{font-size:.74rem;font-weight:700;color:var(--gold)}
 .icon-btn:hover{background:rgba(255,255,255,.1);color:var(--text)}
 
 /* ── SCREENS ── */
@@ -458,20 +462,17 @@ if ('serviceWorker' in navigator) {
     <input type="search" id="searchInput" placeholder="Rechercher une vidéo…" aria-label="Rechercher">
   </div>
   <div class="header-right">
-    <div class="user-chip" id="userBadge" aria-live="polite">
-      <div class="user-avatar" id="userAvatar" aria-hidden="true">?</div>
-      <span id="userEmail"></span>
-    </div>
     <button class="admin-header-btn" id="adminHeaderBtn" onclick="toggleAdminDropdown()">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       Admin
     </button>
-    <button class="icon-btn" id="settingsBtn" title="Paramètres" aria-label="Paramètres">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1-.33H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.24.3.48.63.6 1 .08.32.11.65.1.9a1.65 1.65 0 0 0 .9.4H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6Z"/></svg>
+    <button class="icon-btn profile-btn" id="settingsBtn" title="Mon compte" aria-label="Mon compte">
+      <span class="profile-initial" id="userAvatar">?</span>
     </button>
     <button class="icon-btn" id="refreshBtn" title="Actualiser" aria-label="Actualiser">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0 0 20.49 15"/></svg>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0 0 20.49 15"/></svg>
     </button>
+    <div class="hdr-sep" id="userBadge"></div>
     <button class="quit-btn" id="signOutBtn" onclick="signOut()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       Quitter
@@ -612,7 +613,7 @@ if ('serviceWorker' in navigator) {
 
     <div class="settings-panel" id="settingsPanel" role="region" aria-label="Mon compte">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-        <strong style="font-size:.9rem;letter-spacing:-.02em">Mon compte</strong>
+        <strong style="font-size:.9rem">Mon compte</strong>
         <button class="btn" onclick="document.getElementById('settingsPanel').classList.remove('open');document.body.style.overflow=''" style="font-size:.72rem;padding:.3rem .65rem">&#x2715;</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:.65rem">
@@ -1290,12 +1291,11 @@ function setLoadingMsg(msg) { document.getElementById('loadingMsg').textContent 
 
 function showAppUI() {
   showScreen('loading');
-  // Avatar initiale
-  var initial = currentUser.email ? currentUser.email.charAt(0).toUpperCase() : '?';
+  var initial = (currentUser.name||currentUser.email||'?').charAt(0).toUpperCase();
   var avatar = document.getElementById('userAvatar');
   if (avatar) avatar.textContent = initial;
-  document.getElementById('userBadge').style.display = 'flex';
-  document.getElementById('userEmail').textContent = currentUser.email;
+  var badge = document.getElementById('userBadge');
+  if (badge) badge.style.display = 'flex';
   document.getElementById('signOutBtn').style.display = 'flex';
   document.getElementById('refreshBtn').style.display = 'flex';
   document.getElementById('settingsBtn').style.display = 'flex';
@@ -1784,8 +1784,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
 // SETTINGS
 // ============================================
 function renderRules() {
-  var el = document.getElementById('ruleList');
-  if (!el) return; // settings panel remplacé par infos compte
+  var el=document.getElementById('ruleList');if(!el)return;
   el.innerHTML = settings.rules.map((r,i)=>`<div class="tag-rule"><span class="keyword">${escHtml(r.keyword)}</span><span class="arrow">→</span><span class="cat">${escHtml(r.cat)}</span><button class="tag-rule-delete" onclick="deleteRule(${i})">×</button></div>`).join('')||'<span style="color:var(--muted);font-size:.82rem;">Aucune règle</span>';
 }
 function addRule() { const kw=document.getElementById('ruleKeyword').value.trim(),cat=document.getElementById('ruleCat').value.trim(); if(!kw||!cat){toast('⚠ Remplissez les deux champs.');return;} settings.rules.push({keyword:kw,cat}); document.getElementById('ruleKeyword').value=''; document.getElementById('ruleCat').value=''; renderRules(); }
