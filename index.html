@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604040533">
+<meta name="cache-version" content="202604040759">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -403,8 +403,10 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('sw.js').then(function(reg) {
 
-      // Vérifier immédiatement s'il y a une mise à jour
-      reg.update();
+      // Vérifier s'il y a une mise à jour (seulement si déjà contrôlé)
+      if (navigator.serviceWorker.controller) {
+        reg.update();
+      }
 
       // Quand un nouveau SW est installé et en attente
       reg.addEventListener('updatefound', function() {
@@ -419,10 +421,13 @@ if ('serviceWorker' in navigator) {
 
     }).catch(function() {});
 
-    // Quand le SW prend le contrôle (après activation) → recharger
+    // Recharger uniquement si le SW change APRES le chargement initial
+    // (pas au premier install)
+    var _swReady = false;
+    setTimeout(function() { _swReady = true; }, 2000);
     var refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', function() {
-      if (!refreshing) {
+      if (_swReady && !refreshing) {
         refreshing = true;
         window.location.reload();
       }
@@ -858,11 +863,19 @@ function initPullToRefresh() {
       if (navigator.vibrate) navigator.vibrate(10);
 
       setTimeout(function() {
+        if (window._refreshInProgress) {
+          refreshing = false;
+          indicator.classList.remove('visible', 'releasing');
+          indicator.style.transform = '';
+          return;
+        }
+        window._refreshInProgress = true;
         try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
         fetchAndCacheVideos(true, true).then(function() {
           toast('✓ Bibliothèque actualisée');
         }).finally(function() {
           refreshing = false;
+          window._refreshInProgress = false;
           indicator.classList.remove('visible', 'releasing');
           indicator.style.transform = '';
         });
@@ -1185,6 +1198,8 @@ async function enrichThumbnails(videos) {
 }
 
 async function refreshVideosBackground() {
+  // Ne pas tourner si un refresh manuel est en cours
+  if (window._refreshInProgress) return;
   try {
     var data = await callScript('videos', { email: currentUser.email });
     var fresh = dedup(data.videos || []);
@@ -1779,7 +1794,10 @@ function formatDuration(ms) { const s=Math.floor(ms/1000),h=Math.floor(s/3600),m
 function toast(msg,dur=3500) { const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.getElementById('toasts').appendChild(t); setTimeout(()=>t.remove(),dur); }
 
 function refreshWithFeedback() {
-  // Toast de chargement persistant
+  // Verrou anti-double appel
+  if (window._refreshInProgress) return;
+  window._refreshInProgress = true;
+
   var container = document.getElementById('toasts');
   var t = document.createElement('div');
   t.className = 'toast toast-loading';
@@ -1787,7 +1805,6 @@ function refreshWithFeedback() {
   t.innerHTML = '<div class="toast-spinner"></div><span>Actualisation en cours…</span>';
   container.appendChild(t);
 
-  // Feedback haptique sur mobile
   if (navigator.vibrate) navigator.vibrate(10);
 
   try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
@@ -1800,6 +1817,8 @@ function refreshWithFeedback() {
     var old = document.getElementById('refreshToast');
     if (old) old.remove();
     toast('⚠ Erreur lors de l’actualisation');
+  }).finally(function() {
+    window._refreshInProgress = false;
   });
 }
 
@@ -2039,7 +2058,10 @@ function formatDuration(ms) { const s=Math.floor(ms/1000),h=Math.floor(s/3600),m
 function toast(msg,dur=3500) { const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.getElementById('toasts').appendChild(t); setTimeout(()=>t.remove(),dur); }
 
 function refreshWithFeedback() {
-  // Toast de chargement persistant
+  // Verrou anti-double appel
+  if (window._refreshInProgress) return;
+  window._refreshInProgress = true;
+
   var container = document.getElementById('toasts');
   var t = document.createElement('div');
   t.className = 'toast toast-loading';
@@ -2047,7 +2069,6 @@ function refreshWithFeedback() {
   t.innerHTML = '<div class="toast-spinner"></div><span>Actualisation en cours…</span>';
   container.appendChild(t);
 
-  // Feedback haptique sur mobile
   if (navigator.vibrate) navigator.vibrate(10);
 
   try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
@@ -2060,6 +2081,8 @@ function refreshWithFeedback() {
     var old = document.getElementById('refreshToast');
     if (old) old.remove();
     toast('⚠ Erreur lors de l’actualisation');
+  }).finally(function() {
+    window._refreshInProgress = false;
   });
 }
 
