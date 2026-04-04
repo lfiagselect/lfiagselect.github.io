@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604041559">
+<meta name="cache-version" content="202604041641">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1330,7 +1330,7 @@ function categorize(video) {
 
 function renderAll() {
   showScreen('app');
-  try { window._sharedStats = getSharedStats(); } catch(e) { window._sharedStats = {}; }
+  window._sharedStats = getSharedStats();
   if (isMobile()) { renderMobCatbar(); } else { renderDeskCatBar(); }
   renderCatDrawer();
   renderVideos();
@@ -1584,8 +1584,13 @@ function setCategory(c) { activeCategory = c; if(isMobile()){renderMobCatbar();}
 function videoCard(v, isNew) {
   isNew=!!isNew;
   var _h={}; try{_h=JSON.parse(localStorage.getItem('lfiag_history')||'{}')}catch(e){}
-  var _v={}; try{_v=JSON.parse(localStorage.getItem('lfiag_views')||'{}')}catch(e){}
-  var seen=!!_h[v.id], vc_count=_v[v.id]||0;
+  var _lk={}; try{_lk=JSON.parse(localStorage.getItem('lfiag_likes')||'{}')}catch(e){}
+  var _vw={}; try{_vw=JSON.parse(localStorage.getItem('lfiag_views')||'{}')}catch(e){}
+  var seen=!!_h[v.id];
+  var progress=(_h[v.id]&&_h[v.id].progress)||0;
+  var myLike=_lk[v.id]||0;
+  var vc_count=_vw[v.id]||0;
+  var likeCount=myLike===1?1:0;
   var _cleanN = v.name.replace(/\.[^.]+$/,'');
   var _words  = _cleanN.split(/[\s\-_]+/).filter(function(w){return w.length>0;});
   var _init   = (_words.length>=2 ? _words[0][0]+_words[1][0] : _cleanN.substring(0,2)).toUpperCase();
@@ -1723,7 +1728,14 @@ function openVideo(id) {
 
   var _m=document.getElementById('modal');
   _m._currentVideoId=id;
-  try{ var vw=JSON.parse(localStorage.getItem('lfiag_views')||'{}'); vw[id]=(vw[id]||0)+1; localStorage.setItem('lfiag_views',JSON.stringify(vw)); }catch(e){}
+  try {
+    var vw=JSON.parse(localStorage.getItem('lfiag_views')||'{}');
+    vw[id]=(vw[id]||0)+1;
+    localStorage.setItem('lfiag_views',JSON.stringify(vw));
+    if(!window._sharedStats) window._sharedStats={};
+    if(!window._sharedStats[id]) window._sharedStats[id]={views:0,likes:0};
+    window._sharedStats[id].views=vw[id];
+  } catch(e) {}
   _m.classList.add('open');
   document.body.style.overflow='hidden';
   // Enregistrer immédiatement dans l'historique à l'ouverture
@@ -1791,6 +1803,18 @@ function saveSettings() { localStorage.setItem('lfiag_settings_v2',JSON.stringif
 // ============================================
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function getSharedStats() {
+  var views = {}; var likes = {};
+  try { views = JSON.parse(localStorage.getItem('lfiag_views')||'{}'); } catch(e) {}
+  try { likes = JSON.parse(localStorage.getItem('lfiag_likes')||'{}'); } catch(e) {}
+  var stats = {};
+  Object.keys(views).forEach(function(id){ stats[id]={views:views[id]||0,likes:0}; });
+  Object.keys(likes).forEach(function(id){
+    if(!stats[id]) stats[id]={views:0,likes:0};
+    stats[id].likes = likes[id]===1 ? 1 : 0;
+  });
+  return stats;
+}
 function getLikes() {
   try { return JSON.parse(localStorage.getItem('lfiag_likes')||'{}'); } catch(e) { return {}; }
 }
@@ -1802,27 +1826,27 @@ function getViewsShared() {
 }
 function toggleLike(id, val) {
   if (!id) return;
-  var l = getLikes();
-  var prev = l[id]||0;
-  l[id] = (prev===val) ? 0 : val;
+  var l=getLikes(), prev=l[id]||0;
+  l[id]=(prev===val)?0:val;
   saveLikes(l);
+  if(window._sharedStats){
+    if(!window._sharedStats[id]) window._sharedStats[id]={views:0,likes:0};
+    window._sharedStats[id].likes=l[id]===1?1:0;
+  }
+  renderVideos();
   updateModalLikes(id);
 }
 function updateModalLikes(id) {
-  var l = getLikes();
-  var v = getViewsShared();
-  var ml = l[id]||0;
-  var views = v[id]||0;
+  var l=getLikes(), vw=getViewsShared();
+  var ml=l[id]||0, views=vw[id]||0;
   var lb=document.getElementById('modalLikeBtn');
   var db=document.getElementById('modalDislikeBtn');
-  var mv=document.getElementById('modalViews');
-  if (lb) lb.className='modal-like-btn'+(ml===1?' active-like':'');
-  if (db) db.className='modal-like-btn'+(ml===-1?' active-dislike':'');
-  if (mv) mv.textContent=views>0?views+' vue'+(views>1?'s':''):'';
-  // Mettre à jour le count de likes dans le bouton
   var lc=document.getElementById('modalLikeCount');
-  var likes = Object.values(getLikes()).filter(function(v){return v===1;}).length;
-  if (lc) lc.textContent = Object.keys(getLikes()).filter(function(k){return getLikes()[k]===1&&k===id;}).length || 0;
+  var mv=document.getElementById('modalViews');
+  if(lb) lb.className='modal-like-btn'+(ml===1?' active-like':'');
+  if(db) db.className='modal-like-btn'+(ml===-1?' active-dislike':'');
+  if(lc) lc.textContent=ml===1?1:0;
+  if(mv) mv.textContent=views>0?views+' vue'+(views>1?'s':''):'';
 }
 function formatDuration(ms) { const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60; return h>0?`${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${m}:${String(sec).padStart(2,'0')}`; }
 function toast(msg,dur=3500) { const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.getElementById('toasts').appendChild(t); setTimeout(()=>t.remove(),dur); }
