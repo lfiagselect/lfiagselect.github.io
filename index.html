@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604040853">
+<meta name="cache-version" content="202604040857">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -107,9 +107,9 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
 .hero-signoff{display:block;margin-top:.55rem;color:rgba(255,255,255,.9);font-weight:600;letter-spacing:-.01em}
 .hero-actions{display:flex;flex-direction:column;align-items:flex-start;gap:.6rem;margin-top:1.35rem}
   .hero-btns{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
-  .hero-counter{display:inline-flex;align-items:baseline;gap:.3rem;font-size:.82rem;color:rgba(255,255,255,.55)}
-  .hero-counter-num{font-size:1.55rem;font-weight:800;letter-spacing:-.04em;color:#fff;font-variant-numeric:tabular-nums}
-  .hero-counter-label{font-size:.75rem;color:rgba(255,255,255,.45);letter-spacing:.04em}
+  .hero-counter{display:inline-flex;align-items:baseline;gap:.45rem;font-size:.82rem;color:rgba(255,255,255,.55)}
+  .hero-counter-num{font-size:1.55rem;font-weight:800;letter-spacing:-.04em;color:var(--gold);font-variant-numeric:tabular-nums}
+  .hero-counter-label{font-size:.78rem;color:rgba(255,255,255,.55);letter-spacing:.02em}
   @keyframes countUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   .hero-counter-num{animation:countUp .5s var(--ease) both}
 
@@ -585,8 +585,7 @@ if ('serviceWorker' in navigator) {
         </div>
         <div class="hero-actions">
           <div class="hero-counter" id="heroCounter" style="display:none">
-            <span class="hero-counter-num" id="heroCounterNum">0</span>
-            <span class="hero-counter-label">vid&#xe9;os disponibles</span>
+            <span class="hero-counter-num" id="heroCounterNum">0</span> <span class="hero-counter-label">vid&#xe9;os disponibles</span>
           </div>
           <div class="hero-btns">
             <button class="btn btn-ghost-hero" id="heroContinueBtn" style="display:none" onclick="heroContinueWatching()">
