@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604040847">
+<meta name="cache-version" content="202604040853">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -78,6 +78,9 @@ header.shrunk{height:calc(40px + env(safe-area-inset-top))!important;padding:env
 
 /* ── BUTTONS ── */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.6rem .95rem;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);color:var(--text2);font-size:.8rem;font-weight:500;text-decoration:none;cursor:pointer;transition:.15s}
+  .btn.loading{opacity:.7;pointer-events:none}
+  .btn.loading svg{animation:spin .7s linear infinite}
+  @keyframes btn-pulse{0%,100%{opacity:1}50%{opacity:.55}}
   .btn-ghost-hero{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.15);color:var(--text);font-weight:600}
 .btn:hover{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.18);color:var(--text);transform:translateY(-1px)}
 .btn-primary{background:var(--text);color:#000;border-color:transparent;font-weight:700}
@@ -583,17 +586,14 @@ if ('serviceWorker' in navigator) {
         <div class="hero-actions">
           <div class="hero-counter" id="heroCounter" style="display:none">
             <span class="hero-counter-num" id="heroCounterNum">0</span>
-            <div>
-              <div class="hero-counter-label">vid&#xe9;os</div>
-              <div class="hero-counter-label">disponibles</div>
-            </div>
+            <span class="hero-counter-label">vid&#xe9;os disponibles</span>
           </div>
           <div class="hero-btns">
             <button class="btn btn-ghost-hero" id="heroContinueBtn" style="display:none" onclick="heroContinueWatching()">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              Continuer &#xe0; regarder
+              Reprendre la lecture
             </button>
-            <button class="btn" onclick="refreshWithFeedback()">
+            <button class="btn" id="heroRefreshBtn" onclick="refreshWithFeedback()">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0 0 20.49 15"/></svg>
               Actualiser
             </button>
@@ -1817,27 +1817,30 @@ function refreshWithFeedback() {
 
   if (navigator.vibrate) navigator.vibrate(10);
 
-  // Vider uniquement le cache local
+  // Animer le bouton Actualiser
+  var btn = document.getElementById('heroRefreshBtn');
+  if (btn) btn.classList.add('loading');
+
+  var done = function(ok) {
+    window._refreshInProgress = false;
+    if (btn) btn.classList.remove('loading');
+    if (ok) {
+      toast('✓ Bibliothèque actualisée');
+      setTimeout(refreshVideosBackground, 2000);
+    } else {
+      toast('⚠ Erreur de connexion — réessayez');
+    }
+  };
+
   try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
 
-  // Étape 1 : charger depuis le cache serveur (~1.5s)
-  fetchAndCacheVideos(true, false).then(function() {
-    toast('✓ Bibliothèque actualisée');
-    window._refreshInProgress = false;
-    // Étape 2 : invalider le cache serveur en arrière-plan (silencieux, ~27s)
-    setTimeout(function() {
-      refreshVideosBackground();
-    }, 2000);
-  }).catch(function() {
-    // En cas d'échec, réessayer sans cache
-    fetchAndCacheVideos(true, true).then(function() {
-      toast('✓ Bibliothèque actualisée');
-    }).catch(function() {
-      toast('⚠ Erreur de connexion — réessayez');
-    }).finally(function() {
-      window._refreshInProgress = false;
+  fetchAndCacheVideos(true, false)
+    .then(function() { done(true); })
+    .catch(function() {
+      fetchAndCacheVideos(true, true)
+        .then(function() { done(true); })
+        .catch(function() { done(false); });
     });
-  });
 }
 
 var _au=[];
@@ -2081,27 +2084,30 @@ function refreshWithFeedback() {
 
   if (navigator.vibrate) navigator.vibrate(10);
 
-  // Vider uniquement le cache local
+  // Animer le bouton Actualiser
+  var btn = document.getElementById('heroRefreshBtn');
+  if (btn) btn.classList.add('loading');
+
+  var done = function(ok) {
+    window._refreshInProgress = false;
+    if (btn) btn.classList.remove('loading');
+    if (ok) {
+      toast('✓ Bibliothèque actualisée');
+      setTimeout(refreshVideosBackground, 2000);
+    } else {
+      toast('⚠ Erreur de connexion — réessayez');
+    }
+  };
+
   try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
 
-  // Étape 1 : charger depuis le cache serveur (~1.5s)
-  fetchAndCacheVideos(true, false).then(function() {
-    toast('✓ Bibliothèque actualisée');
-    window._refreshInProgress = false;
-    // Étape 2 : invalider le cache serveur en arrière-plan (silencieux, ~27s)
-    setTimeout(function() {
-      refreshVideosBackground();
-    }, 2000);
-  }).catch(function() {
-    // En cas d'échec, réessayer sans cache
-    fetchAndCacheVideos(true, true).then(function() {
-      toast('✓ Bibliothèque actualisée');
-    }).catch(function() {
-      toast('⚠ Erreur de connexion — réessayez');
-    }).finally(function() {
-      window._refreshInProgress = false;
+  fetchAndCacheVideos(true, false)
+    .then(function() { done(true); })
+    .catch(function() {
+      fetchAndCacheVideos(true, true)
+        .then(function() { done(true); })
+        .catch(function() { done(false); });
     });
-  });
 }
 
 document.getElementById('searchInput').addEventListener('input', function(e) {
