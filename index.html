@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604041557">
+<meta name="cache-version" content="202604041559">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1330,9 +1330,9 @@ function categorize(video) {
 
 function renderAll() {
   showScreen('app');
-  window._sharedStats = getSharedStats();
+  try { window._sharedStats = getSharedStats(); } catch(e) { window._sharedStats = {}; }
   if (isMobile()) { renderMobCatbar(); } else { renderDeskCatBar(); }
-  renderCatDrawer(); // toujours à jour même si le drawer était ouvert
+  renderCatDrawer();
   renderVideos();
   updateHeroWidgets();
   updateAluneSection();
