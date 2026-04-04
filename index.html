@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604041325">
+<meta name="cache-version" content="202604041329">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -891,10 +891,9 @@ function initPullToRefresh() {
         }
         window._refreshInProgress = true;
         try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
-        // Cache serveur (~1.5s) puis background bust
-        fetchAndCacheVideos(true, false).then(function() {
+        // Bust cache serveur pour avoir les nouvelles vidéos
+        fetchAndCacheVideos(true, true).then(function() {
           toast('✓ Bibliothèque actualisée');
-          setTimeout(refreshVideosBackground, 2000);
         }).catch(function() {
           toast('⚠ Erreur de connexion');
         }).finally(function() {
@@ -1207,7 +1206,7 @@ async function loadVideos() {
     var raw = localStorage.getItem('lfiag_videos_cache');
     if (raw) {
       var p = JSON.parse(raw);
-      if (p && p.videos && (Date.now() - p.ts) < 21600000) cached = p.videos;
+      if (p && p.videos && (Date.now() - p.ts) < 3600000) cached = p.videos; // 1h
     }
   } catch(e) {}
 
@@ -1855,13 +1854,10 @@ function refreshWithFeedback() {
 
   try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
 
-  fetchAndCacheVideos(true, false)
+  // Bust le cache serveur (ts=Date.now()) pour forcer la réindexation Drive
+  fetchAndCacheVideos(true, true)
     .then(function() { done(true); })
-    .catch(function() {
-      fetchAndCacheVideos(true, true)
-        .then(function() { done(true); })
-        .catch(function() { done(false); });
-    });
+    .catch(function() { done(false); });
 }
 
 var _au=[];
