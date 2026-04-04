@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604041339">
+<meta name="cache-version" content="202604041346">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -412,17 +412,14 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('sw.js').then(function(reg) {
 
-      // Vérifier s'il y a une mise à jour (seulement si déjà contrôlé)
-      if (navigator.serviceWorker.controller) {
-        reg.update();
-      }
+      // Vérifier une mise à jour à chaque ouverture (PWA incluse)
+      reg.update();
 
-      // Quand un nouveau SW est installé et en attente
+      // Quand un nouveau SW est trouvé — l'activer immédiatement
       reg.addEventListener('updatefound', function() {
         var newWorker = reg.installing;
         newWorker.addEventListener('statechange', function() {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            // Nouvelle version disponible — activer immédiatement
+          if (newWorker.state === 'installed') {
             newWorker.postMessage('SKIP_WAITING');
           }
         });
@@ -430,15 +427,12 @@ if ('serviceWorker' in navigator) {
 
     }).catch(function() {});
 
-    // Recharger uniquement si le SW change APRES le chargement initial
-    // Ne jamais recharger si un token OAuth est en cours de traitement
-    var _swReady = false;
-    setTimeout(function() { _swReady = true; }, 2000);
+    // Recharger la page quand le nouveau SW prend le contrôle
+    // Protection OAuth : ne pas recharger si un token est dans le hash
     var refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', function() {
-      // Protéger le flux OAuth : ne pas recharger si le hash contient un token
       if (location.hash.includes('access_token')) return;
-      if (_swReady && !refreshing) {
+      if (!refreshing) {
         refreshing = true;
         window.location.reload();
       }
