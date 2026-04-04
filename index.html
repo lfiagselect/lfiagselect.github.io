@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604040807">
+<meta name="cache-version" content="202604040847">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -871,8 +871,12 @@ function initPullToRefresh() {
         }
         window._refreshInProgress = true;
         try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
-        fetchAndCacheVideos(true, true).then(function() {
+        // Cache serveur (~1.5s) puis background bust
+        fetchAndCacheVideos(true, false).then(function() {
           toast('✓ Bibliothèque actualisée');
+          setTimeout(refreshVideosBackground, 2000);
+        }).catch(function() {
+          toast('⚠ Erreur de connexion');
         }).finally(function() {
           refreshing = false;
           window._refreshInProgress = false;
@@ -1159,7 +1163,7 @@ function callScript(action, params, retry) {
       var el=document.getElementById(cb); if(el)el.remove();
       if(retry<1) callScript(action,params,retry+1).then(resolve).catch(reject);
       else reject(new Error('Serveur introuvable. Réessayez.'));
-    },25000);
+    },30000);
     window[cb]=function(data){
       if(done)return; done=true; clearTimeout(timer); delete window[cb];
       var el=document.getElementById(cb); if(el)el.remove();
@@ -1808,31 +1812,31 @@ function formatDuration(ms) { const s=Math.floor(ms/1000),h=Math.floor(s/3600),m
 function toast(msg,dur=3500) { const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.getElementById('toasts').appendChild(t); setTimeout(()=>t.remove(),dur); }
 
 function refreshWithFeedback() {
-  // Verrou anti-double appel
   if (window._refreshInProgress) return;
   window._refreshInProgress = true;
 
-  var container = document.getElementById('toasts');
-  var t = document.createElement('div');
-  t.className = 'toast toast-loading';
-  t.id = 'refreshToast';
-  t.innerHTML = '<div class="toast-spinner"></div><span>Actualisation en cours…</span>';
-  container.appendChild(t);
-
   if (navigator.vibrate) navigator.vibrate(10);
 
+  // Vider uniquement le cache local
   try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
 
-  fetchAndCacheVideos(true, true).then(function() {
-    var old = document.getElementById('refreshToast');
-    if (old) old.remove();
+  // Étape 1 : charger depuis le cache serveur (~1.5s)
+  fetchAndCacheVideos(true, false).then(function() {
     toast('✓ Bibliothèque actualisée');
-  }).catch(function() {
-    var old = document.getElementById('refreshToast');
-    if (old) old.remove();
-    toast('⚠ Erreur lors de l’actualisation');
-  }).finally(function() {
     window._refreshInProgress = false;
+    // Étape 2 : invalider le cache serveur en arrière-plan (silencieux, ~27s)
+    setTimeout(function() {
+      refreshVideosBackground();
+    }, 2000);
+  }).catch(function() {
+    // En cas d'échec, réessayer sans cache
+    fetchAndCacheVideos(true, true).then(function() {
+      toast('✓ Bibliothèque actualisée');
+    }).catch(function() {
+      toast('⚠ Erreur de connexion — réessayez');
+    }).finally(function() {
+      window._refreshInProgress = false;
+    });
   });
 }
 
@@ -2072,31 +2076,31 @@ function formatDuration(ms) { const s=Math.floor(ms/1000),h=Math.floor(s/3600),m
 function toast(msg,dur=3500) { const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.getElementById('toasts').appendChild(t); setTimeout(()=>t.remove(),dur); }
 
 function refreshWithFeedback() {
-  // Verrou anti-double appel
   if (window._refreshInProgress) return;
   window._refreshInProgress = true;
 
-  var container = document.getElementById('toasts');
-  var t = document.createElement('div');
-  t.className = 'toast toast-loading';
-  t.id = 'refreshToast';
-  t.innerHTML = '<div class="toast-spinner"></div><span>Actualisation en cours…</span>';
-  container.appendChild(t);
-
   if (navigator.vibrate) navigator.vibrate(10);
 
+  // Vider uniquement le cache local
   try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
 
-  fetchAndCacheVideos(true, true).then(function() {
-    var old = document.getElementById('refreshToast');
-    if (old) old.remove();
+  // Étape 1 : charger depuis le cache serveur (~1.5s)
+  fetchAndCacheVideos(true, false).then(function() {
     toast('✓ Bibliothèque actualisée');
-  }).catch(function() {
-    var old = document.getElementById('refreshToast');
-    if (old) old.remove();
-    toast('⚠ Erreur lors de l’actualisation');
-  }).finally(function() {
     window._refreshInProgress = false;
+    // Étape 2 : invalider le cache serveur en arrière-plan (silencieux, ~27s)
+    setTimeout(function() {
+      refreshVideosBackground();
+    }, 2000);
+  }).catch(function() {
+    // En cas d'échec, réessayer sans cache
+    fetchAndCacheVideos(true, true).then(function() {
+      toast('✓ Bibliothèque actualisée');
+    }).catch(function() {
+      toast('⚠ Erreur de connexion — réessayez');
+    }).finally(function() {
+      window._refreshInProgress = false;
+    });
   });
 }
 
