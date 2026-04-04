@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604041645">
+<meta name="cache-version" content="202604041652">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1200,7 +1200,7 @@ async function loadVideos() {
     var raw = localStorage.getItem('lfiag_videos_cache');
     if (raw) {
       var p = JSON.parse(raw);
-      if (p && p.videos && (Date.now() - p.ts) < 3600000) cached = p.videos; // 1h
+      if (p && p.videos && (Date.now() - p.ts) < 1800000) cached = p.videos; // 30min
     }
   } catch(e) {}
 
@@ -1228,12 +1228,14 @@ async function refreshVideosBackground() {
   // Ne pas tourner si un refresh manuel est en cours
   if (window._refreshInProgress) return;
   try {
-    var data = await callScript('videos', { email: currentUser.email });
+    // ts=Date.now() pour invalider le cache serveur Apps Script (6h) à chaque ouverture
+    var data = await callScript('videos', { email: currentUser.email, ts: Date.now() });
     var fresh = dedup(data.videos || []);
     fresh = await enrichThumbnails(fresh);
     try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: fresh, ts: Date.now()})); } catch(e) {}
-    var a = fresh.map(function(v){return v.id;}).sort().join(',');
-    var b = allVideos.map(function(v){return v.id;}).sort().join(',');
+    // Comparer IDs ET catégories pour détecter les renommages de dossiers
+    var a = fresh.map(function(v){return v.id+'|'+(v._category||'');}).sort().join(',');
+    var b = allVideos.map(function(v){return v.id+'|'+(v._cat||'');}).sort().join(',');
     if (a !== b) {
       allVideos = dedup(fresh).map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
       renderAll();
