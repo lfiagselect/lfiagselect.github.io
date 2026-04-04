@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604041652">
+<meta name="cache-version" content="202604042020">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1196,21 +1196,29 @@ function callScript(action, params, retry) {
 // ============================================
 async function loadVideos() {
   var cached = null;
+  var cacheAge = Infinity;
   try {
     var raw = localStorage.getItem('lfiag_videos_cache');
     if (raw) {
       var p = JSON.parse(raw);
-      if (p && p.videos && (Date.now() - p.ts) < 1800000) cached = p.videos; // 30min
+      if (p && p.videos && p.videos.length > 0) {
+        cached = p.videos;
+        cacheAge = Date.now() - (p.ts || 0);
+      }
     }
   } catch(e) {}
 
-  if (cached && cached.length > 0) {
+  if (cached && cacheAge < 1800000) {
+    // Cache < 30min : afficher immédiatement
     allVideos = dedup(cached).map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
     renderAll();
+    // Toujours vérifier le serveur en arrière-plan avec bust
+    // pour avoir les catégories à jour (renommages Drive)
     setTimeout(refreshVideosBackground, 300);
   } else {
+    // Cache absent ou > 30min : appel serveur avec bust obligatoire
     showLoading();
-    await fetchAndCacheVideos(true);
+    await fetchAndCacheVideos(true, true); // bustCache=true
   }
 }
 
