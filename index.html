@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604050717">
+<meta name="cache-version" content="202604050722">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1130,59 +1130,49 @@ async function handleCallback() {
 
   if (!accessToken) { showScreen('auth'); return; }
 
-  // ── Cas 1 : utilisateur connu en cache → affichage immédiat ──
-  var cachedUser = null;
-  try { cachedUser = JSON.parse(sessionStorage.getItem('lfiag_user') || localStorage.getItem('lfiag_user') || 'null'); } catch(e) {}
-
-  if (cachedUser && cachedUser.email) {
-    currentUser = Object.assign({}, cachedUser, { token: accessToken });
-    showAppUI();
-    // Charger les vidéos ET vérifier l'accès en parallèle
-    var checkPromise = callScript('check', { email: currentUser.email });
-    await loadVideos();
-    checkPromise.then(function(access) {
-      if (!access.authorized) { signOut(); toast('Accès révoqué'); }
-      else { currentUser.role = access.role; }
-    }).catch(function() {});
-    return;
-  }
-
-  // ── Cas 2 : première connexion ──
   showScreen('loading');
   setLoadingMsg('Connexion…');
 
   try {
-    // Étape 1 : récupérer l'email (userinfo Google ~0.2s)
-    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-      headers: { Authorization: 'Bearer ' + accessToken }
-    });
-    if (!res.ok) throw new Error('Token invalide');
-    const info = await res.json();
+    // ── Étape 1 : récupérer le profil Google ──────────────────
+    var cachedUser = null;
+    try { cachedUser = JSON.parse(sessionStorage.getItem('lfiag_user') || localStorage.getItem('lfiag_user') || 'null'); } catch(e) {}
 
-    currentUser = { email: info.email, name: info.name || info.email, token: accessToken };
-    try {
-      var u = JSON.stringify(currentUser);
-      sessionStorage.setItem('lfiag_user', u);
-      localStorage.setItem('lfiag_user', u);
-    } catch(e) {}
+    if (cachedUser && cachedUser.email) {
+      // Profil connu — pas besoin d'appeler Google
+      currentUser = Object.assign({}, cachedUser, { token: accessToken });
+    } else {
+      // Première connexion — appel userinfo
+      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: 'Bearer ' + accessToken }
+      });
+      if (!res.ok) throw new Error('Token invalide');
+      const info = await res.json();
+      currentUser = { email: info.email, name: info.name || info.email, token: accessToken };
+      try {
+        var u = JSON.stringify(currentUser);
+        sessionStorage.setItem('lfiag_user', u);
+        localStorage.setItem('lfiag_user', u);
+      } catch(e) {}
+    }
 
-    // Étape 2 : check + videos en parallèle (~1.3s au lieu de 2.5s)
-    showAppUI();
-    const [accessResult] = await Promise.all([
-      callScript('check', { email: currentUser.email }),
-      loadVideos()
-    ]);
-
-    if (!accessResult.authorized) {
-      signOut();
+    // ── Étape 2 : vérifier l'accès ────────────────────────────
+    setLoadingMsg('Vérification…');
+    const access = await callScript('check', { email: currentUser.email });
+    if (!access.authorized) {
       document.getElementById('deniedEmail').textContent = currentUser.email;
       showScreen('denied');
       return;
     }
-    currentUser.role = accessResult.role;
+    currentUser.role = access.role;
+
+    // ── Étape 3 : afficher l'app et charger les vidéos ────────
+    showAppUI();
+    await loadVideos();
 
   } catch(e) {
     sessionStorage.removeItem('lfiag_token');
+    try { localStorage.removeItem('lfiag_user'); } catch(ex) {}
     showScreen('auth');
     toast('Erreur de connexion : ' + e.message);
   }
