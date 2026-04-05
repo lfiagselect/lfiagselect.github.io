@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604050712">
+<meta name="cache-version" content="202604050717">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1130,60 +1130,56 @@ async function handleCallback() {
 
   if (!accessToken) { showScreen('auth'); return; }
 
-  // ── Cas 1 : utilisateur déjà connu en cache (retour rapide) ──
+  // ── Cas 1 : utilisateur connu en cache → affichage immédiat ──
   var cachedUser = null;
   try { cachedUser = JSON.parse(sessionStorage.getItem('lfiag_user') || localStorage.getItem('lfiag_user') || 'null'); } catch(e) {}
 
   if (cachedUser && cachedUser.email) {
-    // Afficher immédiatement sans attendre le réseau
     currentUser = Object.assign({}, cachedUser, { token: accessToken });
     showAppUI();
+    // Charger les vidéos ET vérifier l'accès en parallèle
+    var checkPromise = callScript('check', { email: currentUser.email });
     await loadVideos();
-    // Vérifier l'accès en arrière-plan (révocation éventuelle)
-    callScript('check', { email: currentUser.email }).then(function(access) {
+    checkPromise.then(function(access) {
       if (!access.authorized) { signOut(); toast('Accès révoqué'); }
       else { currentUser.role = access.role; }
-    }).catch(function() {}); // silencieux si réseau absent
+    }).catch(function() {});
     return;
   }
 
-  // ── Cas 2 : première connexion — appels réseau nécessaires ──
+  // ── Cas 2 : première connexion ──
   showScreen('loading');
-  setLoadingMsg('Connexion en cours…');
+  setLoadingMsg('Connexion…');
 
   try {
-    // userinfo Google + check Apps Script en parallèle
-    const [res, access] = await Promise.all([
-      fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: 'Bearer ' + accessToken }
-      }),
-      // On ne peut pas lancer check sans email — on lance userinfo d'abord
-      Promise.resolve(null)
-    ]);
-
+    // Étape 1 : récupérer l'email (userinfo Google ~0.2s)
+    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: 'Bearer ' + accessToken }
+    });
     if (!res.ok) throw new Error('Token invalide');
     const info = await res.json();
+
     currentUser = { email: info.email, name: info.name || info.email, token: accessToken };
-    // Sauvegarder pour les prochaines ouvertures (accès instantané)
     try {
       var u = JSON.stringify(currentUser);
       sessionStorage.setItem('lfiag_user', u);
       localStorage.setItem('lfiag_user', u);
     } catch(e) {}
 
-    setLoadingMsg('Vérification…');
+    // Étape 2 : check + videos en parallèle (~1.3s au lieu de 2.5s)
+    showAppUI();
+    const [accessResult] = await Promise.all([
+      callScript('check', { email: currentUser.email }),
+      loadVideos()
+    ]);
 
-    // check Apps Script
-    const accessResult = await callScript('check', { email: currentUser.email });
     if (!accessResult.authorized) {
+      signOut();
       document.getElementById('deniedEmail').textContent = currentUser.email;
       showScreen('denied');
       return;
     }
-
     currentUser.role = accessResult.role;
-    showAppUI();
-    await loadVideos();
 
   } catch(e) {
     sessionStorage.removeItem('lfiag_token');
