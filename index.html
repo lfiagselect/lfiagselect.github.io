@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604061457">
+<meta name="cache-version" content="202604061551">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1136,16 +1136,16 @@ async function handleCallback() {
   setLoadingMsg('Connexion…');
 
   try {
-    // ── Étape 1 : profil (cache ou Google ~0.2s) ──────────────
+    // ── Étape 1 : profil utilisateur (~0s depuis cache, ~0.2s depuis Google) ──
     var cachedUser = null;
-    try { cachedUser = JSON.parse(sessionStorage.getItem('lfiag_user') || localStorage.getItem('lfiag_user') || 'null'); } catch(e) {}
+    try { cachedUser = JSON.parse(sessionStorage.getItem('lfiag_user') ||
+                                  localStorage.getItem('lfiag_user') || 'null'); } catch(e) {}
 
     if (cachedUser && cachedUser.email) {
       currentUser = Object.assign({}, cachedUser, { token: accessToken });
     } else {
-      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: 'Bearer ' + accessToken }
-      });
+      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',
+        { headers: { Authorization: 'Bearer ' + accessToken } });
       if (!res.ok) throw new Error('Token invalide');
       const info = await res.json();
       currentUser = { email: info.email, name: info.name || info.email, token: accessToken };
@@ -1156,7 +1156,7 @@ async function handleCallback() {
       } catch(e) {}
     }
 
-    // ── Étape 2 : vérifier le cache d'accès (2h) ─────────────
+    // ── Étape 2 : cache accès (2h) ───────────────────────────────
     var cachedAccess = null;
     try {
       var ca = JSON.parse(localStorage.getItem('lfiag_access') || 'null');
@@ -1164,34 +1164,59 @@ async function handleCallback() {
         cachedAccess = ca;
     } catch(e) {}
 
-    if (cachedAccess) {
-      // Accès connu et récent : afficher immédiatement
-      if (!cachedAccess.authorized) { showScreen('denied'); return; }
-      currentUser.role = cachedAccess.role || 'user';
-      showAppUI();
-      await loadVideos();
-      // Vérifier silencieusement en arrière-plan
-      _checkAccessBackground();
-    } else {
-      // Pas de cache : afficher d'abord, vérifier ensuite
-      // Le token Google valide est suffisant pour afficher l'app
-      currentUser.role = 'user'; // rôle par défaut en attendant check
-      showAppUI();
-      // Charger les vidéos ET vérifier en parallèle
-      await Promise.all([
-        loadVideos(),
-        _checkAccessBackground()
-      ]);
-    }
+    // Rôle par défaut en attendant la confirmation du check
+    currentUser.role = (cachedAccess && cachedAccess.role) || 'user';
+
+    // ── Étape 3 : afficher l'app IMMÉDIATEMENT ─────────────────
+    // Charger les vidéos (depuis cache local si dispo, sinon skeleton)
+    showAppUI();
+    _loadVideosAndShow();
+
+    // ── Étape 4 : check accès en ARRIÈRE-PLAN (jamais bloquant) ──
+    _checkAccessBackground();
 
   } catch(e) {
     sessionStorage.removeItem('lfiag_token');
-    try { localStorage.removeItem('lfiag_user'); localStorage.removeItem('lfiag_access'); } catch(ex) {}
+    try { localStorage.removeItem('lfiag_user');
+          localStorage.removeItem('lfiag_access'); } catch(ex) {}
     showScreen('auth');
     toast('Erreur de connexion : ' + e.message);
   }
 }
 
+// Charger et afficher les vidéos — jamais bloquant
+async function _loadVideosAndShow() {
+  try {
+    var cached = null, cacheAge = Infinity;
+    try {
+      var raw = localStorage.getItem('lfiag_videos_cache');
+      if (raw) { var p = JSON.parse(raw);
+        if (p && p.videos && p.videos.length > 0) {
+          cached = p.videos; cacheAge = Date.now() - (p.ts || 0); } }
+    } catch(e) {}
+
+    if (cached && cached.length > 0) {
+      // Cache local disponible : afficher instantanément
+      allVideos = dedup(cached).map(function(v){
+        return Object.assign({},v,{_cat:categorize(v)}); });
+      renderAll(); // appelle showScreen('app')
+      // Rafraîchir en arrière-plan si cache > 5min
+      if (cacheAge > 300000) setTimeout(refreshVideosBackground, 500);
+    } else {
+      // Pas de cache : montrer skeleton puis charger
+      showLoading();
+      showScreen('app'); // afficher l'app avec skeleton
+      try {
+        await fetchAndCacheVideos(true, false);
+      } catch(e) {
+        // Si échec réseau, laisser l'app ouverte avec un message
+        document.getElementById('content').innerHTML =
+          '<div class="empty-state"><p>Chargement…</p>' +
+          '<button class="btn" onclick="_loadVideosAndShow()" style="margin:1rem auto">Réessayer</button></div>';
+      }
+    }
+  } catch(e) { console.warn('loadVideos:', e); }
+}
 function _checkAccessBackground() {
   return callScript('check', { email: currentUser.email })
     .then(function(access) {
@@ -1243,34 +1268,9 @@ function callScript(action, params, retry) {
 // LOAD VIDEOS
 // ============================================
 async function loadVideos() {
-  var cached = null;
-  var cacheAge = Infinity;
-  try {
-    var raw = localStorage.getItem('lfiag_videos_cache');
-    if (raw) {
-      var p = JSON.parse(raw);
-      if (p && p.videos && p.videos.length > 0) {
-        cached = p.videos;
-        cacheAge = Date.now() - (p.ts || 0);
-      }
-    }
-  } catch(e) {}
-
-  if (cached && cacheAge < 1800000) {
-    // Cache < 30min : afficher immédiatement
-    allVideos = dedup(cached).map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
-    renderAll();
-    // Toujours vérifier le serveur en arrière-plan avec bust
-    // pour avoir les catégories à jour (renommages Drive)
-    setTimeout(refreshVideosBackground, 300);
-  } else {
-    // Cache absent ou > 30min : charger depuis le cache serveur (~1.5s)
-    // PAS de bust Drive (risque de timeout 30s+)
-    showLoading();
-    await fetchAndCacheVideos(true, false);
-  }
+  // Alias pour compatibilité — délègue à _loadVideosAndShow
+  return _loadVideosAndShow();
 }
-
 function dedup(arr) {
   var s = {};
   return (arr||[]).filter(function(v){ if(!v||!v.id||s[v.id]) return false; s[v.id]=true; return true; });
