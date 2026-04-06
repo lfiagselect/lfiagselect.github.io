@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604061950">
+<meta name="cache-version" content="202604061954">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -969,10 +969,22 @@ function renderCatDrawer() {
 function selectCatFromDrawer(c) {
   activeCategory = c;
   closeCatDrawer();
+  closeDeskDrawer();
   renderToolbar(); renderVideos();
-  window.scrollTo({top:0,behavior:'smooth'});
   var b = document.getElementById('mobCatLabel');
   if (b) b.textContent = c==='__new__'?'Récents':c==='Tout'?'Tout':c.split(/[\s\-]/)[0];
+  if (!isMobile()) {
+    // Desktop : scroll vers le contenu
+    setTimeout(function() {
+      var content = document.getElementById('content');
+      if (content) {
+        var top = content.getBoundingClientRect().top + window.scrollY - 16;
+        window.scrollTo({top: top, behavior: 'smooth'});
+      }
+    }, 60);
+  } else {
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
 }
 function initHeaderShrink() {
   var hdr = document.querySelector('header');
