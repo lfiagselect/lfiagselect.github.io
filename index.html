@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604061448">
+<meta name="cache-version" content="202604061457">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1914,33 +1914,32 @@ function toast(msg,dur=3500) { const t=document.createElement('div'); t.classNam
 function refreshWithFeedback() {
   if (window._refreshInProgress) return;
   window._refreshInProgress = true;
-
   if (navigator.vibrate) navigator.vibrate(10);
 
-  // Animer le bouton Actualiser
   var btn = document.getElementById('heroRefreshBtn');
   if (btn) btn.classList.add('loading');
 
-  var done = function(ok) {
-    window._refreshInProgress = false;
-    if (btn) btn.classList.remove('loading');
-    if (ok) {
-      toast('✓ Bibliothèque actualisée');
-    } else {
-      toast('⚠ Erreur de connexion — réessayez');
-    }
-  };
-
-  try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
-
-  // v9.1 : invalider le cache serveur en 1s puis recharger depuis Drive
+  // Etape 1 : invalider le cache serveur (~5s)
   callScript('invalidate', { admin_email: currentUser.email })
-    .catch(function() {}) // silencieux si pas v9.1 en place
+    .catch(function(){})
     .finally(function() {
-      // Recharger avec bust pour forcer la réindexation Drive
-      fetchAndCacheVideos(true, true)
-        .then(function() { done(true); })
-        .catch(function() { done(false); });
+      // Etape 2 : lancer la reindexation Drive cote serveur (feu et oubli, ~32s)
+      // On n'attend PAS la reponse (timeout client a 30s)
+      callScript('videos', { email: currentUser.email }).catch(function(){});
+
+      // Etape 3 : informer l'utilisateur et debloquer l'UI
+      if (btn) btn.classList.remove('loading');
+      window._refreshInProgress = false;
+      toast('⏳ Mise à jour en cours (40s)…');
+      try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
+
+      // Etape 4 : apres 42s le cache serveur est pret, recharger
+      setTimeout(function() {
+        toast('Chargement des nouvelles categories…');
+        fetchAndCacheVideos(true, false)
+          .then(function() { toast('✓ Categories mises a jour !'); })
+          .catch(function() { toast('⚠ Reessayez dans quelques secondes'); });
+      }, 42000);
     });
 }
 
