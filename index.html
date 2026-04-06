@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604050722">
+<meta name="cache-version" content="202604061418">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -478,6 +478,7 @@ if ('serviceWorker' in navigator) {
 <div class="admin-dropdown" id="adminDropdown">
   <div class="admin-dropdown-head">
     <span class="admin-dropdown-title">&#x1F6E1; Gestion des acc&#xe8;s</span>
+    <button class="btn" onclick="adminInvalidateCache()" style="font-size:.68rem;padding:.2rem .5rem;background:rgba(255,214,10,.08);border-color:rgba(255,214,10,.2);color:var(--gold)" title="Vider le cache Drive">&#8635; Cache</button>
     <button class="admin-dropdown-close" onclick="toggleAdminDropdown()">&#x2715;</button>
   </div>
   <div class="admin-add-row">
@@ -1134,15 +1135,13 @@ async function handleCallback() {
   setLoadingMsg('Connexion…');
 
   try {
-    // ── Étape 1 : récupérer le profil Google ──────────────────
+    // ── Étape 1 : profil utilisateur (cache ou Google) ───────────────
     var cachedUser = null;
     try { cachedUser = JSON.parse(sessionStorage.getItem('lfiag_user') || localStorage.getItem('lfiag_user') || 'null'); } catch(e) {}
 
     if (cachedUser && cachedUser.email) {
-      // Profil connu — pas besoin d'appeler Google
       currentUser = Object.assign({}, cachedUser, { token: accessToken });
     } else {
-      // Première connexion — appel userinfo
       const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
         headers: { Authorization: 'Bearer ' + accessToken }
       });
@@ -1156,9 +1155,14 @@ async function handleCallback() {
       } catch(e) {}
     }
 
-    // ── Étape 2 : vérifier l'accès ────────────────────────────
+    // ── Étape 2 : check + préchargement vidéos en PARALLÈLE (économise ~1.2s) ──
+    // check et loadVideos tournent simultanément
+    // showAppUI() uniquement après confirmation check OK
     setLoadingMsg('Vérification…');
+    var videosLoaded = false;
+    var loadPromise = loadVideos().then(function() { videosLoaded = true; }).catch(function() {});
     const access = await callScript('check', { email: currentUser.email });
+
     if (!access.authorized) {
       document.getElementById('deniedEmail').textContent = currentUser.email;
       showScreen('denied');
@@ -1166,9 +1170,10 @@ async function handleCallback() {
     }
     currentUser.role = access.role;
 
-    // ── Étape 3 : afficher l'app et charger les vidéos ────────
+    // Accès confirmé — afficher l'app
     showAppUI();
-    await loadVideos();
+    // Attendre les vidéos seulement si pas encore chargées
+    if (!videosLoaded) await loadPromise;
 
   } catch(e) {
     sessionStorage.removeItem('lfiag_token');
@@ -1249,8 +1254,8 @@ async function refreshVideosBackground() {
   // Ne pas tourner si un refresh manuel est en cours
   if (window._refreshInProgress) return;
   try {
-    // ts=Date.now() pour invalider le cache serveur Apps Script (6h) à chaque ouverture
-    var data = await callScript('videos', { email: currentUser.email, ts: Date.now() });
+    // Pas de ts : le serveur sert son cache (rapide). Invalidation via bouton Actualiser.
+    var data = await callScript('videos', { email: currentUser.email });
     var fresh = dedup(data.videos || []);
     fresh = await enrichThumbnails(fresh);
     try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: fresh, ts: Date.now()})); } catch(e) {}
@@ -1890,7 +1895,6 @@ function refreshWithFeedback() {
     if (btn) btn.classList.remove('loading');
     if (ok) {
       toast('✓ Bibliothèque actualisée');
-      setTimeout(refreshVideosBackground, 2000);
     } else {
       toast('⚠ Erreur de connexion — réessayez');
     }
@@ -1898,10 +1902,15 @@ function refreshWithFeedback() {
 
   try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
 
-  // Bust le cache serveur (ts=Date.now()) pour forcer la réindexation Drive
-  fetchAndCacheVideos(true, true)
-    .then(function() { done(true); })
-    .catch(function() { done(false); });
+  // v9.1 : invalider le cache serveur en 1s puis recharger depuis Drive
+  callScript('invalidate', { admin_email: currentUser.email })
+    .catch(function() {}) // silencieux si pas v9.1 en place
+    .finally(function() {
+      // Recharger avec bust pour forcer la réindexation Drive
+      fetchAndCacheVideos(true, true)
+        .then(function() { done(true); })
+        .catch(function() { done(false); });
+    });
 }
 
 var _au=[];
@@ -1928,6 +1937,22 @@ function _closeAdminOut(e) {
   }
 }
 function toggleAdminPanel() { toggleAdminDropdown(); }
+function adminInvalidateCache() {
+  var btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '⏳ En cours…';
+  callScript('invalidate', { admin_email: currentUser.email })
+    .then(function() {
+      btn.disabled = false;
+      btn.innerHTML = '&#8635; Cache';
+      toast('✓ Cache serveur vidé — appuyez sur Actualiser pour recharger');
+    })
+    .catch(function(e) {
+      btn.disabled = false;
+      btn.innerHTML = '&#8635; Cache';
+      toast('⚠ ' + e.message);
+    });
+}
 function refreshAdminUsers() {
   var l = document.getElementById('adminUserList');
   if (l) l.innerHTML = '<p style="padding:.75rem 1rem;color:var(--text3);font-size:.8rem">Chargement…</p>';
