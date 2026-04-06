@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604061556">
+<meta name="cache-version" content="202604061905">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -265,7 +265,7 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
 .video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.85rem}
 
 /* ── VIDEO CARD ── */
-.video-card{background:rgba(20,20,22,.8);border:1px solid rgba(255,255,255,.07);border-radius:18px;overflow:hidden;cursor:pointer;transition:.2s border-color}
+.video-card{background:rgba(20,20,22,.8);border:1px solid rgba(255,255,255,.07);border-radius:18px;overflow:hidden;cursor:pointer;transition:.2s border-color;content-visibility:auto;contain-intrinsic-size:auto 280px}
 .video-card:hover{transform:scale(1.02) translateY(-2px);border-color:rgba(255,255,255,.16);box-shadow:0 16px 40px rgba(0,0,0,.4)}
 .thumb-wrap{position:relative;aspect-ratio:16/9;background:#0c0c10;overflow:hidden}
 .thumb-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:translateZ(0)}
@@ -825,7 +825,6 @@ function scheduleTokenRefresh() {
 function signOut() {
   sessionStorage.clear();
   try{
-    localStorage.removeItem('lfiag_videos_cache');
     localStorage.removeItem('lfiag_token');
     localStorage.removeItem('lfiag_expiry');
     localStorage.removeItem('lfiag_user');
@@ -1245,14 +1244,17 @@ function callScript(action, params, retry) {
   params=params||{}; retry=retry||0;
   return new Promise(function(resolve,reject){
     var cb='cb_'+Math.random().toString(36).slice(2), done=false;
+    var slowTimer=setTimeout(function(){
+      if(!done) setLoadingMsg('Connexion lente… encore quelques secondes');
+    },5000);
     var timer=setTimeout(function(){
-      if(done)return; done=true; delete window[cb];
+      if(done)return; done=true; clearTimeout(slowTimer); delete window[cb];
       var el=document.getElementById(cb); if(el)el.remove();
       if(retry<1) callScript(action,params,retry+1).then(resolve).catch(reject);
       else reject(new Error('Serveur introuvable. Réessayez.'));
-    },30000);
+    },12000);
     window[cb]=function(data){
-      if(done)return; done=true; clearTimeout(timer); delete window[cb];
+      if(done)return; done=true; clearTimeout(timer); clearTimeout(slowTimer); delete window[cb];
       var el=document.getElementById(cb); if(el)el.remove();
       if(data.status==='error') reject(new Error(data.message)); else resolve(data);
     };
@@ -1276,10 +1278,7 @@ function dedup(arr) {
   return (arr||[]).filter(function(v){ if(!v||!v.id||s[v.id]) return false; s[v.id]=true; return true; });
 }
 
-async function enrichThumbnails(videos) {
-  // Thumbnails gérés côté serveur (Apps Script v8)
-  return videos;
-}
+
 
 async function refreshVideosBackground() {
   // Ne pas tourner si un refresh manuel est en cours
@@ -1288,7 +1287,6 @@ async function refreshVideosBackground() {
     // Pas de ts : le serveur sert son cache (rapide). Invalidation via bouton Actualiser.
     var data = await callScript('videos', { email: currentUser.email });
     var fresh = dedup(data.videos || []);
-    fresh = await enrichThumbnails(fresh);
     try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: fresh, ts: Date.now()})); } catch(e) {}
     // Comparer IDs ET catégories pour détecter les renommages de dossiers
     var a = fresh.map(function(v){return v.id+'|'+(v._category||'');}).sort().join(',');
@@ -1306,7 +1304,6 @@ async function fetchAndCacheVideos(showErr, bustCache) {
     if (bustCache) params.ts = Date.now();
     var data = await callScript('videos', params);
     var videos = dedup(data.videos || []);
-    videos = await enrichThumbnails(videos);
     try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: videos, ts: Date.now()})); } catch(e) {}
     allVideos = videos.map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
     renderAll();
@@ -1337,6 +1334,21 @@ function showScreen(name) {
   var el=document.getElementById('screen-'+name);
   el.classList.add('active');
   requestAnimationFrame(function(){el.classList.add('visible');});
+  if (name === 'auth') _preWarmAppsScript();
+}
+function _preWarmAppsScript() {
+  try {
+    if (window.__pw_done) return;
+    window.__pw_done = true;
+    var cb = '__pw_' + Date.now();
+    window[cb] = function() { delete window[cb]; };
+    var s = document.createElement('script');
+    s.src = SCRIPT_URL + '?action=check&email=warmup&callback=' + cb;
+    s.onload = function() { s.remove(); };
+    s.onerror = function() { s.remove(); delete window[cb]; };
+    document.head.appendChild(s);
+    setTimeout(function() { delete window[cb]; }, 10000);
+  } catch(e) {}
 }
 
 function setLoadingMsg(msg) { document.getElementById('loadingMsg').textContent = msg; }
@@ -1772,8 +1784,7 @@ function openVideo(id) {
   var mobLink = document.getElementById('modalDriveLinkMob');
   if (mobLink) mobLink.href = driveLink;
 
-  var dur  = v.videoMediaMetadata && v.videoMediaMetadata.durationMillis
-    ? formatDuration(parseInt(v.videoMediaMetadata.durationMillis)) : null;
+  var dur = v.dur ? formatDuration(parseInt(v.dur)) : null;
   var date = v.modifiedTime
     ? new Date(v.modifiedTime).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}) : null;
   var meta = '<span class="pill">' + escHtml(v._cat) + '</span>';
@@ -1990,12 +2001,8 @@ function refreshAdminUsers() {
     if (l) l.innerHTML = '<p style="padding:.75rem 1rem;color:#ff453a;font-size:.8rem">Non connecté</p>';
     return;
   }
-  // Utiliser fetch au lieu de JSONP pour list_users
-  var url = SCRIPT_URL + '?action=list_users&email=' + encodeURIComponent(currentUser.email) + '&t=' + Date.now();
-  fetch(url)
-    .then(function(r) { return r.json(); })
+  callScript('list_users', { email: currentUser.email })
     .then(function(d) {
-      if (d.status === 'error') throw new Error(d.message);
       _au = d.users || [];
       renderAdminUsers();
     })
