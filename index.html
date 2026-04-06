@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604061418">
+<meta name="cache-version" content="202604061438">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -829,6 +829,7 @@ function signOut() {
     localStorage.removeItem('lfiag_token');
     localStorage.removeItem('lfiag_expiry');
     localStorage.removeItem('lfiag_user');
+    localStorage.removeItem('lfiag_access');
   }catch(e){}
   if('caches' in window)caches.keys().then(function(n){n.forEach(function(k){caches.delete(k);});});
   currentUser=null;showScreen('auth');
@@ -1135,7 +1136,7 @@ async function handleCallback() {
   setLoadingMsg('Connexion…');
 
   try {
-    // ── Étape 1 : profil utilisateur (cache ou Google) ───────────────
+    // ── Étape 1 : profil (cache localStorage ou Google) ───────────
     var cachedUser = null;
     try { cachedUser = JSON.parse(sessionStorage.getItem('lfiag_user') || localStorage.getItem('lfiag_user') || 'null'); } catch(e) {}
 
@@ -1155,29 +1156,57 @@ async function handleCallback() {
       } catch(e) {}
     }
 
-    // ── Étape 2 : check + préchargement vidéos en PARALLÈLE (économise ~1.2s) ──
-    // check et loadVideos tournent simultanément
-    // showAppUI() uniquement après confirmation check OK
-    setLoadingMsg('Vérification…');
-    var videosLoaded = false;
-    var loadPromise = loadVideos().then(function() { videosLoaded = true; }).catch(function() {});
-    const access = await callScript('check', { email: currentUser.email });
+    // ── Étape 2 : check avec cache 1h ─────────────────────────────
+    // Le résultat du check est mis en cache 1h pour éviter l'appel réseau à chaque ouverture
+    var access = null;
+    try {
+      var cachedAccess = JSON.parse(localStorage.getItem('lfiag_access') || 'null');
+      if (cachedAccess && cachedAccess.email === currentUser.email &&
+          cachedAccess.ts && (Date.now() - cachedAccess.ts) < 3600000) {
+        access = cachedAccess; // cache valide < 1h
+      }
+    } catch(e) {}
 
-    if (!access.authorized) {
-      document.getElementById('deniedEmail').textContent = currentUser.email;
-      showScreen('denied');
-      return;
+    if (!access) {
+      // Premier appel ou cache expiré : appel réseau
+      setLoadingMsg('Vérification…');
+      // Lancer videos en parallèle pendant le check
+      var videosLoaded = false;
+      var loadPromise = loadVideos().then(function(){ videosLoaded = true; }).catch(function(){});
+      access = await callScript('check', { email: currentUser.email });
+      access.ts = Date.now();
+      access.email = currentUser.email;
+      try { localStorage.setItem('lfiag_access', JSON.stringify(access)); } catch(e) {}
+      if (!access.authorized) {
+        document.getElementById('deniedEmail').textContent = currentUser.email;
+        showScreen('denied');
+        return;
+      }
+      currentUser.role = access.role;
+      showAppUI();
+      if (!videosLoaded) await loadPromise;
+    } else {
+      // Cache valide : afficher immédiatement sans attendre le réseau
+      if (!access.authorized) {
+        document.getElementById('deniedEmail').textContent = currentUser.email;
+        showScreen('denied');
+        return;
+      }
+      currentUser.role = access.role;
+      showAppUI();
+      await loadVideos();
+      // Vérifier en arrière-plan que l'accès n'a pas été révoqué
+      callScript('check', { email: currentUser.email }).then(function(fresh) {
+        fresh.ts = Date.now(); fresh.email = currentUser.email;
+        try { localStorage.setItem('lfiag_access', JSON.stringify(fresh)); } catch(e) {}
+        if (!fresh.authorized) { signOut(); toast('Accès révoqué'); }
+        else { currentUser.role = fresh.role; }
+      }).catch(function(){});
     }
-    currentUser.role = access.role;
-
-    // Accès confirmé — afficher l'app
-    showAppUI();
-    // Attendre les vidéos seulement si pas encore chargées
-    if (!videosLoaded) await loadPromise;
 
   } catch(e) {
     sessionStorage.removeItem('lfiag_token');
-    try { localStorage.removeItem('lfiag_user'); } catch(ex) {}
+    try { localStorage.removeItem('lfiag_user'); localStorage.removeItem('lfiag_access'); } catch(ex) {}
     showScreen('auth');
     toast('Erreur de connexion : ' + e.message);
   }
