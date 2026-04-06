@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604061947">
+<meta name="cache-version" content="202604061950">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -180,7 +180,7 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
   .desk-cat-bar{display:flex;align-items:center;gap:.75rem;margin:0 0 1.1rem;position:relative;width:100%}
   .desk-cat-btn{display:inline-flex;align-items:center;gap:.55rem;padding:.58rem 1.1rem;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:var(--text);font-size:.84rem;font-weight:600;cursor:pointer;user-select:none;transition:background .15s,border-color .15s;white-space:nowrap}
   .desk-cat-btn:hover{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.2)}
-  .desk-cat-btn.open{background:rgba(10,132,255,.1);border-color:rgba(10,132,255,.3)}
+  .desk-cat-btn.open{background:rgba(10,132,255,.1);border-color:rgba(10,132,255,.3)}.hdr-cat-btn{display:none;white-space:nowrap;flex-shrink:0}
   .desk-cat-active{color:var(--gold);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .desk-cat-chevron{transition:transform .22s cubic-bezier(.34,1.56,.64,1);flex-shrink:0;opacity:.5}
   .desk-cat-btn.open .desk-cat-chevron{transform:rotate(180deg)}
@@ -336,7 +336,7 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
   .ptr-indicator.visible{opacity:1}
   .ptr-indicator.releasing{color:var(--gold)}
   .ptr-spinner{width:14px;height:14px;border:1.5px solid rgba(255,255,255,.2);border-top-color:currentColor;border-radius:50%;animation:spin .7s linear infinite}
-@media(min-width:900px){.video-grid{grid-template-columns:repeat(5,1fr);gap:.85rem;contain:layout style}.hero-bg-img{object-position:center 20%;transform:translateZ(0)}.cat-drawer,.cat-drawer-overlay{display:none!important}}
+@media(min-width:900px){.video-grid{grid-template-columns:repeat(5,1fr);gap:.85rem;contain:layout style}.hero-bg-img{object-position:center 20%;transform:translateZ(0)}.cat-drawer,.cat-drawer-overlay{display:none!important}.hdr-cat-btn{display:inline-flex!important}#deskCatBar{display:none!important}}
   @media(max-width:900px){.video-grid{grid-template-columns:repeat(2,1fr);gap:.6rem}}
 
 @media(max-width:640px){
@@ -455,6 +455,11 @@ if ('serviceWorker' in navigator) {
     <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     <input type="search" id="searchInput" placeholder="Rechercher une vidéo…" aria-label="Rechercher">
   </div>
+  <button class="desk-cat-btn hdr-cat-btn" id="headerCatBtn" onclick="toggleDeskDrawer()" aria-label="Catégories">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    Cat&#xe9;gories&nbsp;<span class="desk-cat-active" id="headerCatActive">Tout</span>
+    <svg class="desk-cat-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+  </button>
   <div class="header-right">
     <button class="admin-header-btn" id="adminHeaderBtn" onclick="toggleAdminDropdown()">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -1532,6 +1537,8 @@ function renderDeskCatBar() {
     : activeCategory==='Tout' ? 'Tout' : activeCategory;
   var el = document.getElementById('deskCatActive');
   if (el) el.textContent = activeLabel;
+  var el2 = document.getElementById('headerCatActive');
+  if (el2) el2.textContent = activeLabel;
 
   // Pills de tri
   var sortLabels = {date_desc:'&#8595; R&#xe9;cent', date_asc:'&#8593; Ancien', name_asc:'A&#8211;Z'};
@@ -1584,7 +1591,9 @@ function toggleDeskDrawer() {
 }
 
 function _positionDeskDrawer() {
-  var btn    = document.getElementById('deskCatBtn');
+  // Sur desktop, le bouton est dans le header (headerCatBtn)
+  var headerBtn = document.getElementById('headerCatBtn');
+  var btn = (headerBtn && headerBtn.offsetParent !== null) ? headerBtn : document.getElementById('deskCatBtn');
   var drawer = document.getElementById('deskDrawer');
   if (!btn || !drawer) return;
   var rect = btn.getBoundingClientRect();
@@ -1606,6 +1615,7 @@ function openDeskDrawer() {
   _positionDeskDrawer();
   drawer.classList.add('open');
   btn.classList.add('open');
+  var hBtn = document.getElementById('headerCatBtn'); if (hBtn) hBtn.classList.add('open');
   if (overlay) overlay.classList.add('open');
 
   // Suivi au scroll — repositionner en temps réel
@@ -1640,6 +1650,7 @@ function closeDeskDrawer() {
   if (drawer)  drawer.classList.remove('open');
   if (overlay) overlay.classList.remove('open');
   if (btn)     btn.classList.remove('open');
+  var hBtn2 = document.getElementById('headerCatBtn'); if (hBtn2) hBtn2.classList.remove('open');
   if (inp)     inp.value = '';
 }
 
