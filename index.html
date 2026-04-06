@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604061444">
+<meta name="cache-version" content="202604061448">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1264,9 +1264,10 @@ async function loadVideos() {
     // pour avoir les catégories à jour (renommages Drive)
     setTimeout(refreshVideosBackground, 300);
   } else {
-    // Cache absent ou > 30min : appel serveur avec bust obligatoire
+    // Cache absent ou > 30min : charger depuis le cache serveur (~1.5s)
+    // PAS de bust Drive (risque de timeout 30s+)
     showLoading();
-    await fetchAndCacheVideos(true, true); // bustCache=true
+    await fetchAndCacheVideos(true, false);
   }
 }
 
@@ -1341,7 +1342,7 @@ function showScreen(name) {
 function setLoadingMsg(msg) { document.getElementById('loadingMsg').textContent = msg; }
 
 function showAppUI() {
-  showScreen('loading');
+  // Ne pas changer l'écran ici — renderAll() appellera showScreen('app')
   var initial = (currentUser.name||currentUser.email||'?').charAt(0).toUpperCase();
   var avatar = document.getElementById('userAvatar');
   if (avatar) avatar.textContent = initial;
