@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604070358">
+<meta name="cache-version" content="202604070403">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1488,6 +1488,11 @@ function renderAll() {
       loader.style.transition = 'opacity .7s ease, transform .7s ease';
       loader.style.opacity = '0';
       loader.style.transform = 'scale(1.03)';
+      // S'assurer que screen-app est bien visible quand le loader disparaît
+      var appScreen = document.getElementById('screen-app');
+      if (appScreen && !appScreen.classList.contains('active')) {
+        showScreen('app');
+      }
       setTimeout(function() { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 700);
     }, remaining);
   }
