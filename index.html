@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604070411">
+<meta name="cache-version" content="202604070417">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1398,12 +1398,20 @@ function showScreen(name) {
   var el=document.getElementById('screen-'+name);
   el.classList.add('active');
   requestAnimationFrame(function(){el.classList.add('visible');});
-  // Header : masqué sur auth et loading, visible sur app
+  // Header
   var hdr = document.querySelector('header');
   if (hdr) hdr.style.display = (name === 'auth' || name === 'loading') ? 'none' : '';
   if (name === 'auth') _preWarmAppsScript();
-  // loader déjà initialisé au chargement
   if (name === 'app') _showHeaderElements();
+  // Masquer le loader immédiatement si on va sur auth ou denied (pas de connexion)
+  if (name === 'auth' || name === 'denied') {
+    var loader = document.getElementById('lfiagLoader');
+    if (loader && !loader._hiding) {
+      loader._hiding = true;
+      loader.classList.add('lfiag-hide');
+      setTimeout(function() { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 750);
+    }
+  }
 }
 
 function _initLfiagLoader() {
