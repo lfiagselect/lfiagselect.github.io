@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604071202">
+<meta name="cache-version" content="202604071211">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -624,13 +624,6 @@ if ('serviceWorker' in navigator) {
       </div>
     </div>
 
-    <section id="catGridSection" style="display:none">
-        <div class="cat-grid-section">
-          <div class="cat-grid-title">&#x25A6; Discographie</div>
-          <div id="catGrid" class="cat-grid"></div>
-        </div>
-      </section>
-
     <!-- Section À la une -->
     <section class="alune-section" id="aluneSection">
       <div class="alune-title">
@@ -672,6 +665,13 @@ if ('serviceWorker' in navigator) {
         </div>
       </div>
     </section>
+
+      <section id="catGridSection" style="display:none">
+        <div class="cat-grid-section">
+          <div class="cat-grid-title">Choisissez un univers...</div>
+          <div id="catGrid" class="cat-grid"></div>
+        </div>
+      </section>
 
     <!-- Desktop cat bar + drawer -->
     <div class="desk-cat-bar" id="deskCatBar">
@@ -781,6 +781,10 @@ if ('serviceWorker' in navigator) {
   .cat-vignette:hover .cat-vignette-img{transform:scale(1.07);filter:brightness(1.08)}
   .cat-vignette-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.82) 0%,rgba(0,0,0,.25) 50%,transparent 100%)}
   .cat-vignette-name{position:absolute;bottom:0;left:0;right:0;padding:.6rem .7rem .7rem;font-size:.72rem;font-weight:700;letter-spacing:.02em;line-height:1.25;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.8)}
+
+  /* ── Bouton retour univers ── */
+  .back-to-grid{display:inline-flex;align-items:center;gap:.4rem;font-size:.72rem;font-weight:600;color:rgba(255,255,255,.55);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:.28rem .75rem;cursor:pointer;margin-bottom:.9rem;transition:color .2s,background .2s}
+  .back-to-grid:hover{color:#fff;background:rgba(255,255,255,.13)}
 </style>
 <div id="lfiagLoader">
   <canvas id="lfiagParticles" style="position:absolute;inset:0;pointer-events:none"></canvas>
@@ -1037,7 +1041,7 @@ function selectCatFromDrawer(c) {
   activeCategory = c;
   closeCatDrawer();
   closeDeskDrawer();
-  renderToolbar(); renderVideos();
+  renderToolbar(); renderCatGrid(); renderVideos();
   var b = document.getElementById('mobCatLabel');
   if (b) b.textContent = c==='__new__'?'Récents':c==='Tout'?'Tout':c.split(/[\s\-]/)[0];
   // Sur mobile : 60ms suffit
@@ -1575,7 +1579,7 @@ function renderCatGrid() {
     return '<div class="cat-vignette"' +
       ' onclick="selectCatFromGrid(\'' + escAttr(cat) + '\')"' +
       ' title="' + escAttr(cat) + '">' +
-      (img ? '<img class="cat-vignette-img" src="' + img + '" alt="' + escAttr(cat) + '" loading="lazy">' : '<div class="cat-vignette-img" style="background:rgba(255,255,255,.06)"></div>') +
+      (img ? '<img class="cat-vignette-img" src="' + img + '" alt="' + escAttr(cat) + '">' : '<div class="cat-vignette-img" style="background:rgba(255,255,255,.06)"></div>') +
       '<div class="cat-vignette-overlay"></div>' +
       '<div class="cat-vignette-name">' + escHtml(cat) + '</div>' +
       '</div>';
@@ -1590,12 +1594,23 @@ function selectCatFromGrid(cat) {
   renderVideos();
   var delay = isMobile() ? 60 : 120;
   setTimeout(function() {
-    var el = document.getElementById('content');
-    var hdr = document.querySelector('header');
-    if (el) {
-      var hdrH = hdr ? hdr.getBoundingClientRect().height : 0;
-      var top = el.getBoundingClientRect().top + window.scrollY - hdrH - 8;
-      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    if (cat === 'Tout') {
+      // Retour au grid : scroller vers catGridSection
+      var sec = document.getElementById('catGridSection');
+      var hdr = document.querySelector('header');
+      if (sec) {
+        var hdrH = hdr ? hdr.getBoundingClientRect().height : 0;
+        var top = sec.getBoundingClientRect().top + window.scrollY - hdrH - 12;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      }
+    } else {
+      var el = document.getElementById('content');
+      var hdr = document.querySelector('header');
+      if (el) {
+        var hdrH = hdr ? hdr.getBoundingClientRect().height : 0;
+        var top = el.getBoundingClientRect().top + window.scrollY - hdrH - 8;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      }
     }
   }, delay);
 }
@@ -1977,7 +1992,12 @@ function renderVideos() {
     }).join('');
     el.innerHTML = html;
   } else {
+    var backBtn = (activeCategory !== 'Tout' && activeCategory !== '__new__' && !searchQuery)
+      ? '<span class="back-to-grid" onclick="selectCatFromGrid(\'Tout\')">'
+        + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>'
+        + ' Univers</span>' : '';
     el.innerHTML =
+      (backBtn ? '<div>' + backBtn + '</div>' : '') +
       '<div class="section-header"><span class="section-title">' +
       (activeCategory!=='Tout'?escHtml(activeCategory):'Résultats') +
       '</span><span class="section-count">' + filtered.length + ' vidéo' + (filtered.length>1?'s':'') + '</span>' +
