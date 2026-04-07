@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604070403">
+<meta name="cache-version" content="202604070411">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -552,17 +552,6 @@ if ('serviceWorker' in navigator) {
 
 <!-- SCREEN: LOADING -->
 <div id="screen-loading" class="screen" role="status" aria-live="polite">
-
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');
-    @keyframes lfiagFadeUp{to{opacity:1;transform:translateY(0)}}
-    @keyframes lfiagGlow{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
-    @keyframes lfiagYT{0%,100%{box-shadow:0 0 18px rgba(255,0,0,.45)}50%{box-shadow:0 0 36px rgba(255,0,0,.85)}}
-    @keyframes lfiagLine{to{width:300px}}
-    @keyframes lfiagBar{0%{width:0%}30%{width:35%}65%{width:68%}88%{width:90%}100%{width:100%}}
-    @keyframes lfiagShimmer{to{left:300px}}
-    @keyframes lfiagTypeWriter{to{max-width:320px}}
-  </style>
 </div>
 
 <!-- SCREEN: DENIED -->
@@ -759,6 +748,49 @@ if ('serviceWorker' in navigator) {
 <!-- PRIVACY LINK FOR GOOGLE (static) -->
 <a href="/privacy.html" style="display:none" aria-hidden="true">Politique de confidentialit&#xe9;</a>
 
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');
+  @keyframes lfiagFadeUp{to{opacity:1;transform:translateY(0)}}
+  @keyframes lfiagGlow{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+  @keyframes lfiagYT{0%,100%{box-shadow:0 0 18px rgba(255,0,0,.45)}50%{box-shadow:0 0 36px rgba(255,0,0,.85)}}
+  @keyframes lfiagLine{to{width:300px}}
+  @keyframes lfiagBar{0%{width:0%}30%{width:35%}65%{width:68%}88%{width:90%}100%{width:100%}}
+  @keyframes lfiagShimmer{to{left:300px}}
+  @keyframes lfiagTypeWriter{to{max-width:320px}}
+  #lfiagLoader{position:fixed;inset:0;background:radial-gradient(ellipse at center,#0a1628 0%,#000508 60%,#000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .7s ease,transform .7s ease}
+  #lfiagLoader.lfiag-hide{opacity:0;transform:scale(1.03);pointer-events:none}
+</style>
+<div id="lfiagLoader">
+  <canvas id="lfiagParticles" style="position:absolute;inset:0;pointer-events:none"></canvas>
+  <div style="display:flex;align-items:center;gap:24px;opacity:0;transform:translateY(28px);animation:lfiagFadeUp .9s ease .2s forwards;position:relative;z-index:1">
+    <div style="position:relative">
+      <div style="position:absolute;inset:-10px;border-radius:22px;background:radial-gradient(circle,rgba(100,160,255,.22),transparent 70%);animation:lfiagGlow 2.5s ease-in-out infinite"></div>
+      <img id="lfiagLoaderImg" src="" alt="LFIAGtube" style="width:90px;height:90px;border-radius:16px;object-fit:cover;box-shadow:0 0 48px rgba(80,140,255,.45);position:relative">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <span style="font-size:2.6rem;font-weight:900;color:#fff;letter-spacing:3px;font-family:Arial Black,sans-serif;text-shadow:0 0 28px rgba(150,200,255,.45)">LFIAG</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="background:#ff0000;border-radius:5px;padding:4px 9px;display:flex;align-items:center;box-shadow:0 0 18px rgba(255,0,0,.45);animation:lfiagYT 2s ease-in-out infinite">
+          <svg viewBox="0 0 68 48" width="20" height="14" fill="white"><path d="M27,14 L27,34 L44,24 Z"/></svg>
+        </div>
+        <span style="font-size:1.6rem;font-weight:700;color:#fff;letter-spacing:2px;font-family:Arial,sans-serif">tube</span>
+      </div>
+    </div>
+  </div>
+  <div style="width:0;height:1px;margin:28px auto;background:linear-gradient(90deg,transparent,rgba(180,210,255,.55),transparent);animation:lfiagLine 1s ease .8s forwards;position:relative;z-index:1"></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0;animation:lfiagFadeUp .5s ease 1.2s forwards;position:relative;z-index:1">
+    <div style="overflow:hidden;max-width:0;animation:lfiagTypeWriter 1.6s steps(10,end) 1.6s forwards">
+      <span style="font-family:'Dancing Script',cursive;font-size:2.8rem;color:transparent;background:linear-gradient(135deg,#c8deff,#a0c4ff,#e8f4ff);-webkit-background-clip:text;background-clip:text;letter-spacing:4px;white-space:nowrap;filter:drop-shadow(0 0 10px rgba(150,200,255,.55))">Bienvenue</span>
+    </div>
+    <span id="lfiagLoaderMsg" style="font-family:Georgia,serif;font-size:.78rem;color:rgba(180,210,255,.5);letter-spacing:3px;text-transform:uppercase;opacity:0;animation:lfiagFadeUp .6s ease 3.4s forwards">Connexion…</span>
+  </div>
+  <div style="margin-top:32px;opacity:0;animation:lfiagFadeUp .6s ease 1s forwards;position:relative;z-index:1">
+    <div style="width:240px;height:2px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;position:relative">
+      <div style="height:100%;width:0%;background:linear-gradient(90deg,#4080ff,#80c0ff,#c0e0ff);box-shadow:0 0 8px rgba(100,160,255,.8);animation:lfiagBar 4.2s ease .4s forwards"></div>
+      <div style="position:absolute;top:0;left:-60px;width:60px;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:lfiagShimmer 2s ease .4s infinite"></div>
+    </div>
+  </div>
+</div>
 <script>
 // ============================================
 // CONFIG — à personnaliser
@@ -1477,26 +1509,16 @@ function categorize(video) {
 }
 
 function renderAll() {
-  // Masquer le loader après 4500ms minimum depuis son apparition
+  showScreen('app');
   var loader = document.getElementById('lfiagLoader');
   if (loader && !loader._hiding) {
     loader._hiding = true;
-    var elapsed = window._loaderStart ? Date.now() - window._loaderStart : 9999;
-    var MIN_DISPLAY = 4500; // ms
-    var remaining = Math.max(0, MIN_DISPLAY - elapsed);
+    var remaining = Math.max(0, 4500 - (window._loaderStart ? Date.now() - window._loaderStart : 9999));
     setTimeout(function() {
-      loader.style.transition = 'opacity .7s ease, transform .7s ease';
-      loader.style.opacity = '0';
-      loader.style.transform = 'scale(1.03)';
-      // S'assurer que screen-app est bien visible quand le loader disparaît
-      var appScreen = document.getElementById('screen-app');
-      if (appScreen && !appScreen.classList.contains('active')) {
-        showScreen('app');
-      }
-      setTimeout(function() { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 700);
+      loader.classList.add('lfiag-hide');
+      setTimeout(function() { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 750);
     }, remaining);
   }
-  showScreen('app');
   window._sharedStats = getSharedStats();
   if (isMobile()) { renderMobCatbar(); } else { renderDeskCatBar(); }
   renderCatDrawer();
@@ -2209,40 +2231,5 @@ document.getElementById('settingsBtn').addEventListener('click', function(){
 // ============================================
 _initLfiagLoader();
 handleCallback();</script>
-<div id="lfiagLoader" style="position:fixed;inset:0;background:radial-gradient(ellipse at center,#0a1628 0%,#000508 60%,#000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .7s ease,transform .7s ease">
-    <canvas id="lfiagParticles" style="position:absolute;inset:0;pointer-events:none"></canvas>
-    <!-- Logo -->
-    <div style="display:flex;align-items:center;gap:24px;opacity:0;transform:translateY(28px);animation:lfiagFadeUp .9s ease .2s forwards">
-      <div style="position:relative">
-        <div style="position:absolute;inset:-10px;border-radius:22px;background:radial-gradient(circle,rgba(100,160,255,.22),transparent 70%);animation:lfiagGlow 2.5s ease-in-out infinite"></div>
-        <img id="lfiagLoaderImg" src="" alt="LFIAGtube" style="width:90px;height:90px;border-radius:16px;object-fit:cover;box-shadow:0 0 48px rgba(80,140,255,.45);position:relative">
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <span style="font-size:2.6rem;font-weight:900;color:#fff;letter-spacing:3px;font-family:Arial Black,sans-serif;text-shadow:0 0 28px rgba(150,200,255,.45)">LFIAG</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="background:#ff0000;border-radius:5px;padding:4px 9px;display:flex;align-items:center;box-shadow:0 0 18px rgba(255,0,0,.45);animation:lfiagYT 2s ease-in-out infinite">
-            <svg viewBox="0 0 68 48" width="20" height="14" fill="white"><path d="M27,14 L27,34 L44,24 Z"/></svg>
-          </div>
-          <span style="font-size:1.6rem;font-weight:700;color:#fff;letter-spacing:2px;font-family:Arial,sans-serif">tube</span>
-        </div>
-      </div>
-    </div>
-    <!-- Séparateur -->
-    <div style="width:0;height:1px;margin:28px auto;background:linear-gradient(90deg,transparent,rgba(180,210,255,.55),transparent);animation:lfiagLine 1s ease .8s forwards"></div>
-    <!-- Bienvenue -->
-    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0;animation:lfiagFadeUp .5s ease 1.2s forwards">
-      <div style="overflow:hidden;max-width:0;animation:lfiagTypeWriter 1.6s steps(10,end) 1.6s forwards">
-        <span style="font-family:'Dancing Script',cursive;font-size:2.8rem;color:transparent;background:linear-gradient(135deg,#c8deff,#a0c4ff,#e8f4ff);-webkit-background-clip:text;background-clip:text;letter-spacing:4px;white-space:nowrap;filter:drop-shadow(0 0 10px rgba(150,200,255,.55))">Bienvenue</span>
-      </div>
-      <span id="loadingMsg" style="font-family:Georgia,serif;font-size:.78rem;color:rgba(180,210,255,.5);letter-spacing:3px;text-transform:uppercase;opacity:0;animation:lfiagFadeUp .6s ease 3.4s forwards">Connexion en cours&#x2026;</span>
-    </div>
-    <!-- Barre de progression -->
-    <div style="margin-top:32px;opacity:0;animation:lfiagFadeUp .6s ease 1s forwards">
-      <div style="width:240px;height:2px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;position:relative">
-        <div style="height:100%;width:0%;background:linear-gradient(90deg,#4080ff,#80c0ff,#c0e0ff);box-shadow:0 0 8px rgba(100,160,255,.8);animation:lfiagBar 4s ease .4s forwards"></div>
-        <div style="position:absolute;top:0;left:-60px;width:60px;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:lfiagShimmer 2s ease .4s infinite"></div>
-      </div>
-    </div>
-  </div>
 </body>
 </html>
