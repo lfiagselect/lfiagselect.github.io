@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604070341">
+<meta name="cache-version" content="202604070345">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1405,6 +1405,7 @@ function showScreen(name) {
 }
 
 function _initLfiagLoader() {
+  window._loaderStart = Date.now(); // heure de début
   // Injecter le logo
   var img = document.getElementById('lfiagLoaderImg');
   if (img && LOGO_SRC) img.src = LOGO_SRC;
@@ -1500,13 +1501,19 @@ function categorize(video) {
 }
 
 function renderAll() {
-  // Masquer le loader animé proprement
+  // Masquer le loader après 4500ms minimum depuis son apparition
   var loader = document.getElementById('lfiagLoader');
   if (loader && !loader._hiding) {
     loader._hiding = true;
-    loader.style.opacity = '0';
-    loader.style.transform = 'scale(1.03)';
-    setTimeout(function() { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 700);
+    var elapsed = window._loaderStart ? Date.now() - window._loaderStart : 9999;
+    var MIN_DISPLAY = 4500; // ms
+    var remaining = Math.max(0, MIN_DISPLAY - elapsed);
+    setTimeout(function() {
+      loader.style.transition = 'opacity .7s ease, transform .7s ease';
+      loader.style.opacity = '0';
+      loader.style.transform = 'scale(1.03)';
+      setTimeout(function() { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 700);
+    }, remaining);
   }
   showScreen('app');
   window._sharedStats = getSharedStats();
