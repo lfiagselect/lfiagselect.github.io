@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604070529">
+<meta name="cache-version" content="202604070548">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1001,7 +1001,9 @@ function selectCatFromDrawer(c) {
   renderToolbar(); renderVideos();
   var b = document.getElementById('mobCatLabel');
   if (b) b.textContent = c==='__new__'?'Récents':c==='Tout'?'Tout':c.split(/[\s\-]/)[0];
-  // Scroll vers les vidéos (desktop ET mobile)
+  // Sur mobile : 60ms suffit
+  // Sur desktop : attendre 280ms que le drawer finisse de se fermer avant de calculer la position
+  var delay = isMobile() ? 60 : 280;
   setTimeout(function() {
     var el = document.getElementById('content');
     var hdr = document.querySelector('header');
@@ -1010,7 +1012,7 @@ function selectCatFromDrawer(c) {
       var top = el.getBoundingClientRect().top + window.scrollY - hdrH - 8;
       window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     }
-  }, 60);
+  }, delay);
 }
 function initHeaderShrink() {
   var hdr = document.querySelector('header');
