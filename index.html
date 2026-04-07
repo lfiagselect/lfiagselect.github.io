@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604071432">
+<meta name="cache-version" content="202604071447">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -787,8 +787,8 @@ if ('serviceWorker' in navigator) {
   .cat-vignette-name{position:absolute;bottom:0;left:0;right:0;padding:.6rem .7rem .7rem;font-size:.72rem;font-weight:700;letter-spacing:.02em;line-height:1.25;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.8)}
 
   /* ── Bouton retour univers ── */
-  .back-to-grid{display:inline-flex;align-items:center;gap:.4rem;font-size:.72rem;font-weight:600;color:rgba(255,255,255,.55);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:.28rem .75rem;cursor:pointer;margin-bottom:.9rem;transition:color .2s,background .2s}
-  .back-to-grid:hover{color:#fff;background:rgba(255,255,255,.13)}
+  .back-to-grid{display:inline-flex;align-items:center;gap:.5rem;font-size:.78rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:rgba(255,255,255,.8);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:.4rem 1rem;cursor:pointer;margin-bottom:1.1rem;transition:color .2s,background .2s,border-color .2s}
+  .back-to-grid:hover{color:#fff;background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.35)}
 </style>
 <div id="lfiagLoader">
   <canvas id="lfiagParticles" style="position:absolute;inset:0;pointer-events:none"></canvas>
@@ -2024,7 +2024,7 @@ function renderVideos() {
   var backBtn = (activeCategory !== 'Tout' && activeCategory !== '__new__' && !searchQuery)
     ? '<span class="back-to-grid" onclick="selectCatFromGrid(\'Tout\')">'
       + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>'
-      + ' Univers</span>' : '';
+      + ' Retour aux univers</span>' : '';
   el.innerHTML =
     (backBtn ? '<div>' + backBtn + '</div>' : '') +
     '<div class="section-header"><span class="section-title">' +
