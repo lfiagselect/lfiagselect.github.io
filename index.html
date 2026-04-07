@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604070632">
+<meta name="cache-version" content="202604071037">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1857,7 +1857,7 @@ function renderVideos() {
   var el = document.getElementById('content');
 
   if (activeCategory === '__new__') {
-    var recent = getRecentVideos(20);
+    var recent = getRecentVideos(4);
     el.innerHTML =
       '<div class="section-header"><span class="section-title new-title">✦ Derniers ajouts</span>' +
       '<span class="section-count">' + recent.length + ' vidéo' + (recent.length>1?'s':'') + '</span>' +
