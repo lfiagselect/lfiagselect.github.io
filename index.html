@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604070420">
+<meta name="cache-version" content="202604070426">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1402,9 +1402,17 @@ function showScreen(name) {
   // Header
   var hdr = document.querySelector('header');
   if (hdr) hdr.style.display = (name === 'auth' || name === 'loading') ? 'none' : '';
+  if (name === 'auth' || name === 'loading') {
+    // Masquer explicitement tous les éléments header (styles inline résiduels)
+    ['searchWrap','headerCatBtn','settingsBtn','refreshBtn','userBadge',
+     'signOutBtn','adminHeaderBtn'].forEach(function(id) {
+      var e = document.getElementById(id);
+      if (e) e.style.display = 'none';
+    });
+  }
   if (name === 'auth') _preWarmAppsScript();
   if (name === 'app') _showHeaderElements();
-  // Masquer le loader immédiatement si on va sur auth ou denied (pas de connexion)
+  // Masquer le loader sur auth ou denied
   if (name === 'auth' || name === 'denied') {
     var loader = document.getElementById('lfiagLoader');
     if (loader && !loader._hiding) {
