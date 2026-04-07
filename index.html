@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604070315">
+<meta name="cache-version" content="202604070319">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -976,9 +976,11 @@ function selectCatFromDrawer(c) {
   // Scroll vers les vidéos (desktop ET mobile)
   setTimeout(function() {
     var el = document.getElementById('content');
+    var hdr = document.querySelector('header');
     if (el) {
-      var top = el.getBoundingClientRect().top + window.scrollY - 8;
-      window.scrollTo({ top: top, behavior: 'smooth' });
+      var hdrH = hdr ? hdr.getBoundingClientRect().height : 0;
+      var top = el.getBoundingClientRect().top + window.scrollY - hdrH - 8;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     }
   }, 60);
 }
@@ -1100,9 +1102,11 @@ function mobSetCat(c) {
   // Scroll vers les vidéos
   setTimeout(function() {
     var el = document.getElementById('content');
+    var hdr = document.querySelector('header');
     if (el) {
-      var top = el.getBoundingClientRect().top + window.scrollY - 8;
-      window.scrollTo({ top: top, behavior: 'smooth' });
+      var hdrH = hdr ? hdr.getBoundingClientRect().height : 0;
+      var top = el.getBoundingClientRect().top + window.scrollY - hdrH - 8;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     }
   }, 60);
   // Scroller la pill active au centre de la catbar
