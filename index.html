@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604070508">
+<meta name="cache-version" content="202604070517">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1405,15 +1405,7 @@ function showScreen(name) {
   }
   if (name === 'auth') _preWarmAppsScript();
   if (name === 'app') _showHeaderElements();
-  // Masquer le loader sur auth ou denied
-  if (name === 'auth' || name === 'denied') {
-    var loader = document.getElementById('lfiagLoader');
-    if (loader && !loader._hiding) {
-      loader._hiding = true;
-      loader.classList.add('lfiag-hide');
-      setTimeout(function() { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 750);
-    }
-  }
+
 }
 
 function _initLfiagLoader() {
@@ -1464,7 +1456,9 @@ function _startLoaderAudio() {
     }
   });
   return window._loaderAudioPromise;
-}function _preWarmAppsScript() {
+}
+
+function _preWarmAppsScript() {
   try {
     if (window.__pw_done) return;
     window.__pw_done = true;
@@ -1546,11 +1540,14 @@ function renderAll() {
     });
     // Le son est chef d'orchestre : on attend qu'il finisse
     // Si audio bloqué/erreur, la promise résout immédiatement → minP prend le relais
-    Promise.race([audioP, new Promise(function(r){setTimeout(r,15000);})])
-      .then(function() {
-        loader.classList.add('lfiag-hide');
-        setTimeout(function() { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 750);
-      });
+    var MIN_MS = 4500;
+    var elapsed = window._loaderStart ? Date.now() - window._loaderStart : 0;
+    var minWait = new Promise(function(r){ setTimeout(r, Math.max(0, MIN_MS - elapsed)); });
+    // Attendre le son ET le minimum — le plus long des deux gagne
+    Promise.all([audioP, minWait]).then(function() {
+      loader.classList.add('lfiag-hide');
+      setTimeout(function() { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 750);
+    });
   }
   window._sharedStats = getSharedStats();
   if (isMobile()) { renderMobCatbar(); } else { renderDeskCatBar(); }
