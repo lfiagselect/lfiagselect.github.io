@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604070347">
+<meta name="cache-version" content="202604070352">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1232,8 +1232,9 @@ async function handleCallback() {
     // Rôle par défaut en attendant la confirmation du check
     currentUser.role = (cachedAccess && cachedAccess.role) || 'user';
 
-    // ── Étape 3 : afficher l'app IMMÉDIATEMENT ─────────────────
-    // Charger les vidéos (depuis cache local si dispo, sinon skeleton)
+    // ── Étape 3 : laisser le loader s'initialiser (1 tick) ──────
+    // puis charger les vidéos et vérifier l'accès
+    await new Promise(function(r){ setTimeout(r, 50); });
     showAppUI();
     _loadVideosAndShow();
 
@@ -1400,11 +1401,12 @@ function showScreen(name) {
   var el=document.getElementById('screen-'+name);
   el.classList.add('active');
   requestAnimationFrame(function(){el.classList.add('visible');});
-  // Masquer le header sur les écrans auth et loading
+  // Header : masqué sur auth et loading, visible sur app
   var hdr = document.querySelector('header');
   if (hdr) hdr.style.display = (name === 'auth' || name === 'loading') ? 'none' : '';
   if (name === 'auth') _preWarmAppsScript();
   if (name === 'loading') _initLfiagLoader();
+  if (name === 'app') _showHeaderElements();
 }
 
 function _initLfiagLoader() {
@@ -1456,32 +1458,34 @@ function _preWarmAppsScript() {
 function setLoadingMsg(msg) { document.getElementById('loadingMsg').textContent = msg; }
 
 function showAppUI() {
-  // Ne pas changer l'écran ici — renderAll() appellera showScreen('app')
+  // Préparer les données sans afficher les éléments header
+  // (ils seront visibles uniquement quand showScreen('app') est appelé)
   var initial = (currentUser.name||currentUser.email||'?').charAt(0).toUpperCase();
   var avatar = document.getElementById('userAvatar');
   if (avatar) avatar.textContent = initial;
-  var badge = document.getElementById('userBadge');
-  if (badge) badge.style.display = 'flex';
-  document.getElementById('signOutBtn').style.display = 'flex';
-  document.getElementById('refreshBtn').style.display = 'flex';
-  document.getElementById('settingsBtn').style.display = 'flex';
-  document.getElementById('searchWrap').style.display = isMobile() ? 'none' : 'block';
-  if (currentUser.role === 'admin') {
-    var _ab = document.getElementById('adminHeaderBtn');
-    if (_ab) _ab.style.display = 'flex';
-
-  }
-  // renderRules() — settings panel supprimé
-  setupMobileUI();
-  scheduleTokenRefresh();
-  // Afficher le bouton Reprendre dès l'ouverture si historique présent
-  updateHeroWidgets();
   // Initiale mobile
   var dot = document.getElementById('mobUserDot');
   if (dot && currentUser.email) {
     dot.textContent = initial;
     dot.title = currentUser.email;
   }
+  scheduleTokenRefresh();
+}
+
+// Appelé par showScreen('app') — affiche les éléments header
+function _showHeaderElements() {
+  var badge = document.getElementById('userBadge');
+  if (badge) badge.style.display = 'flex';
+  document.getElementById('signOutBtn').style.display = 'flex';
+  document.getElementById('refreshBtn').style.display = 'flex';
+  document.getElementById('settingsBtn').style.display = 'flex';
+  document.getElementById('searchWrap').style.display = isMobile() ? 'none' : 'block';
+  if (currentUser && currentUser.role === 'admin') {
+    var _ab = document.getElementById('adminHeaderBtn');
+    if (_ab) _ab.style.display = 'flex';
+  }
+  setupMobileUI();
+  updateHeroWidgets();
 }
 
 function showLoading() {
