@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604071211">
+<meta name="cache-version" content="202604071220">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1564,6 +1564,28 @@ function categorize(video) {
 }
 
 
+
+function _normCatKey(s) {
+  return String(s)
+    .toLowerCase()
+    .replace(/[‘’‛ʼ]/g, "'")  // apostrophes typographiques → ASCII
+    .replace(/\s+/g, ' ')                           // espaces multiples → 1 espace
+    .trim();
+}
+// Index normalisé de CAT_IMAGES (construit une seule fois)
+var _CAT_IMAGES_IDX = null;
+function _buildCatIndex() {
+  if (_CAT_IMAGES_IDX) return;
+  _CAT_IMAGES_IDX = {};
+  Object.keys(CAT_IMAGES).forEach(function(k) {
+    _CAT_IMAGES_IDX[_normCatKey(k)] = CAT_IMAGES[k];
+  });
+}
+function getCatImage(cat) {
+  _buildCatIndex();
+  return CAT_IMAGES[cat] || _CAT_IMAGES_IDX[_normCatKey(cat)] || '';
+}
+
 function renderCatGrid() {
   var sec = document.getElementById('catGridSection');
   if (!sec) return;
@@ -1574,7 +1596,7 @@ function renderCatGrid() {
   var grid = document.getElementById('catGrid');
   if (!grid) return;
   grid.innerHTML = cats.map(function(cat) {
-    var img = CAT_IMAGES[cat] || '';
+    var img = getCatImage(cat);
     var count = allVideos.filter(function(v){return v._cat===cat;}).length;
     return '<div class="cat-vignette"' +
       ' onclick="selectCatFromGrid(\'' + escAttr(cat) + '\')"' +
