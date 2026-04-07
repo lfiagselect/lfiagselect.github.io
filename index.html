@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604070345">
+<meta name="cache-version" content="202604070347">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1400,6 +1400,9 @@ function showScreen(name) {
   var el=document.getElementById('screen-'+name);
   el.classList.add('active');
   requestAnimationFrame(function(){el.classList.add('visible');});
+  // Masquer le header sur les écrans auth et loading
+  var hdr = document.querySelector('header');
+  if (hdr) hdr.style.display = (name === 'auth' || name === 'loading') ? 'none' : '';
   if (name === 'auth') _preWarmAppsScript();
   if (name === 'loading') _initLfiagLoader();
 }
