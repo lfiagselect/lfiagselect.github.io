@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604070442">
+<meta name="cache-version" content="202604070445">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1265,7 +1265,11 @@ async function _loadVideosAndShow() {
         return Object.assign({},v,{_cat:categorize(v)}); });
       renderAll(); // appelle showScreen('app')
       // Rafraîchir en arrière-plan si cache > 5min
-      if (cacheAge > 300000) setTimeout(refreshVideosBackground, 500);
+      if (cacheAge > 300000) {
+        // Attendre la fin du loader avant de rafraîchir (évite double animation barre)
+        var loaderDelay = window._loaderStart ? Math.max(500, 5300 - (Date.now() - window._loaderStart)) : 500;
+        setTimeout(refreshVideosBackground, loaderDelay);
+      }
     } else {
       // Pas de cache : montrer skeleton puis charger
       showLoading();
