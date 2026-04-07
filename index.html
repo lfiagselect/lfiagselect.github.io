@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604071233">
+<meta name="cache-version" content="202604071236">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1238,6 +1238,16 @@ async function handleCallback() {
 
   showScreen('loading');
   setLoadingMsg('Connexion…');
+  // Timeout de sécurité : forcer la fermeture du loader après 18s
+  window._loaderSafetyTimer = setTimeout(function() {
+    _hideLoader();
+    var content = document.getElementById('content');
+    if (content && !content.innerHTML.trim()) {
+      content.innerHTML = '<div class="empty-state"><h3>Chargement lent</h3>'
+        + '<p>Le serveur met du temps à répondre.</p>'
+        + '<button class="btn" onclick="handleCallback()" style="margin:1rem auto">&#8635; Réessayer</button></div>';
+    }
+  }, 18000);
 
   try {
     // ── Étape 1 : profil utilisateur (~0s depuis cache, ~0.2s depuis Google) ──
@@ -1312,16 +1322,17 @@ async function _loadVideosAndShow() {
         setTimeout(refreshVideosBackground, loaderDelay);
       }
     } else {
-      // Pas de cache : montrer skeleton puis charger
+      // Pas de cache : montrer skeleton, fermer le loader, puis charger
       showLoading();
       showScreen('app'); // afficher l'app avec skeleton
+      _hideLoader();     // fermer le loader animé — ne pas attendre fetchAndCacheVideos
       try {
         await fetchAndCacheVideos(true, false);
       } catch(e) {
         // Si échec réseau, laisser l'app ouverte avec un message
         document.getElementById('content').innerHTML =
-          '<div class="empty-state"><p>Chargement…</p>' +
-          '<button class="btn" onclick="_loadVideosAndShow()" style="margin:1rem auto">Réessayer</button></div>';
+          '<div class="empty-state"><h3>Connexion lente</h3><p>Le serveur met du temps à répondre.</p>' +
+          '<button class="btn" onclick="_loadVideosAndShow()" style="margin:1rem auto">&#8635; Réessayer</button></div>';
       }
     }
   } catch(e) { console.warn('loadVideos:', e); }
@@ -1645,7 +1656,16 @@ function selectCatFromGrid(cat) {
   }, delay);
 }
 
+function _hideLoader() {
+  var loader = document.getElementById('lfiagLoader');
+  if (loader && !loader._hiding) {
+    loader._hiding = true;
+    loader.classList.add('lfiag-hide');
+    setTimeout(function() { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }, 750);
+  }
+}
 function renderAll() {
+  if (window._loaderSafetyTimer) { clearTimeout(window._loaderSafetyTimer); window._loaderSafetyTimer = null; }
   showScreen('app');
   var loader = document.getElementById('lfiagLoader');
   if (loader && !loader._hiding) {
@@ -1653,7 +1673,7 @@ function renderAll() {
     var remaining = Math.max(0, 4500 - (window._loaderStart ? Date.now() - window._loaderStart : 9999));
     setTimeout(function() {
       loader.classList.add('lfiag-hide');
-      setTimeout(function() { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 750);
+      setTimeout(function() { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }, 750);
     }, remaining);
   }
   window._sharedStats = getSharedStats();
