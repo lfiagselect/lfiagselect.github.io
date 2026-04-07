@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604071345">
+<meta name="cache-version" content="202604071346">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1053,18 +1053,7 @@ function selectCatFromDrawer(c) {
   renderToolbar(); renderCatGrid(); renderVideos();
   var b = document.getElementById('mobCatLabel');
   if (b) b.textContent = c==='__new__'?'Récents':c==='Tout'?'Tout':c.split(/[\s\-]/)[0];
-  // Sur mobile : 60ms suffit
-  // Sur desktop : attendre 280ms que le drawer finisse de se fermer avant de calculer la position
-  var delay = isMobile() ? 60 : 280;
-  setTimeout(function() {
-    var el = document.getElementById('content');
-    var hdr = document.querySelector('header');
-    if (el) {
-      var hdrH = hdr ? hdr.getBoundingClientRect().height : 0;
-      var top = el.getBoundingClientRect().top + window.scrollY - hdrH - 8;
-      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-    }
-  }, delay);
+  _scrollToEl(document.getElementById('content'));
 }
 function initHeaderShrink() {
   var hdr = document.querySelector('header');
@@ -1182,17 +1171,7 @@ function mobSetCat(c) {
   renderMobCatbar();
   renderCatGrid();
   renderVideos();
-  // Scroll vers les vidéos
-  setTimeout(function() {
-    var el = document.getElementById('content');
-    var hdr = document.querySelector('header');
-    if (el) {
-      var hdrH = hdr ? hdr.getBoundingClientRect().height : 0;
-      var top = el.getBoundingClientRect().top + window.scrollY - hdrH - 8;
-      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-    }
-  }, 60);
-  // Scroller la pill active au centre de la catbar
+  _scrollToEl(document.getElementById('content'));
   setTimeout(function() {
     var bar = document.getElementById('mobCatbar');
     var active = bar && bar.querySelector('.cat-pill.active');
@@ -1635,27 +1614,11 @@ function selectCatFromGrid(cat) {
   renderToolbar();
   renderCatGrid();
   renderVideos();
-  var delay = isMobile() ? 60 : 120;
-  setTimeout(function() {
-    if (cat === 'Tout') {
-      // Retour au grid : scroller vers catGridSection
-      var sec = document.getElementById('catGridSection');
-      var hdr = document.querySelector('header');
-      if (sec) {
-        var hdrH = hdr ? hdr.getBoundingClientRect().height : 0;
-        var top = sec.getBoundingClientRect().top + window.scrollY - hdrH - 12;
-        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-      }
-    } else {
-      var el = document.getElementById('content');
-      var hdr = document.querySelector('header');
-      if (el) {
-        var hdrH = hdr ? hdr.getBoundingClientRect().height : 0;
-        var top = el.getBoundingClientRect().top + window.scrollY - hdrH - 8;
-        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-      }
-    }
-  }, delay);
+  if (cat === 'Tout') {
+    _scrollToEl(document.getElementById('catGridSection'), -4);
+  } else {
+    _scrollToEl(document.getElementById('content'));
+  }
 }
 
 function _hideLoader() {
@@ -1666,7 +1629,6 @@ function _hideLoader() {
     setTimeout(function() { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }, 750);
   }
 }
-
 function _scrollToEl(el, extraOffset) {
   if (!el) return;
   extraOffset = extraOffset || 0;
@@ -1678,54 +1640,6 @@ function _scrollToEl(el, extraOffset) {
       window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     });
   });
-}
-
-function setAluneCategory(cat) {
-  window._aluneFilter = cat;
-  renderVideosAlune(cat);
-  _scrollToEl(document.getElementById('content'));
-}
-
-function selectCatFromGrid(cat) {
-  activeCategory = cat;
-  renderMobCatbar();
-  renderToolbar();
-  renderCatGrid();
-  renderVideos();
-  if (cat === 'Tout') {
-    _scrollToEl(document.getElementById('catGridSection'), -4);
-  } else {
-    _scrollToEl(document.getElementById('content'));
-  }
-}
-
-function selectCatFromDrawer(c) {
-  activeCategory = c;
-  closeCatDrawer();
-  closeDeskDrawer();
-  renderToolbar(); renderCatGrid(); renderVideos();
-  var b = document.getElementById('mobCatLabel');
-  if (b) b.textContent = c==='__new__'?'Récents':c==='Tout'?'Tout':c.split(/[\s\-]/)[0];
-  _scrollToEl(document.getElementById('content'));
-}
-
-function mobSetCat(c) {
-  activeCategory = c;
-  renderMobCatbar();
-  renderCatGrid();
-  renderVideos();
-  _scrollToEl(document.getElementById('content'));
-  setTimeout(function() {
-    var bar = document.getElementById('mobCatbar');
-    var active = bar && bar.querySelector('.cat-pill.active');
-    if (active && bar) {
-      var barRect = bar.getBoundingClientRect();
-      var pillRect = active.getBoundingClientRect();
-      var scrollLeft = bar.scrollLeft + pillRect.left - barRect.left
-        - (barRect.width / 2) + (pillRect.width / 2);
-      bar.scrollTo({ left: scrollLeft, behavior: 'smooth' });
-    }
-  }, 50);
 }
 
 function renderAll() {
@@ -1760,18 +1674,9 @@ function updateAluneSection() {
 }
 
 function setAluneCategory(cat) {
-  // Afficher les vidéos du dossier SANS modifier la catégorie active
-  // On filtre temporairement via une variable dédiée
   window._aluneFilter = cat;
   renderVideosAlune(cat);
-  setTimeout(function() {
-    var target = document.getElementById('aluneSection');
-    if (target) {
-      var rect = target.getBoundingClientRect();
-      var bottom = rect.bottom + window.scrollY;
-      window.scrollTo({ top: bottom + 16, behavior: 'smooth' });
-    }
-  }, 60);
+  _scrollToEl(document.getElementById('content'));
 }
 
 function renderVideosAlune(cat) {
