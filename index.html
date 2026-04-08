@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604081959">
+<meta name="cache-version" content="202604082006">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -2089,6 +2089,22 @@ function openVideo(id) {
   if (dur)  meta += '<span>&#9201; ' + dur + '</span>';
   if (date) meta += '<span>&#128197; ' + date + '</span>';
   document.getElementById('modalMeta').innerHTML = meta;
+
+  // TV : ouvrir directement le lien Drive dans le navigateur
+  if (document.documentElement.classList.contains('is-tv')) {
+    window.open(driveLink, '_blank');
+    // Enregistrer quand même dans l'historique et les vues
+    try {
+      var vwt=JSON.parse(localStorage.getItem('lfiag_views')||'{}');
+      vwt[id]=(vwt[id]||0)+1;
+      localStorage.setItem('lfiag_views',JSON.stringify(vwt));
+      var _hht=JSON.parse(localStorage.getItem('lfiag_history')||'{}');
+      _hht[id]={ts:Date.now()};
+      localStorage.setItem('lfiag_history',JSON.stringify(_hht));
+    } catch(e) {}
+    setTimeout(function(){ updateHeroWidgets(); }, 100);
+    return;
+  }
 
   var _mp = document.getElementById('modalPlayer');
   _mp.style.position = 'relative';
