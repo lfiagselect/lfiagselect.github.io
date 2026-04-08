@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604071501">
+<meta name="cache-version" content="202604081934">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -54,6 +54,16 @@ header.shrunk{height:calc(40px + env(safe-area-inset-top))!important;padding:env
   .quit-btn{display:none;align-items:center;gap:.35rem;padding:.3rem .7rem;border-radius:8px;background:rgba(255,69,58,.08);border:1px solid rgba(255,69,58,.2);color:rgba(255,69,58,.85);font-size:.74rem;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
   .quit-btn:hover{background:rgba(255,69,58,.15);border-color:rgba(255,69,58,.35);color:#ff453a}
   .hdr-sep{width:1px;height:20px;background:rgba(255,255,255,.1);flex-shrink:0;margin:0 .15rem}
+  /* Firestick / TV : navigation D-pad */
+  @media (hover:none) and (pointer:coarse) {
+    :focus-visible { outline: 3px solid var(--gold) !important; outline-offset: 3px !important; }
+  }
+  @media (min-width:1280px) and (hover:none) {
+    .video-grid { grid-template-columns:repeat(5,1fr) !important; gap:1.2rem !important; }
+    .video-card:focus-visible { outline:4px solid var(--gold) !important; transform:scale(1.04); z-index:2; box-shadow:0 0 0 4px rgba(255,214,10,.3) !important; }
+    .cat-drawer-item:focus-visible { outline:3px solid var(--gold) !important; background:rgba(255,214,10,.12) !important; }
+    .btn:focus-visible, .icon-btn:focus-visible { outline:3px solid var(--gold) !important; }
+  }
   .profile-btn{border-radius:50% !important;background:rgba(255,214,10,.12) !important;border-color:rgba(255,214,10,.3) !important}
   .profile-btn:hover{background:rgba(255,214,10,.22) !important}
   .profile-initial{font-size:.74rem;font-weight:700;color:var(--gold)}
@@ -1047,7 +1057,7 @@ function renderCatDrawer() {
       .map(function(c){return {id:c,label:c,count:allVideos.filter(function(v){return v._cat===c;}).length};}));
   list.innerHTML = cats.map(function(cat){
     var act = cat.id===activeCategory?'active':'';
-    return '<div class="cat-drawer-item '+act+'" data-cat="'+escAttr(cat.id)+'" onclick="selectCatFromDrawer(this.dataset.cat)"><span>'+escHtml(cat.label)+'</span><span class="cat-drawer-count">'+cat.count+'</span></div>';
+    return '<div class="cat-drawer-item '+act+'" tabindex="0" data-cat="'+escAttr(cat.id)+'" onclick="selectCatFromDrawer(this.dataset.cat)"><span>'+escHtml(cat.label)+'</span><span class="cat-drawer-count">'+cat.count+'</span></div>';
   }).join('');
 }
 function selectCatFromDrawer(c) {
@@ -1961,7 +1971,7 @@ function videoCard(v, isNew) {
   const progressBar = seen
     ? '<div class="progress-bar"><div class="progress-bar-fill" style="width:100%"></div></div>'
     : '';
-  return '<div class="video-card" onclick="openVideo(\'' + v.id + '\')">'
+  return '<div class="video-card" tabindex="0" onclick="openVideo(\'' + v.id + '\')">'
     + '<div class="thumb-wrap">' + thumb
     + '<div class="play-overlay"><div class="play-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>'
     + newBadge + vuBadge + ncBadge + durBadge + progressBar + '</div>'
@@ -2393,6 +2403,29 @@ document.getElementById('settingsBtn').addEventListener('click', function(){
 // INIT
 // ============================================
 _initLfiagLoader();
+
+// D-pad navigation (Firestick/TV)
+document.addEventListener('keydown', function(e) {
+  var el = document.activeElement;
+  if (e.key === 'Enter' && el && el !== document.body) {
+    el.click(); e.preventDefault(); return;
+  }
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    var items = Array.from(document.querySelectorAll('#catDrawerList .cat-drawer-item'));
+    var idx = items.indexOf(el);
+    if (idx >= 0) {
+      var next = e.key === 'ArrowDown' ? items[idx+1] : items[idx-1];
+      if (next) { next.focus(); e.preventDefault(); }
+    }
+  }
+  if (e.key === 'Escape') {
+    var modal = document.getElementById('modal');
+    var drawer = document.getElementById('catDrawer');
+    if (modal && modal.classList.contains('open')) { closeModal(); e.preventDefault(); }
+    else if (drawer && drawer.classList.contains('open')) { closeCatDrawer(); e.preventDefault(); }
+  }
+});
+
 handleCallback();</script>
 </body>
 </html>
