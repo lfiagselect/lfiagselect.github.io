@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604082016">
+<meta name="cache-version" content="202604082030">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1615,7 +1615,8 @@ function renderCatGrid() {
     var img = getCatImage(cat);
     var count = allVideos.filter(function(v){return v._cat===cat;}).length;
     return '<div class="cat-vignette"' +
-      ' onclick="selectCatFromGrid(\'' + escAttr(cat) + '\')"' +
+      ' data-cat="' + escAttr(cat) + '"' +
+      ' onclick="selectCatFromGrid(this.dataset.cat)"' +
       ' title="' + escAttr(cat) + '">' +
       (img ? '<img class="cat-vignette-img" src="' + img + '" alt="' + escAttr(cat) + '">' : '<div class="cat-vignette-img" style="background:rgba(255,255,255,.06)"></div>') +
       '<div class="cat-vignette-overlay"></div>' +
