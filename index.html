@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604081948">
+<meta name="cache-version" content="202604081955">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -405,6 +405,18 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
     .cat-drawer-count{font-size:.72rem;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:100px;flex-shrink:0;}
     .cat-drawer-item.active .cat-drawer-count{color:var(--gold);}
 }
+
+  /* TV / Firestick / Apple TV / Smart TV */
+  @media (hover:none) and (min-width:1280px) {
+    :focus-visible { outline:4px solid var(--gold) !important; outline-offset:4px !important; border-radius:6px; }
+    .video-grid { grid-template-columns:repeat(4,1fr) !important; gap:1.4rem !important; }
+    .video-card:focus-visible { transform:scale(1.05) !important; box-shadow:0 0 0 4px rgba(255,214,10,.4),0 12px 40px rgba(0,0,0,.6) !important; z-index:2 !important; }
+    .card-title { font-size:.95rem !important; }
+    .cat-drawer-item { padding:.85rem 1.2rem !important; font-size:.92rem !important; }
+    .cat-drawer-item:focus-visible { background:rgba(255,214,10,.15) !important; }
+    .btn:focus-visible,.icon-btn:focus-visible,.quit-btn:focus-visible { outline:3px solid var(--gold) !important; }
+    .mob-catbar { display:none !important; }
+  }
 </style>
 <script>
 if ('serviceWorker' in navigator) {
@@ -1047,7 +1059,7 @@ function renderCatDrawer() {
       .map(function(c){return {id:c,label:c,count:allVideos.filter(function(v){return v._cat===c;}).length};}));
   list.innerHTML = cats.map(function(cat){
     var act = cat.id===activeCategory?'active':'';
-    return '<div class="cat-drawer-item '+act+'" data-cat="'+escAttr(cat.id)+'" onclick="selectCatFromDrawer(this.dataset.cat)"><span>'+escHtml(cat.label)+'</span><span class="cat-drawer-count">'+cat.count+'</span></div>';
+    return '<div class="cat-drawer-item '+act+'" tabindex="0" data-cat="'+escAttr(cat.id)+'" onclick="selectCatFromDrawer(this.dataset.cat)"><span>'+escHtml(cat.label)+'</span><span class="cat-drawer-count">'+cat.count+'</span></div>';
   }).join('');
 }
 function selectCatFromDrawer(c) {
@@ -1682,6 +1694,7 @@ function renderAll() {
   renderVideos();
   updateHeroWidgets();
   updateAluneSection();
+  try{document.dispatchEvent(new CustomEvent('lfiag:ready'));}catch(e){}
 }
 
 function updateAluneSection() {
@@ -1961,7 +1974,7 @@ function videoCard(v, isNew) {
   const progressBar = seen
     ? '<div class="progress-bar"><div class="progress-bar-fill" style="width:100%"></div></div>'
     : '';
-  return '<div class="video-card" onclick="openVideo(\'' + v.id + '\')">'
+  return '<div class="video-card" tabindex="0" onclick="openVideo(\'' + v.id + '\')">'
     + '<div class="thumb-wrap">' + thumb
     + '<div class="play-overlay"><div class="play-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>'
     + newBadge + vuBadge + ncBadge + durBadge + progressBar + '</div>'
@@ -2393,6 +2406,50 @@ document.getElementById('settingsBtn').addEventListener('click', function(){
 // INIT
 // ============================================
 _initLfiagLoader();
+
+(function(){
+  var ua=navigator.userAgent||'';
+  var isTV=/Silk|SilkBrowser/i.test(ua)||/AppleTV|tvOS/i.test(ua)||
+    /Tizen/i.test(ua)||/WebOS|Web0S/i.test(ua)||/SMART-TV|SmartTV/i.test(ua)||
+    /CrKey/i.test(ua)||/Android.*TV|TV.*Android/i.test(ua)||
+    (screen.width>=1280&&!('ontouchstart' in window)&&window.matchMedia('(hover:none)').matches);
+  if(!isTV) return;
+  document.documentElement.classList.add('is-tv');
+  document.addEventListener('keydown',function(e){
+    var el=document.activeElement,key=e.key;
+    if(key==='Enter'&&el&&el!==document.body){el.click();e.preventDefault();return;}
+    if(key==='ArrowDown'||key==='ArrowUp'){
+      var items=Array.from(document.querySelectorAll('#catDrawerList .cat-drawer-item'));
+      var ix=items.indexOf(el);
+      if(ix>=0){var ni=key==='ArrowDown'?items[ix+1]:items[ix-1];if(ni){ni.focus();e.preventDefault();return;}}
+      var cards=Array.from(document.querySelectorAll('.video-card'));
+      var ci=cards.indexOf(el);
+      if(ci>=0){
+        var grid=document.querySelector('.video-grid');
+        var cols=grid?Math.max(1,Math.round(grid.offsetWidth/(cards[0]?cards[0].offsetWidth+20:320))):4;
+        var tc=key==='ArrowDown'?cards[ci+cols]:cards[ci-cols];
+        if(tc){tc.focus();tc.scrollIntoView({block:'nearest',behavior:'smooth'});e.preventDefault();}
+      }
+    }
+    if(key==='ArrowLeft'||key==='ArrowRight'){
+      var cards2=Array.from(document.querySelectorAll('.video-card'));
+      var ci2=cards2.indexOf(el);
+      if(ci2>=0){var tc2=key==='ArrowRight'?cards2[ci2+1]:cards2[ci2-1];if(tc2){tc2.focus();tc2.scrollIntoView({block:'nearest',behavior:'smooth'});e.preventDefault();}}
+    }
+    if(key==='Escape'||key==='GoBack'||key==='BrowserBack'){
+      var modal=document.getElementById('modal');
+      var drawer=document.getElementById('catDrawer');
+      var sp=document.getElementById('settingsPanel');
+      if(modal&&modal.classList.contains('open')){closeModal();e.preventDefault();return;}
+      if(drawer&&drawer.classList.contains('open')){closeCatDrawer();e.preventDefault();return;}
+      if(sp&&sp.classList.contains('open')){sp.classList.remove('open');document.body.style.overflow='';e.preventDefault();}
+    }
+  });
+  document.addEventListener('lfiag:ready',function(){
+    setTimeout(function(){var c=document.querySelector('.video-card');if(c)c.focus();},400);
+  });
+})();
+
 handleCallback();</script>
 </body>
 </html>
