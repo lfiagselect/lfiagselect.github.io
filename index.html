@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604091839">
+<meta name="cache-version" content="202604091843">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -894,6 +894,22 @@ try { const s = JSON.parse(localStorage.getItem('lfiag_settings_v2')||'{}'); if(
 // ============================================
 function signIn(prompt_mode) {
   prompt_mode = prompt_mode || 'select_account';
+  // Débloquer l'AudioContext sur le geste utilisateur (iOS Safari)
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) {
+      var ac = new AC();
+      ac.resume();
+      // Jouer un son silencieux pour débloquer l'AudioContext
+      var buf = ac.createBuffer(1, 1, 22050);
+      var src = ac.createBufferSource();
+      src.buffer = buf;
+      src.connect(ac.destination);
+      src.start(0);
+      // Stocker l'AudioContext pour réutilisation au retour
+      sessionStorage.setItem('lfiag_ac_unlocked', '1');
+    }
+  } catch(e) {}
   location.href = 'https://accounts.google.com/o/oauth2/v2/auth'
     + '?client_id=' + encodeURIComponent(CLIENT_ID)
     + '&redirect_uri=' + encodeURIComponent(REDIRECT_URI)
@@ -1494,29 +1510,36 @@ function _initLfiagLoader() {
   // Afficher le loader
   var loader = document.getElementById('lfiagLoader');
   if (loader) { loader.style.display = 'flex'; loader._hiding = false; }
-  // Jingle — jouer ici (handleCallback est déclenché après un geste OAuth implicite)
-  var jingle = document.getElementById('lfiagJingle');
-  if (jingle) {
-    jingle.currentTime = 0;
-    var setJingleDuration = function() {
-      if (jingle.duration && isFinite(jingle.duration)) {
-        window._loaderDuration = Math.ceil(jingle.duration * 1000);
-      }
-    };
-    if (jingle.readyState >= 1) setJingleDuration();
-    else jingle.addEventListener('loadedmetadata', setJingleDuration);
-    // AudioContext unlock — contourne le blocage iOS au retour OAuth
-    try {
-      var AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (AudioCtx) {
-        var ctx = new AudioCtx();
-        ctx.resume().then(function() {
-          jingle.play().catch(function(){});
-        });
-      } else {
-        jingle.play().catch(function(){});
-      }
-    } catch(e) { try { jingle.play().catch(function(){}); } catch(e2) {} }
+  // Jingle via Web Audio API (plus fiable que HTMLAudioElement sur iOS)
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) {
+      var _ac = new AC();
+      _ac.resume().then(function() {
+        fetch('/audio/jingle.mp3')
+          .then(function(r) { return r.arrayBuffer(); })
+          .then(function(buf) { return _ac.decodeAudioData(buf); })
+          .then(function(decoded) {
+            window._loaderDuration = Math.ceil(decoded.duration * 1000);
+            var src = _ac.createBufferSource();
+            src.buffer = decoded;
+            src.connect(_ac.destination);
+            src.start(0);
+          })
+          .catch(function() {
+            // Fallback HTMLAudioElement
+            var jingle = document.getElementById('lfiagJingle');
+            if (jingle) { jingle.currentTime = 0; jingle.play().catch(function(){}); }
+          });
+      });
+    } else {
+      // Navigateur sans AudioContext
+      var jingle = document.getElementById('lfiagJingle');
+      if (jingle) { jingle.currentTime = 0; jingle.play().catch(function(){}); }
+    }
+  } catch(e) {
+    var jingle = document.getElementById('lfiagJingle');
+    if (jingle) { try { jingle.currentTime = 0; jingle.play().catch(function(){}); } catch(e2) {} }
   }
   // Logo
   var img = document.getElementById('lfiagLoaderImg');
