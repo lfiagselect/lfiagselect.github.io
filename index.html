@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604091854">
+<meta name="cache-version" content="202604091900">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -906,11 +906,10 @@ function signIn(prompt_mode) {
   try { popup = window.open(authUrl, 'lfiag_oauth', 'width=500,height=650,top=100,left=100'); } catch(e) {}
 
   if (popup && !popup.closed) {
-    // Popup ouvert — jouer le jingle MAINTENANT (geste actif)
+    // 1. Jingle + loader IMMÉDIATEMENT (geste actif, même pile d'exécution)
     _playJingle();
-    // Afficher le loader
     showScreen('loading');
-    _initLfiagLoader(true); // true = jingle déjà lancé
+    _initLfiagLoader(true); // true = jingle déjà lancé, ne pas rejouer
     // Surveiller la fermeture du popup et récupérer le token
     var poll = setInterval(function() {
       try {
@@ -932,6 +931,7 @@ function signIn(prompt_mode) {
 }
 
 function _playJingle() {
+  window._loaderStart = Date.now(); // horodatage précis au clic
   try {
     var AC = window.AudioContext || window.webkitAudioContext;
     if (AC && typeof JINGLE_SRC !== 'undefined') {
@@ -1544,8 +1544,8 @@ function showScreen(name) {
 }
 
 function _initLfiagLoader(jingleAlreadyPlaying) {
-  // Reset à chaque appel pour gérer reconnexion après signOut
-  window._loaderStart = window._loaderStart || Date.now();
+  // Reset seulement si pas déjà fixé par _playJingle
+  if (!window._loaderStart) window._loaderStart = Date.now();
   window._loaderDuration = 8750; // durée exacte du jingle (ms)
   window._loaderHiding = false;
   // Afficher le loader
