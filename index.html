@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604091752">
+<meta name="cache-version" content="202604091807">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1220,11 +1220,9 @@ if (_mob) _mob.addEventListener('input', function(e) {
 });
 
 window.addEventListener('resize', function() {
-  try { setupMobileUI(); } catch(e) { console.warn('setupMobileUI:', e); }
+  // Ne montrer les éléments mobiles qu'après connexion
+  try { if (currentUser) setupMobileUI(); } catch(e) {}
 });
-
-// Init mobile au chargement (sécurisé)
-try { setupMobileUI(); } catch(e) { console.warn('mobile init:', e); }
 try { injectLogo(); } catch(e) {}
 
 function injectLogo(){['logoImgHeader','logoImgAuth'].forEach(function(id){var el=document.getElementById(id);if(el)el.src=LOGO_SRC;});}
