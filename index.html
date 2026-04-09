@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604090444">
+<meta name="cache-version" content="202604090657">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -323,6 +323,10 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
   .pdf-btn.fs{background:rgba(255,214,10,.1);border-color:rgba(255,214,10,.25);color:var(--gold)}
   .pdf-frame-wrap{flex:1;position:relative;background:#525659;overflow:hidden}
   .pdf-frame-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none;opacity:0;transition:opacity .3s}
+  #pdfFullscreenOverlay{display:none;position:fixed;inset:0;z-index:99999;background:#000;flex-direction:column}
+  #pdfFullscreenOverlay.open{display:flex}
+  #pdfFsToolbar{display:flex;align-items:center;justify-content:space-between;padding:.5rem .85rem;background:rgba(10,10,10,.98);border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0}
+  #pdfFsFrame{flex:1;width:100%;border:none}
 .modal-player iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
 .modal-body{padding:.9rem 1.1rem 1.1rem}
 .modal-meta{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;color:var(--text3);font-size:.78rem;margin-bottom:.9rem}
@@ -2152,29 +2156,29 @@ function buildPdfPlayer(container, fileId, driveLink) {
   container.classList.add('pdf-mode');
   container.innerHTML = '';
 
-  // Toolbar
+  var iframeUrl = 'https://drive.google.com/file/d/' + fileId + '/preview';
+
+  // Toolbar mini (dans le modal)
   var tb = document.createElement('div');
   tb.className = 'pdf-toolbar';
 
   var openA = document.createElement('a');
   openA.href = driveLink; openA.target = '_blank'; openA.className = 'pdf-btn';
-  openA.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Ouvrir dans Drive';
+  openA.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Drive';
 
   var fsBtn = document.createElement('button');
   fsBtn.className = 'pdf-btn fs';
   fsBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg> Plein écran';
   fsBtn.onclick = function() {
-    var el = document.getElementById('modal');
-    var rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
-    if (rfs) rfs.call(el);
-    else { container.style.height = '100vh'; }
+    openPdfFullscreen(iframeUrl, driveLink,
+      container.closest('#modal') ? document.getElementById('modalTitle').textContent : '');
   };
 
   var left = document.createElement('div'); left.appendChild(openA);
   var right = document.createElement('div'); right.appendChild(fsBtn);
   tb.appendChild(left); tb.appendChild(right);
 
-  // Frame
+  // Frame dans le modal
   var fw = document.createElement('div');
   fw.className = 'pdf-frame-wrap';
 
@@ -2183,18 +2187,35 @@ function buildPdfPlayer(container, fileId, driveLink) {
   spin.innerHTML = '<div style="width:30px;height:30px;border:3px solid rgba(255,255,255,.15);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;"></div>';
 
   var iframe = document.createElement('iframe');
-  iframe.src = 'https://drive.google.com/file/d/' + fileId + '/preview';
+  iframe.src = iframeUrl;
   iframe.setAttribute('allow', 'autoplay; fullscreen');
   iframe.allowFullscreen = true;
-  iframe.addEventListener('load', function() {
-    spin.style.display = 'none';
-    iframe.style.opacity = '1';
-  });
+  iframe.addEventListener('load', function() { spin.style.display='none'; iframe.style.opacity='1'; });
 
-  fw.appendChild(spin);
-  fw.appendChild(iframe);
-  container.appendChild(tb);
-  container.appendChild(fw);
+  fw.appendChild(spin); fw.appendChild(iframe);
+  container.appendChild(tb); container.appendChild(fw);
+}
+
+function openPdfFullscreen(iframeUrl, driveLink, title) {
+  var ov = document.getElementById('pdfFullscreenOverlay');
+  var fs = document.getElementById('pdfFsFrame');
+  var tl = document.getElementById('pdfFsTitle');
+  var dl = document.getElementById('pdfFsDriveLink');
+  if (!ov || !fs) return;
+  tl.textContent = title || '';
+  dl.href = driveLink || '#';
+  fs.src = iframeUrl;
+  ov.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePdfFullscreen() {
+  var ov = document.getElementById('pdfFullscreenOverlay');
+  var fs = document.getElementById('pdfFsFrame');
+  if (!ov) return;
+  ov.classList.remove('open');
+  fs.src = '';
+  document.body.style.overflow = '';
 }
 
 function buildIframePlayer(container, id) {
@@ -2552,5 +2573,21 @@ _initLfiagLoader();
 })();
 
 handleCallback();</script>
+<div id="pdfFullscreenOverlay">
+  <div id="pdfFsToolbar">
+    <span style="font-size:.8rem;font-weight:600;color:rgba(255,255,255,.7);max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="pdfFsTitle"></span>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <a id="pdfFsDriveLink" href="#" target="_blank" class="pdf-btn" style="font-size:.72rem">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Drive
+      </a>
+      <button onclick="closePdfFullscreen()" class="pdf-btn" style="font-size:.72rem;background:rgba(255,60,50,.1);border-color:rgba(255,60,50,.25);color:#ff6b6b">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 9 15 15"/><polyline points="15 9 9 15"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg>
+        Fermer
+      </button>
+    </div>
+  </div>
+  <iframe id="pdfFsFrame" allow="autoplay; fullscreen" allowfullscreen></iframe>
+</div>
 </body>
 </html>
