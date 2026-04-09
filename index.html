@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604091746">
+<meta name="cache-version" content="202604091752">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -521,7 +521,7 @@ if ('serviceWorker' in navigator) {
   <div class="ptr-spinner" id="ptrSpinner"></div>
   <span id="ptrLabel">Tirer pour actualiser</span>
 </div>
-<div class="mob-topbar" id="mobTopbar">
+<div class="mob-topbar" id="mobTopbar" style="display:none">
   <div class="mob-search-wrap">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     <input type="search" id="mobSearchInput" placeholder="Rechercher…" aria-label="Rechercher">
@@ -531,7 +531,7 @@ if ('serviceWorker' in navigator) {
     Cat&#xe9;gories
   </button>
 </div>
-<div class="mob-catbar" id="mobCatbar" role="navigation" aria-label="Catégories"></div>
+<div class="mob-catbar" id="mobCatbar" role="navigation" aria-label="Catégories" style="display:none"></div>
 <div class="mob-sheet-overlay" id="mobSheetOverlay" onclick="closeMobileFilters()"></div>
 <div class="mob-sheet" id="mobSheet" aria-hidden="true">
   <div class="mob-sheet-handle"></div>
@@ -554,7 +554,7 @@ if ('serviceWorker' in navigator) {
     </div>
   </div>
 </div>
-<nav class="mob-nav" id="mobNav" aria-label="Navigation principale"></nav>
+<nav class="mob-nav" id="mobNav" aria-label="Navigation principale" style="display:none"></nav>
 
 <!-- SCREEN: AUTH -->
 <div id="screen-auth" class="screen active visible" role="main">
