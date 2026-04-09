@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604091248">
+<meta name="cache-version" content="202604091253">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -334,7 +334,7 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
   .pdf-fs-btn{display:inline-flex;align-items:center;gap:.25rem;padding:.3rem .6rem;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:transparent;color:rgba(255,255,255,.75);font-size:.72rem;font-weight:600;cursor:pointer;text-decoration:none;transition:.15s;white-space:nowrap;flex-shrink:0}
   .pdf-fs-btn:hover{background:rgba(255,255,255,.1)}
   .pdf-fs-btn.gold{border-color:rgba(255,214,10,.3);color:var(--gold)}
-  #pdfFsCanvas{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;gap:1.2rem;padding:1.2rem .5rem;-webkit-overflow-scrolling:touch}
+  #pdfFsCanvas{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
   #pdfFsCanvas::-webkit-scrollbar{width:3px}
   #pdfFsCanvas::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:3px}
   .pdf-page-wrap{box-shadow:0 4px 28px rgba(0,0,0,.55);border-radius:2px;overflow:hidden;max-width:100%}
@@ -2206,54 +2206,27 @@ function openPdfFullscreen(fileId, driveLink, title) {
   var dl = document.getElementById('pdfFsDriveLink');
   var tl = document.getElementById('pdfFsTitle');
   if (!ov) return;
-
   tl.textContent = title || '';
   dl.href = driveLink || '#';
   ov.className = 'open';
-  _pdfThemeIdx = 0;
   document.body.style.overflow = 'hidden';
-
-  // Charger PDF.js si besoin
-  canvas.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%"><div style="width:32px;height:32px;border:3px solid rgba(200,169,110,.2);border-top-color:#c8a96e;border-radius:50%;animation:spin .75s linear infinite"></div></div>';
-
-  var loadScript = function(src, cb) {
-    if (window.pdfjsLib) { cb(); return; }
-    var s = document.createElement('script');
-    s.src = src; s.onload = cb; document.head.appendChild(s);
-  };
-
-  loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', function() {
-    if (window.pdfjsLib) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    }
-    var url = 'https://drive.google.com/uc?export=download&id=' + fileId;
-    // Fallback: via proxy CORS si Drive bloque
-    pdfjsLib.getDocument({ url: url, withCredentials: false }).promise
-      .then(function(pdf) {
-        _pdfDoc = pdf; _pdfTotal = pdf.numPages; _pdfPage = 1; _pdfScale = 1.0;
-        var slider = document.getElementById('pdfFsSlider');
-        slider.max = _pdfTotal; slider.value = 1;
-        pdfFsRenderAll();
-      })
-      .catch(function(err) {
-        // Drive bloque le téléchargement direct → afficher iframe de secours
-        canvas.innerHTML =
-          '<div style="display:flex;flex-direction:column;align-items:center;gap:.8rem;padding:2rem;text-align:center">' +
-          '<p style="color:rgba(200,169,110,.8);font-size:.85rem">Drive restreint l\'accès direct.<br>Ouverture dans le visionneur Drive.</p>' +
-          '<a href="' + (driveLink||'#') + '" target="_blank" class="pdf-btn" style="background:rgba(200,169,110,.1);border-color:rgba(200,169,110,.3);color:#c8a96e">Ouvrir dans Drive</a>' +
-          '<iframe src="https://drive.google.com/file/d/' + fileId + '/preview" style="flex:1;width:100%;min-height:70vh;border:none;margin-top:.5rem" allow="autoplay;fullscreen"></iframe>' +
-          '</div>';
-      });
-  });
-
-  // Swipe gauche/droite
-  var sx = 0;
-  ov.addEventListener('touchstart', function(e){ sx = e.touches[0].clientX; }, {passive:true, once:false});
-  ov.addEventListener('touchend', function(e){
-    var dx = e.changedTouches[0].clientX - sx;
-    if (Math.abs(dx) > 50) { if(dx < 0) pdfFsGo(1); else pdfFsGo(-1); }
-  }, {passive:true});
+  // Masquer la bottombar — navigation gérée par le visionneur Drive
+  var bb = document.getElementById('pdfFsBottombar');
+  if (bb) bb.style.display = 'none';
+  // Iframe Drive /preview — seule URL accessible depuis le navigateur
+  canvas.innerHTML = '';
+  var spin = document.createElement('div');
+  spin.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2;';
+  spin.innerHTML = '<div style="width:32px;height:32px;border:3px solid rgba(200,169,110,.2);border-top-color:#c8a96e;border-radius:50%;animation:spin .75s linear infinite"></div>';
+  var iframe = document.createElement('iframe');
+  iframe.src = 'https://drive.google.com/file/d/' + fileId + '/preview';
+  iframe.setAttribute('allow', 'autoplay; fullscreen');
+  iframe.allowFullscreen = true;
+  iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;';
+  iframe.addEventListener('load', function(){ spin.remove(); });
+  canvas.style.position = 'relative';
+  canvas.appendChild(spin);
+  canvas.appendChild(iframe);
 }
 
 async function pdfFsRenderAll() {
@@ -2321,8 +2294,11 @@ function pdfFsCycleTheme() {
 
 function pdfFsClose() {
   var ov = document.getElementById('pdfFullscreenOverlay');
-  if (ov) { ov.className = ''; }
-  _pdfDoc = null; _pdfPage = 1; _pdfTotal = 0;
+  if (ov) ov.className = '';
+  var canvas = document.getElementById('pdfFsCanvas');
+  if (canvas) { canvas.innerHTML = ''; canvas.style.position = ''; }
+  var bb = document.getElementById('pdfFsBottombar');
+  if (bb) bb.style.display = 'flex';
   document.body.style.overflow = '';
 }
 
@@ -2698,16 +2674,14 @@ handleCallback();</script>
   <div id="pdfFsToolbar">
     <button class="pdf-fs-btn" onclick="pdfFsClose()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"/></svg>
+      Fermer
     </button>
     <span id="pdfFsTitle"></span>
-    <div style="display:flex;gap:.35rem">
-      <button class="pdf-fs-btn" onclick="pdfFsCycleTheme()" id="pdfFsThemeBtn">&#9788;</button>
-      <button class="pdf-fs-btn" onclick="pdfFsChangeZoom(-0.15)">&#8722;</button>
-      <button class="pdf-fs-btn" onclick="pdfFsChangeZoom(0.15)">&#43;</button>
-      <a id="pdfFsDriveLink" href="#" target="_blank" class="pdf-fs-btn gold">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-      </a>
-    </div>
+    <a id="pdfFsDriveLink" href="#" target="_blank" class="pdf-fs-btn gold">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Drive
+    </a>
+  </div>
   </div>
   <div id="pdfFsCanvas"></div>
   <div id="pdfFsBottombar">
