@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604091907">
+<meta name="cache-version" content="202604091910">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -949,17 +949,25 @@ function _playJingle() {
       _jingleBuffer = bytes.buffer; // stocké, jamais passé directement à decodeAudioData
     }
     window._jingleAC.resume().then(function() {
-      // Cloner le buffer avant chaque decodeAudioData (évite le détachement)
-      var clone = _jingleBuffer.slice(0);
-      window._jingleAC.decodeAudioData(clone, function(decoded) {
-        _jingleDecoded = decoded; // stocker pour réutilisation éventuelle
+      function playDecoded(decoded) {
         window._loaderDuration = Math.ceil(decoded.duration * 1000);
         var src = window._jingleAC.createBufferSource();
         src.buffer = decoded;
         src.connect(window._jingleAC.destination);
         src.start(0);
         window._jingleNode = src;
-      }, function(){});
+      }
+      if (_jingleDecoded) {
+        // AudioBuffer déjà décodé — réutiliser directement (pas de détachement)
+        playDecoded(_jingleDecoded);
+      } else {
+        // Premier decode — cloner pour éviter le détachement
+        var clone = _jingleBuffer.slice(0);
+        window._jingleAC.decodeAudioData(clone, function(decoded) {
+          _jingleDecoded = decoded; // mettre en cache pour les prochains logins
+          playDecoded(decoded);
+        }, function(){});
+      }
     });
   } catch(e) {}
 }
@@ -1010,8 +1018,9 @@ function signOut() {
   window._loaderStart = null;
   window._loaderDuration = null;
   window._loaderHiding = false;
-  if (window._jingleAC) { try { window._jingleAC.close(); } catch(e) {} window._jingleAC = null; }
-  window._jingleNode = null;
+  // Stopper le son sans fermer l'AudioContext (close() le rend inutilisable)
+  if (window._jingleNode) { try { window._jingleNode.stop(); } catch(e) {} window._jingleNode = null; }
+  window._jingleAC = null; // sera recréé au prochain _playJingle
   // Recréer le loader pour la prochaine connexion
   if (!document.getElementById('lfiagLoader')) {
     var lo = document.createElement('div');
