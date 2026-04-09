@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604091813">
+<meta name="cache-version" content="202604091822">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -829,6 +829,7 @@ if ('serviceWorker' in navigator) {
       <div style="position:absolute;top:0;left:-60px;width:60px;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:lfiagShimmer 2s ease .4s infinite"></div>
     </div>
   </div>
+  <audio id="lfiagJingle" src="/audio/jingle.mp3" preload="auto"></audio>
 </div>
 <script>
 var CAT_IMAGES = {
@@ -1487,6 +1488,19 @@ function showScreen(name) {
 function _initLfiagLoader() {
   if (window._loaderStart) return; // déjà initialisé
   window._loaderStart = Date.now();
+  // Jingle — durée exacte du fichier audio
+  var jingle = document.getElementById('lfiagJingle');
+  if (jingle) {
+    var setJingleDuration = function() {
+      if (jingle.duration && isFinite(jingle.duration)) {
+        window._loaderDuration = Math.ceil(jingle.duration * 1000); // ms exact
+      }
+    };
+    jingle.addEventListener('loadedmetadata', setJingleDuration);
+    if (jingle.readyState >= 1) setJingleDuration();
+    // Lecture — fallback silencieux si bloqué (Safari sans interaction)
+    try { jingle.play().catch(function(){}); } catch(e) {}
+  }
   // Logo
   var img = document.getElementById('lfiagLoaderImg');
   if (img && LOGO_SRC) img.src = LOGO_SRC;
@@ -1650,6 +1664,8 @@ function _hideLoader() {
   var loader = document.getElementById('lfiagLoader');
   if (loader && !loader._hiding) {
     loader._hiding = true;
+    var jingle = document.getElementById('lfiagJingle');
+    if (jingle) { try { jingle.pause(); jingle.currentTime = 0; } catch(e) {} }
     loader.classList.add('lfiag-hide');
     setTimeout(function() { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }, 750);
   }
@@ -1690,8 +1706,14 @@ function renderAll() {
   var loader = document.getElementById('lfiagLoader');
   if (loader && !loader._hiding) {
     loader._hiding = true;
-    var remaining = Math.max(0, 4500 - (window._loaderStart ? Date.now() - window._loaderStart : 9999));
+    // Durée = jingle exact, sinon fallback 4500ms
+    var totalMs = window._loaderDuration || 4500;
+    var elapsed = window._loaderStart ? Date.now() - window._loaderStart : 0;
+    var remaining = Math.max(0, totalMs - elapsed);
     setTimeout(function() {
+      // Arrêter le jingle proprement
+      var jingle = document.getElementById('lfiagJingle');
+      if (jingle) { try { jingle.pause(); jingle.currentTime = 0; } catch(e) {} }
       loader.classList.add('lfiag-hide');
       setTimeout(function() { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }, 750);
     }, remaining);
