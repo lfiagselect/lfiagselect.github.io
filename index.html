@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604091253">
+<meta name="cache-version" content="202604091257">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -315,21 +315,17 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
 .modal-close{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
 .modal-close:hover{background:rgba(255,255,255,.12);color:var(--text)}
 .modal-player{position:relative;background:#000;aspect-ratio:16/9;width:100%}
-  .modal-player.pdf-mode{aspect-ratio:unset;height:82vh;display:flex;flex-direction:column;padding:0;background:#1c1a17}
-  @media(max-width:640px){.modal-player.pdf-mode{height:88vh}}
+  .modal-player.pdf-mode{aspect-ratio:unset;height:75vh;display:flex;flex-direction:column}
+  @media(max-width:640px){.modal-player.pdf-mode{height:80vh}}
   .pdf-toolbar{display:flex;align-items:center;justify-content:space-between;padding:.4rem .7rem;background:rgba(15,14,12,.98);border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
   .pdf-btn{display:inline-flex;align-items:center;gap:.3rem;padding:.28rem .65rem;border-radius:7px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.85);font-size:.74rem;font-weight:600;cursor:pointer;text-decoration:none;transition:.15s}
   .pdf-btn:hover,.pdf-btn:active{background:rgba(255,255,255,.14)}
-  /* ── Liseuse PDF plein écran ── */
-  #pdfFullscreenOverlay{display:none;position:fixed;inset:0;z-index:99999;flex-direction:column;background:#1c1a17;font-family:system-ui,sans-serif;color:#e8e0d4}
+  .pdf-btn.fs{background:rgba(255,214,10,.1);border-color:rgba(255,214,10,.25);color:var(--gold)}
+  .pdf-frame-wrap{flex:1;position:relative;background:#525659;overflow:hidden}
+  .pdf-frame-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none;opacity:0;transition:opacity .4s}
+  #pdfFullscreenOverlay{display:none;position:fixed;inset:0;z-index:99999;flex-direction:column;background:#1c1a17}
   #pdfFullscreenOverlay.open{display:flex}
-  #pdfFullscreenOverlay.th-sepia{background:#e8dcc8;color:#2c1f0e}
-  #pdfFullscreenOverlay.th-sepia #pdfFsToolbar,#pdfFullscreenOverlay.th-sepia #pdfFsBottombar{background:#ddd0b8;border-color:rgba(0,0,0,.12)}
-  #pdfFullscreenOverlay.th-sepia .pdf-fs-btn{color:#5a3e20;border-color:rgba(0,0,0,.15)}
-  #pdfFullscreenOverlay.th-light{background:#f0ede8;color:#1a1410}
-  #pdfFullscreenOverlay.th-light #pdfFsToolbar,#pdfFullscreenOverlay.th-light #pdfFsBottombar{background:#e8e4de;border-color:rgba(0,0,0,.1)}
-  #pdfFullscreenOverlay.th-light .pdf-fs-btn{color:#3a3228;border-color:rgba(0,0,0,.12)}
-  #pdfFsToolbar{display:flex;align-items:center;gap:.5rem;padding:.5rem .85rem;background:rgba(12,10,8,.97);border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+  #pdfFsToolbar{display:flex;align-items:center;justify-content:space-between;padding:.5rem .85rem;background:rgba(12,10,8,.97);border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
   #pdfFsTitle{flex:1;font-size:.82rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;opacity:.8}
   .pdf-fs-btn{display:inline-flex;align-items:center;gap:.25rem;padding:.3rem .6rem;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:transparent;color:rgba(255,255,255,.75);font-size:.72rem;font-weight:600;cursor:pointer;text-decoration:none;transition:.15s;white-space:nowrap;flex-shrink:0}
   .pdf-fs-btn:hover{background:rgba(255,255,255,.1)}
@@ -2172,35 +2168,39 @@ function openVideo(id) {
 function buildPdfPlayer(container, fileId, driveLink) {
   container.classList.add('pdf-mode');
   container.innerHTML = '';
-  // Bouton ouvrir liseuse
-  var wrap = document.createElement('div');
-  wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:1rem;';
-  var icon = document.createElement('div');
-  icon.innerHTML = '<svg width="48" height="60" viewBox="0 0 24 30" fill="none" stroke="rgba(200,169,110,.6)" stroke-width="1"><path d="M4 0h12l6 6v24H4z"/><path d="M16 0v6h6"/><line x1="7" y1="11" x2="17" y2="11"/><line x1="7" y1="15" x2="17" y2="15"/><line x1="7" y1="19" x2="13" y2="19"/></svg>';
-  var label = document.createElement('p');
-  label.style.cssText = 'color:rgba(200,169,110,.7);font-size:.88rem;font-weight:600;margin:0';
-  label.textContent = 'Document PDF';
-  var btn = document.createElement('button');
-  btn.className = 'pdf-btn';
-  btn.style.cssText = 'background:rgba(200,169,110,.12);border-color:rgba(200,169,110,.35);color:#c8a96e;padding:.5rem 1.2rem;font-size:.82rem';
-  btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg> Ouvrir la liseuse';
-  btn.onclick = function(){ openPdfFullscreen(fileId, driveLink,
-    document.getElementById('modalTitle') ? document.getElementById('modalTitle').textContent : '');};
-  wrap.appendChild(icon); wrap.appendChild(label); wrap.appendChild(btn);
-  // Lien Drive direct aussi
-  var a = document.createElement('a');
-  a.href = driveLink; a.target = '_blank'; a.className = 'pdf-btn';
-  a.style.cssText = 'font-size:.72rem;opacity:.6';
-  a.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Ouvrir dans Drive';
-  wrap.appendChild(a);
-  container.appendChild(wrap);
+  var iframeUrl = 'https://drive.google.com/file/d/' + fileId + '/preview';
+  // Toolbar
+  var tb = document.createElement('div');
+  tb.className = 'pdf-toolbar';
+  var openA = document.createElement('a');
+  openA.href = driveLink; openA.target = '_blank'; openA.className = 'pdf-btn';
+  openA.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Drive';
+  var fsBtn = document.createElement('button');
+  fsBtn.className = 'pdf-btn fs';
+  fsBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg> Plein écran';
+  fsBtn.onclick = function() {
+    openPdfFullscreen(iframeUrl, driveLink,
+      document.getElementById('modalTitle') ? document.getElementById('modalTitle').textContent : '');
+  };
+  var left = document.createElement('div'); left.appendChild(openA);
+  var right = document.createElement('div'); right.appendChild(fsBtn);
+  tb.appendChild(left); tb.appendChild(right);
+  // Frame
+  var fw = document.createElement('div');
+  fw.className = 'pdf-frame-wrap';
+  var spin = document.createElement('div');
+  spin.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#525659;z-index:2;';
+  spin.innerHTML = '<div style="width:30px;height:30px;border:3px solid rgba(255,255,255,.15);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;"></div>';
+  var iframe = document.createElement('iframe');
+  iframe.src = iframeUrl;
+  iframe.setAttribute('allow', 'autoplay; fullscreen');
+  iframe.allowFullscreen = true;
+  iframe.addEventListener('load', function() { spin.style.display='none'; iframe.style.opacity='1'; });
+  fw.appendChild(spin); fw.appendChild(iframe);
+  container.appendChild(tb); container.appendChild(fw);
 }
 
-// ── État liseuse ──────────────────────────────────────────────
-var _pdfDoc = null, _pdfScale = 1.0, _pdfPage = 1, _pdfTotal = 0;
-var _pdfThemes = ['', 'th-sepia', 'th-light'], _pdfThemeIdx = 0;
-
-function openPdfFullscreen(fileId, driveLink, title) {
+function openPdfFullscreen(iframeUrl, driveLink, title) {
   var ov = document.getElementById('pdfFullscreenOverlay');
   var canvas = document.getElementById('pdfFsCanvas');
   var dl = document.getElementById('pdfFsDriveLink');
@@ -2208,97 +2208,28 @@ function openPdfFullscreen(fileId, driveLink, title) {
   if (!ov) return;
   tl.textContent = title || '';
   dl.href = driveLink || '#';
-  ov.className = 'open';
-  document.body.style.overflow = 'hidden';
-  // Masquer la bottombar — navigation gérée par le visionneur Drive
-  var bb = document.getElementById('pdfFsBottombar');
-  if (bb) bb.style.display = 'none';
-  // Iframe Drive /preview — seule URL accessible depuis le navigateur
   canvas.innerHTML = '';
   var spin = document.createElement('div');
   spin.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2;';
   spin.innerHTML = '<div style="width:32px;height:32px;border:3px solid rgba(200,169,110,.2);border-top-color:#c8a96e;border-radius:50%;animation:spin .75s linear infinite"></div>';
   var iframe = document.createElement('iframe');
-  iframe.src = 'https://drive.google.com/file/d/' + fileId + '/preview';
+  iframe.src = iframeUrl;
   iframe.setAttribute('allow', 'autoplay; fullscreen');
   iframe.allowFullscreen = true;
-  iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;';
+  iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;flex:1;';
   iframe.addEventListener('load', function(){ spin.remove(); });
-  canvas.style.position = 'relative';
+  canvas.style.cssText = 'flex:1;display:flex;flex-direction:column;position:relative;';
   canvas.appendChild(spin);
   canvas.appendChild(iframe);
-}
-
-async function pdfFsRenderAll() {
-  var canvas = document.getElementById('pdfFsCanvas');
-  if (!canvas || !_pdfDoc) return;
-  canvas.innerHTML = '';
-  var vw = Math.min(window.innerWidth, 860) - 16;
-  var scale = _pdfScale * (vw / 595);
-  for (var i = 1; i <= _pdfTotal; i++) {
-    var page = await _pdfDoc.getPage(i);
-    var vp = page.getViewport({ scale: scale });
-    var wrap = document.createElement('div');
-    wrap.className = 'pdf-page-wrap'; wrap.id = 'pdfp-' + i;
-    var c = document.createElement('canvas');
-    c.width = vp.width; c.height = vp.height;
-    wrap.appendChild(c); canvas.appendChild(wrap);
-    await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
-  }
-  pdfFsUpdateNav();
-  // Scroll tracker
-  canvas.onscroll = function() {
-    var pages = canvas.querySelectorAll('.pdf-page-wrap');
-    var top = canvas.getBoundingClientRect().top;
-    var best = 1, bestD = Infinity;
-    pages.forEach(function(p, i) {
-      var d = Math.abs(p.getBoundingClientRect().top - top);
-      if (d < bestD) { bestD = d; best = i + 1; }
-    });
-    if (best !== _pdfPage) { _pdfPage = best; pdfFsUpdateNav(); }
-  };
-}
-
-function pdfFsGo(delta) {
-  if (!_pdfDoc) return;
-  _pdfPage = Math.max(1, Math.min(_pdfTotal, _pdfPage + delta));
-  var el = document.getElementById('pdfp-' + _pdfPage);
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  pdfFsUpdateNav();
-}
-
-function pdfFsUpdateNav() {
-  var slider = document.getElementById('pdfFsSlider');
-  var info = document.getElementById('pdfFsPageInfo');
-  if (slider) {
-    slider.value = _pdfPage;
-    var pct = ((_pdfPage-1) / Math.max(1,_pdfTotal-1)) * 100;
-    slider.style.background = 'linear-gradient(to right,#c8a96e ' + pct + '%,rgba(255,255,255,.15) ' + pct + '%)';
-  }
-  if (info) info.textContent = _pdfPage + ' / ' + _pdfTotal;
-}
-
-function pdfFsChangeZoom(delta) {
-  _pdfScale = Math.max(0.5, Math.min(3, _pdfScale + delta));
-  if (_pdfDoc) { var cur = _pdfPage; pdfFsRenderAll().then(function(){ pdfFsGo(cur - _pdfPage); }); }
-}
-
-function pdfFsCycleTheme() {
-  var ov = document.getElementById('pdfFullscreenOverlay');
-  _pdfThemeIdx = (_pdfThemeIdx + 1) % _pdfThemes.length;
-  ov.className = 'open ' + _pdfThemes[_pdfThemeIdx];
-  var icons = ['&#9788;', '&#9788;', '&#9788;'];
-  var btn = document.getElementById('pdfFsThemeBtn');
-  if (btn) btn.style.opacity = _pdfThemeIdx === 0 ? '1' : _pdfThemeIdx === 1 ? '0.7' : '0.5';
+  ov.classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
 
 function pdfFsClose() {
   var ov = document.getElementById('pdfFullscreenOverlay');
-  if (ov) ov.className = '';
+  if (ov) ov.classList.remove('open');
   var canvas = document.getElementById('pdfFsCanvas');
-  if (canvas) { canvas.innerHTML = ''; canvas.style.position = ''; }
-  var bb = document.getElementById('pdfFsBottombar');
-  if (bb) bb.style.display = 'flex';
+  if (canvas) canvas.innerHTML = '';
   document.body.style.overflow = '';
 }
 
@@ -2682,7 +2613,8 @@ handleCallback();</script>
       Drive
     </a>
   </div>
-  </div>
+  <div id="pdfFsCanvas"></div>
+</div>
   <div id="pdfFsCanvas"></div>
   <div id="pdfFsBottombar">
     <button class="pdf-fs-btn" onclick="pdfFsGo(-1)" style="padding:.3rem .5rem">
