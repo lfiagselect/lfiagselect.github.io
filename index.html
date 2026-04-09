@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604091822">
+<meta name="cache-version" content="202604091831">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -894,6 +894,16 @@ try { const s = JSON.parse(localStorage.getItem('lfiag_settings_v2')||'{}'); if(
 // ============================================
 function signIn(prompt_mode) {
   prompt_mode = prompt_mode || 'select_account';
+  // Jouer le jingle AVANT le redirect (geste utilisateur actif = iOS autorise)
+  var jingle = document.getElementById('lfiagJingle');
+  if (jingle) {
+    try {
+      jingle.currentTime = 0;
+      jingle.play().catch(function(){});
+      // Stocker l'heure de départ pour synchroniser le loader au retour
+      try { sessionStorage.setItem('lfiag_jingle_start', String(Date.now())); } catch(e) {}
+    } catch(e) {}
+  }
   location.href = 'https://accounts.google.com/o/oauth2/v2/auth'
     + '?client_id=' + encodeURIComponent(CLIENT_ID)
     + '&redirect_uri=' + encodeURIComponent(REDIRECT_URI)
@@ -1487,7 +1497,11 @@ function showScreen(name) {
 
 function _initLfiagLoader() {
   if (window._loaderStart) return; // déjà initialisé
-  window._loaderStart = Date.now();
+  // Récupérer l'heure de départ du jingle (lancé avant le redirect OAuth)
+  var jingleStartStr = sessionStorage.getItem('lfiag_jingle_start');
+  window._loaderStart = jingleStartStr ? parseInt(jingleStartStr) : Date.now();
+  window._loaderDuration = 8750; // durée exacte du jingle (ms)
+  try { sessionStorage.removeItem('lfiag_jingle_start'); } catch(e) {}
   // Jingle — durée exacte du fichier audio
   var jingle = document.getElementById('lfiagJingle');
   if (jingle) {
@@ -1707,7 +1721,7 @@ function renderAll() {
   if (loader && !loader._hiding) {
     loader._hiding = true;
     // Durée = jingle exact, sinon fallback 4500ms
-    var totalMs = window._loaderDuration || 4500;
+    var totalMs = window._loaderDuration || 8750;
     var elapsed = window._loaderStart ? Date.now() - window._loaderStart : 0;
     var remaining = Math.max(0, totalMs - elapsed);
     setTimeout(function() {
