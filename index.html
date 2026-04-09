@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604091807">
+<meta name="cache-version" content="202604091811">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -943,6 +943,7 @@ function signOut() {
   if('caches' in window)caches.keys().then(function(n){n.forEach(function(k){caches.delete(k);});});
   currentUser=null;showScreen('auth');
   ['userBadge','signOutBtn','refreshBtn','settingsBtn','searchWrap','adminHeaderBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
+  ['mobTopbar','mobCatbar','mobNav'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
 }
 
 // ============================================
