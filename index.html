@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604091843">
+<meta name="cache-version" content="202604091848">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1742,22 +1742,7 @@ function _scrollToEl(el, extraOffset) {
 
 function renderAll() {
   if (window._loaderSafetyTimer) { clearTimeout(window._loaderSafetyTimer); window._loaderSafetyTimer = null; }
-  showScreen('app');
-  var loader = document.getElementById('lfiagLoader');
-  if (loader && !loader._hiding) {
-    loader._hiding = true;
-    // Durée = jingle exact, sinon fallback 4500ms
-    var totalMs = window._loaderDuration || 8750;
-    var elapsed = window._loaderStart ? Date.now() - window._loaderStart : 0;
-    var remaining = Math.max(0, totalMs - elapsed);
-    setTimeout(function() {
-      // Arrêter le jingle proprement
-      var jingle = document.getElementById('lfiagJingle');
-      if (jingle) { try { jingle.pause(); jingle.currentTime = 0; } catch(e) {} }
-      loader.classList.add('lfiag-hide');
-      setTimeout(function() { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }, 750);
-    }, remaining);
-  }
+  // Rendre le contenu en mémoire
   window._sharedStats = getSharedStats();
   if (isMobile()) { renderMobCatbar(); } else { renderDeskCatBar(); }
   renderCatDrawer();
@@ -1765,7 +1750,21 @@ function renderAll() {
   renderVideos();
   updateHeroWidgets();
   updateAluneSection();
-  try{document.dispatchEvent(new CustomEvent('lfiag:ready'));}catch(e){}
+  // Calculer le délai restant du jingle
+  var loader = document.getElementById('lfiagLoader');
+  var totalMs = window._loaderDuration || 8750;
+  var elapsed = window._loaderStart ? Date.now() - window._loaderStart : 0;
+  var remaining = (loader && !loader._hiding) ? Math.max(0, totalMs - elapsed) : 0;
+  // Afficher l'app et masquer le loader après la fin du jingle
+  setTimeout(function() {
+    showScreen('app');
+    if (loader && !loader._hiding) {
+      loader._hiding = true;
+      loader.classList.add('lfiag-hide');
+      setTimeout(function() { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }, 750);
+    }
+    try{document.dispatchEvent(new CustomEvent('lfiag:ready'));}catch(e){}
+  }, remaining);
 }
 
 function updateAluneSection() {
