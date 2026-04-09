@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604091850">
+<meta name="cache-version" content="202604091854">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -895,27 +895,63 @@ try { const s = JSON.parse(localStorage.getItem('lfiag_settings_v2')||'{}'); if(
 // ============================================
 function signIn(prompt_mode) {
   prompt_mode = prompt_mode || 'select_account';
-  // Débloquer l'AudioContext sur le geste utilisateur (iOS Safari)
-  try {
-    var AC = window.AudioContext || window.webkitAudioContext;
-    if (AC) {
-      var ac = new AC();
-      ac.resume();
-      // Jouer un son silencieux pour débloquer l'AudioContext
-      var buf = ac.createBuffer(1, 1, 22050);
-      var src = ac.createBufferSource();
-      src.buffer = buf;
-      src.connect(ac.destination);
-      src.start(0);
-      // Stocker l'AudioContext pour réutilisation au retour
-      sessionStorage.setItem('lfiag_ac_unlocked', '1');
-    }
-  } catch(e) {}
-  location.href = 'https://accounts.google.com/o/oauth2/v2/auth'
+  var authUrl = 'https://accounts.google.com/o/oauth2/v2/auth'
     + '?client_id=' + encodeURIComponent(CLIENT_ID)
     + '&redirect_uri=' + encodeURIComponent(REDIRECT_URI)
     + '&response_type=token&scope=' + encodeURIComponent(SCOPES)
     + '&prompt=' + prompt_mode;
+
+  // Tenter ouverture popup (geste utilisateur actif = audio autorisé)
+  var popup = null;
+  try { popup = window.open(authUrl, 'lfiag_oauth', 'width=500,height=650,top=100,left=100'); } catch(e) {}
+
+  if (popup && !popup.closed) {
+    // Popup ouvert — jouer le jingle MAINTENANT (geste actif)
+    _playJingle();
+    // Afficher le loader
+    showScreen('loading');
+    _initLfiagLoader(true); // true = jingle déjà lancé
+    // Surveiller la fermeture du popup et récupérer le token
+    var poll = setInterval(function() {
+      try {
+        if (popup.closed) { clearInterval(poll); return; }
+        var h = popup.location.hash;
+        if (h && h.includes('access_token=')) {
+          clearInterval(poll);
+          var params = new URLSearchParams(h.slice(1));
+          var token = params.get('access_token');
+          popup.close();
+          if (token) { saveToken(token); handleCallbackWithToken(token); }
+        }
+      } catch(e) { /* cross-origin, attendre */ }
+    }, 200);
+  } else {
+    // Fallback : redirect classique (PWA iOS bloque window.open)
+    location.href = authUrl;
+  }
+}
+
+function _playJingle() {
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (AC && typeof JINGLE_SRC !== 'undefined') {
+      window._jingleAC = new AC();
+      var b64 = JINGLE_SRC.split(',')[1];
+      var binary = atob(b64);
+      var bytes = new Uint8Array(binary.length);
+      for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      window._jingleAC.resume().then(function() {
+        window._jingleAC.decodeAudioData(bytes.buffer, function(decoded) {
+          window._loaderDuration = Math.ceil(decoded.duration * 1000);
+          var src = window._jingleAC.createBufferSource();
+          src.buffer = decoded;
+          src.connect(window._jingleAC.destination);
+          src.start(0);
+          window._jingleNode = src;
+        }, function(){});
+      });
+    }
+  } catch(e) {}
 }
 function saveToken(t) {
   var expiry = (Date.now() + 55*60*1000).toString();
@@ -1246,6 +1282,10 @@ try { injectLogo(); } catch(e) {}
 
 function injectLogo(){['logoImgHeader','logoImgAuth'].forEach(function(id){var el=document.getElementById(id);if(el)el.src=LOGO_SRC;});}
 
+async function handleCallbackWithToken(tok) {
+  saveToken(tok);
+  await handleCallback();
+}
 async function handleCallback() {
   const hash = location.hash;
   let accessToken = getToken();
@@ -1503,16 +1543,16 @@ function showScreen(name) {
   }
 }
 
-function _initLfiagLoader() {
+function _initLfiagLoader(jingleAlreadyPlaying) {
   // Reset à chaque appel pour gérer reconnexion après signOut
-  window._loaderStart = Date.now();
+  window._loaderStart = window._loaderStart || Date.now();
   window._loaderDuration = 8750; // durée exacte du jingle (ms)
   window._loaderHiding = false;
   // Afficher le loader
   var loader = document.getElementById('lfiagLoader');
   if (loader) { loader.style.display = 'flex'; loader._hiding = false; }
   // Jingle via Web Audio API + base64 embarqué (pas de fetch = pas de blocage iOS)
-  try {
+  if (!jingleAlreadyPlaying) try {
     var AC = window.AudioContext || window.webkitAudioContext;
     if (AC && typeof JINGLE_SRC !== 'undefined') {
       var _ac = new AC();
