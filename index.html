@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604091903">
+<meta name="cache-version" content="202604091907">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -930,27 +930,37 @@ function signIn(prompt_mode) {
   }
 }
 
+// Buffer jingle pré-décodé, réutilisable sans détachement
+var _jingleBuffer = null; // ArrayBuffer source (jamais détaché)
+var _jingleDecoded = null; // AudioBuffer décodé (réutilisable)
+
 function _playJingle() {
-  window._loaderStart = Date.now(); // horodatage précis au clic
+  window._loaderStart = Date.now();
   try {
     var AC = window.AudioContext || window.webkitAudioContext;
-    if (AC && typeof JINGLE_SRC !== 'undefined') {
-      window._jingleAC = new AC();
+    if (!AC || typeof JINGLE_SRC === 'undefined') return;
+    window._jingleAC = new AC();
+    // Construire le buffer source une seule fois
+    if (!_jingleBuffer) {
       var b64 = JINGLE_SRC.split(',')[1];
       var binary = atob(b64);
       var bytes = new Uint8Array(binary.length);
       for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      window._jingleAC.resume().then(function() {
-        window._jingleAC.decodeAudioData(bytes.buffer, function(decoded) {
-          window._loaderDuration = Math.ceil(decoded.duration * 1000);
-          var src = window._jingleAC.createBufferSource();
-          src.buffer = decoded;
-          src.connect(window._jingleAC.destination);
-          src.start(0);
-          window._jingleNode = src;
-        }, function(){});
-      });
+      _jingleBuffer = bytes.buffer; // stocké, jamais passé directement à decodeAudioData
     }
+    window._jingleAC.resume().then(function() {
+      // Cloner le buffer avant chaque decodeAudioData (évite le détachement)
+      var clone = _jingleBuffer.slice(0);
+      window._jingleAC.decodeAudioData(clone, function(decoded) {
+        _jingleDecoded = decoded; // stocker pour réutilisation éventuelle
+        window._loaderDuration = Math.ceil(decoded.duration * 1000);
+        var src = window._jingleAC.createBufferSource();
+        src.buffer = decoded;
+        src.connect(window._jingleAC.destination);
+        src.start(0);
+        window._jingleNode = src;
+      }, function(){});
+    });
   } catch(e) {}
 }
 function saveToken(t) {
