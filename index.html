@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604091900">
+<meta name="cache-version" content="202604091903">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -996,6 +996,25 @@ function signOut() {
   }catch(e){}
   if('caches' in window)caches.keys().then(function(n){n.forEach(function(k){caches.delete(k);});});
   currentUser=null;showScreen('auth');
+  // Reset état loader/jingle pour prochaine connexion
+  window._loaderStart = null;
+  window._loaderDuration = null;
+  window._loaderHiding = false;
+  if (window._jingleAC) { try { window._jingleAC.close(); } catch(e) {} window._jingleAC = null; }
+  window._jingleNode = null;
+  // Recréer le loader pour la prochaine connexion
+  if (!document.getElementById('lfiagLoader')) {
+    var lo = document.createElement('div');
+    lo.id = 'lfiagLoader';
+    lo.style.cssText = 'position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:9999';
+    lo.style.background = getComputedStyle(document.body).background || '#000';
+    document.body.appendChild(lo);
+  } else {
+    var lo = document.getElementById('lfiagLoader');
+    lo.classList.remove('lfiag-hide');
+    lo._hiding = false;
+    lo.style.display = 'none';
+  }
   ['userBadge','signOutBtn','refreshBtn','settingsBtn','searchWrap','adminHeaderBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
   ['mobTopbar','mobCatbar','mobNav'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
 }
