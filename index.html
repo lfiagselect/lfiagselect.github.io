@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604101255">
+<meta name="cache-version" content="202604101303">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -140,7 +140,10 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
   .u-active{font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:999px;flex-shrink:0;white-space:nowrap}
   .u-active.on{background:rgba(48,209,88,.12);color:#30d158}
   .u-active.off{background:rgba(255,69,58,.12);color:#ff453a}
-  .admin-del-btn{background:none;border:1px solid rgba(255,69,58,.25);border-radius:8px;color:#ff453a;padding:.28rem .65rem;cursor:pointer;flex-shrink:0;transition:.15s;font-size:.72rem;font-weight:600;white-space:nowrap}
+  .admin-promote-btn{padding:.28rem .65rem;border-radius:8px;background:rgba(255,214,10,.08);border:1px solid rgba(255,214,10,.25);color:var(--gold);font-size:.72rem;font-weight:600;cursor:pointer;flex-shrink:0;transition:.15s;white-space:nowrap}
+.admin-promote-btn:hover{background:rgba(255,214,10,.18)}
+.admin-promote-btn[data-role="admin"]{background:rgba(255,214,10,.15);border-color:rgba(255,214,10,.4)}
+.admin-del-btn{background:none;border:1px solid rgba(255,69,58,.25);border-radius:8px;color:#ff453a;padding:.28rem .65rem;cursor:pointer;flex-shrink:0;transition:.15s;font-size:.72rem;font-weight:600;white-space:nowrap}
   .admin-del-btn:hover{background:rgba(255,69,58,.1);border-color:rgba(255,69,58,.5)}
 .admin-panel{display:none;background:rgba(14,14,16,.96);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1.1rem;margin-bottom:1rem}
 .settings-panel{display:none;background:rgba(14,14,16,.96);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1.1rem;margin-bottom:1rem}
@@ -1285,7 +1288,7 @@ async function handleCallback() {
       } catch(e) {}
     }
 
-    // ── Étape 2 : cache accès (2h) ───────────────────────────────
+    // ── Étape 2 : cache accès (TTL=0 — re-checker à chaque ouverture) ─
     var cachedAccess = null;
     try {
       var ca = JSON.parse(localStorage.getItem('lfiag_access') || 'null');
@@ -1574,6 +1577,7 @@ function _showHeaderElements() {
     if (_ab) _ab.style.display = 'flex';
   }
   setupMobileUI();
+  initHeaderShrink();
   updateHeroWidgets();
 }
 
@@ -2153,19 +2157,6 @@ function openVideo(id) {
   setTimeout(function(){ updateHeroWidgets(); }, 100);
 }
 
-// Slider navigation
-(function(){
-  document.addEventListener('DOMContentLoaded', function() {
-    var sl = document.getElementById('pdfFsSlider');
-    if (sl) sl.addEventListener('input', function() {
-      _pdfPage = parseInt(this.value);
-      pdfFsGo(_pdfPage - _pdfPage); // go to page
-      var el = document.getElementById('pdfp-' + _pdfPage);
-      if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
-      pdfFsUpdateNav();
-    });
-  });
-})();
 function buildIframePlayer(container, id) {
   var isTV = document.documentElement.classList.contains('is-tv');
   var _sp = document.createElement('div');
