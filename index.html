@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604101326">
+<meta name="cache-version" content="202604101357">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1306,7 +1306,7 @@ async function handleCallback() {
 
     // ── Étape 3 : laisser le loader s'initialiser (1 tick) ──────
     // puis charger les vidéos et vérifier l'accès
-    await new Promise(function(r){ setTimeout(r, 50); });
+    await new Promise(function(r){ setTimeout(r, 100); });
     showAppUI();
     _loadVideosAndShow();
 
@@ -1345,17 +1345,18 @@ async function _loadVideosAndShow() {
         setTimeout(refreshVideosBackground, loaderDelay);
       }
     } else {
-      // Pas de cache : montrer skeleton, fermer le loader, puis charger
-      showLoading();
-      showScreen('app'); // afficher l'app avec skeleton
-      _hideLoader();     // fermer le loader animé — ne pas attendre fetchAndCacheVideos
+      // Pas de cache (1ère connexion / vide-cache) :
+      // Garder le loader visible pendant tout le fetch — l'effet waouh doit durer
+      setLoadingMsg('Chargement de la bibliothèque…');
       try {
         await fetchAndCacheVideos(true, false);
+        // renderAll() dans fetchAndCacheVideos ferme le loader avec durée minimale 4.5s
       } catch(e) {
-        // Si échec réseau, laisser l'app ouverte avec un message
+        _hideLoader();
+        showScreen('app');
         document.getElementById('content').innerHTML =
           '<div class="empty-state"><h3>Connexion lente</h3><p>Le serveur met du temps à répondre.</p>' +
-          '<button class="btn" onclick="_loadVideosAndShow()" style="margin:1rem auto">&#8635; Réessayer</button></div>';
+          '<button class="btn" onclick="_loadVideosAndShow()" style="margin:1rem auto">蘵 Réessayer</button></div>';
       }
     }
   } catch(e) { console.warn('loadVideos:', e); }
