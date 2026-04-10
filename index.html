@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604100522">
+<meta name="cache-version" content="202604100613">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1224,7 +1224,8 @@ window.addEventListener('resize', function() {
   // Ne montrer les éléments mobiles qu'après connexion
   try { if (currentUser) setupMobileUI(); } catch(e) {}
 });
-try { injectLogo(); } catch(e) {}
+document.addEventListener('DOMContentLoaded', function() { try { injectLogo(); } catch(e) {} });
+try { injectLogo(); } catch(e) {} // fallback si DOM déjà prêt
 
 function injectLogo(){['logoImgHeader','logoImgAuth'].forEach(function(id){var el=document.getElementById(id);if(el)el.src=LOGO_SRC;});}
 
@@ -1487,6 +1488,7 @@ function showScreen(name) {
 function _initLfiagLoader() {
   if (window._loaderStart) return; // déjà initialisé
   window._loaderStart = Date.now();
+  try { injectLogo(); } catch(e) {}
   // Rendre le loader visible seulement maintenant
   var _ldr = document.getElementById('lfiagLoader');
   if (_ldr) { _ldr.style.opacity = '1'; _ldr.style.pointerEvents = ''; }
