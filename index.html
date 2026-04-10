@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604100950">
+<meta name="cache-version" content="202604100956">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1305,7 +1305,7 @@ async function handleCallback() {
 }
 
 // Charger et afficher les vidéos — jamais bloquant
-async function _loadVideosAndShow() {
+async async function _loadVideosAndShow() {
   try {
     var cached = null, cacheAge = Infinity;
     try {
@@ -1320,12 +1320,9 @@ async function _loadVideosAndShow() {
       allVideos = dedup(cached).map(function(v){
         return Object.assign({},v,{_cat:categorize(v)}); });
       renderAll(); // appelle showScreen('app')
+      _hideLoader();
       // Rafraîchir en arrière-plan si cache > 5min
-      if (cacheAge > 300000) {
-        // Attendre la fin du loader avant de rafraîchir (évite double animation barre)
-        var loaderDelay = window._loaderStart ? Math.max(500, 5300 - (Date.now() - window._loaderStart)) : 500;
-        setTimeout(refreshVideosBackground, loaderDelay);
-      }
+      if (cacheAge > 300000) { setTimeout(refreshVideosBackground, 500); }
     } else {
       // Pas de cache : montrer skeleton, fermer le loader, puis charger
       showLoading();
@@ -1432,6 +1429,7 @@ async function fetchAndCacheVideos(showErr, bustCache) {
     try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: videos, ts: Date.now()})); } catch(e) {}
     allVideos = videos.map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
     renderAll();
+    _hideLoader();
   } catch(e) {
     if (showErr) document.getElementById('content').innerHTML =
       '<div class="empty-state"><h3>Chargement lent</h3><p>' + escHtml(e.message) + '</p>' +
