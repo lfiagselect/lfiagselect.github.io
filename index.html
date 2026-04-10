@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604100613">
+<meta name="cache-version" content="202604091813">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -789,7 +789,7 @@ if ('serviceWorker' in navigator) {
   @keyframes lfiagBar{0%{width:0%}30%{width:35%}65%{width:68%}88%{width:90%}100%{width:100%}}
   @keyframes lfiagShimmer{to{left:300px}}
   @keyframes lfiagTypeWriter{to{max-width:320px}}
-  #lfiagLoader{position:fixed;inset:0;background:radial-gradient(ellipse at 50% -20%,rgba(10,132,255,.14),transparent 52%),radial-gradient(ellipse at 85% 12%,rgba(38,84,252,.06),transparent 32%),#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;opacity:0;pointer-events:none;transition:opacity .7s ease,transform .7s ease}
+  #lfiagLoader{position:fixed;inset:0;background:radial-gradient(ellipse at 50% -20%,rgba(10,132,255,.14),transparent 52%),radial-gradient(ellipse at 85% 12%,rgba(38,84,252,.06),transparent 32%),#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .7s ease,transform .7s ease}
   #lfiagLoader.lfiag-hide{opacity:0;transform:scale(1.03);pointer-events:none}
 
   /* ── Grille catégories vignettes ── */
@@ -1224,8 +1224,7 @@ window.addEventListener('resize', function() {
   // Ne montrer les éléments mobiles qu'après connexion
   try { if (currentUser) setupMobileUI(); } catch(e) {}
 });
-document.addEventListener('DOMContentLoaded', function() { try { injectLogo(); } catch(e) {} });
-try { injectLogo(); } catch(e) {} // fallback si DOM déjà prêt
+try { injectLogo(); } catch(e) {}
 
 function injectLogo(){['logoImgHeader','logoImgAuth'].forEach(function(id){var el=document.getElementById(id);if(el)el.src=LOGO_SRC;});}
 
@@ -1280,7 +1279,7 @@ async function handleCallback() {
     var cachedAccess = null;
     try {
       var ca = JSON.parse(localStorage.getItem('lfiag_access') || 'null');
-      if (ca && ca.email === currentUser.email && ca.ts && (Date.now() - ca.ts) < 0) // TTL désactivé — toujours re-checker
+      if (ca && ca.email === currentUser.email && ca.ts && (Date.now() - ca.ts) < 7200000)
         cachedAccess = ca;
     } catch(e) {}
 
@@ -1488,10 +1487,6 @@ function showScreen(name) {
 function _initLfiagLoader() {
   if (window._loaderStart) return; // déjà initialisé
   window._loaderStart = Date.now();
-  try { injectLogo(); } catch(e) {}
-  // Rendre le loader visible seulement maintenant
-  var _ldr = document.getElementById('lfiagLoader');
-  if (_ldr) { _ldr.style.opacity = '1'; _ldr.style.pointerEvents = ''; }
   // Logo
   var img = document.getElementById('lfiagLoaderImg');
   if (img && LOGO_SRC) img.src = LOGO_SRC;
@@ -2405,34 +2400,6 @@ function adminAddUser() {
     .catch(function(err) { toast('Erreur : ' + err.message); })
     .finally(function() { if (btn) { btn.textContent = 'Ajouter'; btn.disabled = false; } });
 }
-function adminToggleRole(i) {
-  var u = _au[i]; if (!u) return;
-  var isAdmin = u.role === 'admin';
-  var newRole = isAdmin ? 'user' : 'admin';
-  var action  = isAdmin ? 'Retirer les droits admin à' : 'Nommer administrateur';
-  var confirm = action + ' ' + (u.name || u.email) + ' ?';
-  var successMsg = isAdmin
-    ? '✓ ' + (u.name || u.email) + ' n'est plus admin'
-    : '✓ ' + (u.name || u.email) + ' est maintenant admin';
-  showAdminConfirm(confirm, function() {
-    _au[i].role = newRole;
-    renderAdminUsers();
-    callScript('set_role', {email: u.email, role: newRole, admin_email: currentUser.email})
-      .then(function() {
-        toast(successMsg);
-        // Si c'est l'utilisateur courant → vider son cache d'accès immédiatement
-        if (currentUser && currentUser.email === u.email) {
-          try { localStorage.removeItem('lfiag_access'); } catch(e) {}
-          currentUser.role = newRole;
-          // Mettre à jour le bouton Admin dans le header
-          var ab = document.getElementById('adminHeaderBtn');
-          if (ab) ab.style.display = newRole === 'admin' ? 'flex' : 'none';
-        }
-      })
-      .catch(function(err) { _au[i].role = u.role; renderAdminUsers(); toast('⚠ Erreur : ' + err.message); });
-  });
-}
-
 function adminDeleteUser(i) {
   var u = _au[i]; if (!u) return;
   showAdminConfirm(
