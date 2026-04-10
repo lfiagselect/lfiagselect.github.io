@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604091813">
+<meta name="cache-version" content="202604101255">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -799,6 +799,16 @@ if ('serviceWorker' in navigator) {
   .cat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.85rem}
   @media(max-width:1100px){.cat-grid{grid-template-columns:repeat(4,1fr)}}
   @media(max-width:800px){.cat-grid{grid-template-columns:repeat(3,1fr);gap:.6rem}}
+  @media(min-width:1280px){
+    .video-grid{grid-template-columns:repeat(6,1fr);gap:1rem}
+    .cat-grid{grid-template-columns:repeat(6,1fr)}
+    .content-wrap,.hero-inner{max-width:1600px;margin-left:auto;margin-right:auto}
+  }
+  @media(min-width:1920px){
+    .video-grid{grid-template-columns:repeat(8,1fr);gap:1.1rem}
+    .cat-grid{grid-template-columns:repeat(8,1fr)}
+    .content-wrap,.hero-inner{max-width:2200px}
+  }
   @media(max-width:540px){.cat-grid{grid-template-columns:repeat(2,1fr);gap:.5rem}}
   .cat-vignette{position:relative;border-radius:16px;overflow:hidden;cursor:pointer;background:#0c0c10;border:1.5px solid rgba(255,255,255,.08);transition:.25s transform,.25s box-shadow,.2s border-color;aspect-ratio:1/1}
   .cat-vignette:hover{transform:scale(1.04) translateY(-3px);border-color:rgba(255,255,255,.22);box-shadow:0 20px 50px rgba(0,0,0,.55)}
@@ -1279,7 +1289,7 @@ async function handleCallback() {
     var cachedAccess = null;
     try {
       var ca = JSON.parse(localStorage.getItem('lfiag_access') || 'null');
-      if (ca && ca.email === currentUser.email && ca.ts && (Date.now() - ca.ts) < 7200000)
+      if (ca && ca.email === currentUser.email && ca.ts && (Date.now() - ca.ts) < 0) // TTL=0
         cachedAccess = ca;
     } catch(e) {}
 
@@ -2400,6 +2410,37 @@ function adminAddUser() {
     .catch(function(err) { toast('Erreur : ' + err.message); })
     .finally(function() { if (btn) { btn.textContent = 'Ajouter'; btn.disabled = false; } });
 }
+function adminToggleRole(i) {
+  var u = _au[i]; if (!u) return;
+  var isAdmin = u.role === 'admin';
+  var newRole  = isAdmin ? 'user' : 'admin';
+  var label    = isAdmin ? 'Retirer admin' : 'Nommer admin';
+  var question = isAdmin
+    ? 'Retirer les droits admin à ' + (u.name || u.email) + ' ?'
+    : 'Nommer ' + (u.name || u.email) + ' administrateur ?';
+  var ok_msg = isAdmin
+    ? '✓ ' + (u.name||u.email) + ' n’est plus admin'
+    : '✓ ' + (u.name||u.email) + ' est maintenant admin';
+  showAdminConfirm(question, label, function() {
+    _au[i].role = newRole;
+    renderAdminUsers();
+    callScript('set_role', {email:u.email, role:newRole, admin_email:currentUser.email})
+      .then(function() {
+        toast(ok_msg);
+        if (currentUser && currentUser.email === u.email) {
+          currentUser.role = newRole;
+          try { localStorage.removeItem('lfiag_access'); } catch(e) {}
+          var ab = document.getElementById('adminHeaderBtn');
+          if (ab) ab.style.display = newRole === 'admin' ? 'flex' : 'none';
+        }
+      })
+      .catch(function(err) {
+        _au[i].role = u.role; renderAdminUsers();
+        toast('⚠ Erreur : ' + err.message);
+      });
+  });
+}
+
 function adminDeleteUser(i) {
   var u = _au[i]; if (!u) return;
   showAdminConfirm(
@@ -2414,16 +2455,17 @@ function adminDeleteUser(i) {
   );
 }
 
-function showAdminConfirm(message, onConfirm) {
+function showAdminConfirm(message, actionLabel, onConfirm) {
+  if (typeof actionLabel === 'function') { onConfirm = actionLabel; actionLabel = 'Confirmer'; }
   var overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:1rem';
   overlay.innerHTML =
     '<div style="background:rgba(10,16,32,.95);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:1.6rem 1.5rem 1.3rem;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.6)">'
-    + '<p style="font-size:.9rem;font-weight:600;color:#f5f5f7;margin-bottom:.5rem">Confirmer la suppression</p>'
+    + '<p style="font-size:.9rem;font-weight:600;color:#f5f5f7;margin-bottom:.5rem">' + escHtml(actionLabel) + '</p>'
     + '<p style="font-size:.8rem;color:rgba(255,255,255,.55);margin-bottom:1.3rem;line-height:1.55">' + escHtml(message) + '</p>'
     + '<div style="display:flex;gap:.6rem;justify-content:flex-end">'
     + '<button id="confirmCancel" style="padding:.52rem 1rem;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#f5f5f7;font-size:.82rem;cursor:pointer">Annuler</button>'
-    + '<button id="confirmOk" style="padding:.52rem 1rem;border-radius:10px;background:rgba(255,69,58,.15);border:1px solid rgba(255,69,58,.35);color:#ff453a;font-size:.82rem;font-weight:600;cursor:pointer">Supprimer</button>'
+    + '<button id="confirmOk" style="padding:.52rem 1rem;border-radius:10px;background:rgba(255,69,58,.15);border:1px solid rgba(255,69,58,.35);color:#ff453a;font-size:.82rem;font-weight:600;cursor:pointer">' + escHtml(actionLabel) + '</button>'
     + '</div></div>';
   document.body.appendChild(overlay);
   overlay.querySelector('#confirmCancel').onclick = function() { overlay.remove(); };
