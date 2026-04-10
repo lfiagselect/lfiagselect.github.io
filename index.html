@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604101321">
+<meta name="cache-version" content="202604101326">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -239,7 +239,10 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
 .cat-pill.sort-pill.active{background:rgba(255,255,255,.11);color:var(--text);border-color:rgba(255,255,255,.16)}
 
 /* ── CONTENT ── */
-.section-header{display:flex;align-items:center;gap:.65rem;margin-bottom:.9rem;flex-wrap:wrap}
+.back-to-grid{display:inline-flex;align-items:center;gap:.35rem;font-size:.76rem;font-weight:600;color:var(--text3);cursor:pointer;padding:.3rem 0;margin-bottom:.5rem;transition:.15s;user-select:none}
+  .back-to-grid:hover{color:var(--gold)}
+  .back-to-grid svg{flex-shrink:0}
+  .section-header{display:flex;align-items:center;gap:.65rem;margin-bottom:.9rem;flex-wrap:wrap}
 .section-title{font-size:1.28rem;font-weight:800;letter-spacing:-.04em}
 .section-count{font-size:.75rem;color:var(--text3)}
 .section-divider{height:1px;flex:1;min-width:48px;background:linear-gradient(90deg,rgba(255,255,255,.1),transparent)}
@@ -1733,14 +1736,8 @@ function updateAluneSection() {
 }
 
 function setAluneCategory(cat) {
-  window._aluneFilter = cat;
-  // S'assurer que #content est visible (il peut être masqué sur la vue Tout)
-  var el = document.getElementById('content');
-  var newSec = document.getElementById('newSection');
-  if (el) el.style.display = '';
-  if (newSec) newSec.style.display = 'none';
-  renderVideosAlune(cat);
-  _scrollToEl(el);
+  // Utiliser le flux normal → activeCategory mis à jour → backBtn affiché
+  selectCatFromGrid(cat);
 }
 
 function renderVideosAlune(cat) {
