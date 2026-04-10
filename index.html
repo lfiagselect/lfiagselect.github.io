@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604101428">
+<meta name="cache-version" content="202604101433">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -328,14 +328,16 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
 .modal-close{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
 .modal-close:hover{background:rgba(255,255,255,.12);color:var(--text)}
 .modal-player{position:relative;background:#000;aspect-ratio:16/9;width:100%}
-  /* iOS fullscreen : le modal en plein écran */
-  .modal-backdrop:-webkit-full-screen{top:0;left:0;right:0;bottom:0;padding:0;background:#000;border-radius:0}
-  .modal-backdrop:fullscreen{top:0;left:0;right:0;bottom:0;padding:0;background:#000}
-  .modal-backdrop:-webkit-full-screen .modal{width:100%;max-height:100vh;border-radius:0;height:100vh}
-  .modal-backdrop:-webkit-full-screen .modal-player{aspect-ratio:unset;height:calc(100vh - 120px)}
-  /* Bouton fullscreen iOS visible */
-  .ios-fs-btn{display:none;position:absolute;bottom:8px;right:8px;z-index:10;background:rgba(0,0,0,.65);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:.4rem .75rem;font-size:.78rem;cursor:pointer;backdrop-filter:blur(8px)}
-  .is-ios .ios-fs-btn{display:flex;align-items:center;gap:.35rem}
+  /* iOS fake-fullscreen */
+  .ios-fake-fs{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:9999!important;padding:0!important;border-radius:0!important;max-height:none!important;background:#000!important}
+  .ios-fake-fs .modal{width:100%!important;max-height:100vh!important;height:100vh!important;border-radius:0!important;margin:0!important}
+  .ios-fake-fs .modal-player{aspect-ratio:unset!important;height:calc(100vh - 56px)!important}
+  .ios-fake-fs .modal-header{padding:.5rem 1rem!important;min-height:56px}
+  .ios-fake-fs .modal-footer,.ios-fake-fs .modal-meta-row{display:none!important}
+  .ios-fs-btn{display:none;position:absolute;bottom:8px;right:8px;z-index:10;background:rgba(0,0,0,.72);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:.42rem .8rem;font-size:.76rem;cursor:pointer;backdrop-filter:blur(8px);gap:.35rem;align-items:center}
+  .is-ios .ios-fs-btn{display:flex}
+  .ios-exit-fs-btn{display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:12px;z-index:10000;background:rgba(0,0,0,.8);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:.4rem .85rem;font-size:.76rem;cursor:pointer;backdrop-filter:blur(8px);align-items:center;gap:.3rem;font-weight:600}
+  .ios-fake-fs-active .ios-exit-fs-btn{display:flex}
   .modal-player.pdf-mode{aspect-ratio:unset;height:75vh;display:flex;flex-direction:column}
   @media(max-width:640px){.modal-player.pdf-mode{height:80vh}}
   .pdf-btn:hover,.pdf-btn:active{background:rgba(255,255,255,.14)}
@@ -477,6 +479,7 @@ if ('serviceWorker' in navigator) {
 </script>
 </head>
 <body>
+<button class="ios-exit-fs-btn" id="iosExitFsBtn" onclick="_iosExitFakeFS()" aria-label="Quitter plein écran">× Quitter</button>
 
 <a class="sr-only" href="#main-content">Aller au contenu principal</a>
 
@@ -958,49 +961,38 @@ function scheduleTokenRefresh() {
   setTimeout(function(){toast('Session expire bientôt…');setTimeout(function(){signIn('none');},2000);},delay);
 }
 
-// ── Fullscreen iOS ──────────────────────────────────────────
+// ── iOS fake-fullscreen (position:fixed) ────────────────────
 var _isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
+var _iosFakeFS = false;
 
-function _iosRequestFullscreen() {
-  // Tenter sur l'élément modal-backdrop (container niveau haut)
-  var el = document.querySelector('.modal-backdrop') || document.getElementById('modal');
-  if (!el) return;
-  if (el.webkitRequestFullscreen) {
-    el.webkitRequestFullscreen();
-  } else if (el.requestFullscreen) {
-    el.requestFullscreen();
-  }
+function _iosEnterFakeFS() {
+  if (_iosFakeFS) return;
+  _iosFakeFS = true;
+  var bd = document.querySelector('.modal-backdrop');
+  if (bd) bd.classList.add('ios-fake-fs');
+  document.body.classList.add('ios-fake-fs-active');
+  try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(function(){}); } catch(e) {}
 }
 
-function _iosExitFullscreen() {
-  if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-  else if (document.exitFullscreen) document.exitFullscreen();
+function _iosExitFakeFS() {
+  if (!_iosFakeFS) return;
+  _iosFakeFS = false;
+  var bd = document.querySelector('.modal-backdrop');
+  if (bd) bd.classList.remove('ios-fake-fs');
+  document.body.classList.remove('ios-fake-fs-active');
+  try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch(e) {}
 }
 
-// Auto fullscreen au passage en paysage sur iOS quand modal ouvert
+// Auto fake-fs au passage en paysage iOS
 window.addEventListener('orientationchange', function() {
   if (!_isIOS) return;
   var modal = document.getElementById('modal');
-  var isOpen = modal && modal.classList.contains('open');
-  if (!isOpen) return;
+  if (!modal || !modal.classList.contains('open')) return;
   setTimeout(function() {
-    var landscape = window.innerWidth > window.innerHeight;
-    var isFS = !!(document.webkitFullscreenElement || document.fullscreenElement);
-    if (landscape && !isFS) {
-      _iosRequestFullscreen();
-    } else if (!landscape && isFS) {
-      _iosExitFullscreen();
-    }
-  }, 100); // Laisser l'OS finir la rotation
-});
-
-// Quand on quitte fullscreen (bouton Échap ou retour portrait), vérifier
-document.addEventListener('webkitfullscreenchange', function() {
-  var isFS = !!document.webkitFullscreenElement;
-  var modal = document.getElementById('modal');
-  if (!isFS && modal && modal.classList.contains('open')) {
-    // Rétrécir le player si retour portrait
-  }
+    var land = window.innerWidth > window.innerHeight;
+    if (land && !_iosFakeFS) _iosEnterFakeFS();
+    else if (!land && _iosFakeFS) _iosExitFakeFS();
+  }, 150);
 });
 
 function signOut() {
@@ -2242,7 +2234,7 @@ function buildIframePlayer(container, id) {
     var iosBtn = document.createElement('button');
     iosBtn.className = 'ios-fs-btn';
     iosBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg> Plein écran';
-    iosBtn.addEventListener('click', function() { _iosRequestFullscreen(); });
+    iosBtn.addEventListener('click', function() { if(_iosFakeFS) _iosExitFakeFS(); else _iosEnterFakeFS(); });
     container.appendChild(iosBtn);
   }
 
@@ -2269,10 +2261,10 @@ function iframeLoaded() {
 function closeModal() {
   var modal=document.getElementById('modal'), vid=modal._currentVideoId;
   if(vid){ try{ var h=JSON.parse(localStorage.getItem('lfiag_history')||'{}'); h[vid]={ts:Date.now()}; localStorage.setItem('lfiag_history',JSON.stringify(h)); }catch(e){} modal._currentVideoId=null; }
+  if(typeof _iosFakeFS !== 'undefined' && _iosFakeFS) _iosExitFakeFS();
   modal.classList.remove('open');
   document.getElementById('modalPlayer').innerHTML='';
   document.body.style.overflow='';
-  // Mettre à jour le bouton "Continuer à regarder" après fermeture
   updateHeroWidgets();
 }
 
