@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604100956">
+<meta name="cache-version" content="202604091813">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1279,7 +1279,7 @@ async function handleCallback() {
     var cachedAccess = null;
     try {
       var ca = JSON.parse(localStorage.getItem('lfiag_access') || 'null');
-      if (ca && ca.email === currentUser.email && ca.ts && (Date.now() - ca.ts) < 0) // TTL=0 — toujours re-checker
+      if (ca && ca.email === currentUser.email && ca.ts && (Date.now() - ca.ts) < 7200000)
         cachedAccess = ca;
     } catch(e) {}
 
@@ -1305,7 +1305,7 @@ async function handleCallback() {
 }
 
 // Charger et afficher les vidéos — jamais bloquant
-async async function _loadVideosAndShow() {
+async function _loadVideosAndShow() {
   try {
     var cached = null, cacheAge = Infinity;
     try {
@@ -1320,9 +1320,12 @@ async async function _loadVideosAndShow() {
       allVideos = dedup(cached).map(function(v){
         return Object.assign({},v,{_cat:categorize(v)}); });
       renderAll(); // appelle showScreen('app')
-      _hideLoader();
       // Rafraîchir en arrière-plan si cache > 5min
-      if (cacheAge > 300000) { setTimeout(refreshVideosBackground, 500); }
+      if (cacheAge > 300000) {
+        // Attendre la fin du loader avant de rafraîchir (évite double animation barre)
+        var loaderDelay = window._loaderStart ? Math.max(500, 5300 - (Date.now() - window._loaderStart)) : 500;
+        setTimeout(refreshVideosBackground, loaderDelay);
+      }
     } else {
       // Pas de cache : montrer skeleton, fermer le loader, puis charger
       showLoading();
@@ -1350,10 +1353,11 @@ function _checkAccessBackground() {
         toast('⚠ Accès non autorisé');
         return;
       }
-      // Mettre à jour le rôle (admin/user) — source de vérité = Apps Script
+      // Mettre à jour le rôle (admin/user)
       currentUser.role = access.role;
+      // Rafraîchir le bouton admin si nécessaire
       var adminBtn = document.getElementById('adminHeaderBtn');
-      if (adminBtn) adminBtn.style.display = access.role === 'admin' ? 'flex' : 'none';
+      if (adminBtn) adminBtn.style.display = currentUser.role === 'admin' ? 'flex' : 'none';
     })
     .catch(function() {
       // Silencieux si réseau indisponible — le cache reste valide
@@ -1429,7 +1433,6 @@ async function fetchAndCacheVideos(showErr, bustCache) {
     try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: videos, ts: Date.now()})); } catch(e) {}
     allVideos = videos.map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
     renderAll();
-    _hideLoader();
   } catch(e) {
     if (showErr) document.getElementById('content').innerHTML =
       '<div class="empty-state"><h3>Chargement lent</h3><p>' + escHtml(e.message) + '</p>' +
@@ -2397,40 +2400,6 @@ function adminAddUser() {
     .catch(function(err) { toast('Erreur : ' + err.message); })
     .finally(function() { if (btn) { btn.textContent = 'Ajouter'; btn.disabled = false; } });
 }
-function adminToggleRole(i) {
-  var u = _au[i]; if (!u) return;
-  var isAdmin = u.role === 'admin';
-  var newRole  = isAdmin ? 'user' : 'admin';
-  var question = isAdmin
-    ? 'Retirer les droits admin à ' + (u.name || u.email) + ' ?'
-    : 'Nommer ' + (u.name || u.email) + ' administrateur ?';
-  var ok_msg = isAdmin
-    ? '✓ ' + (u.name || u.email) + ' n'est plus admin'
-    : '✓ ' + (u.name || u.email) + ' est maintenant admin';
-  showAdminConfirm(question, function() {
-    _au[i].role = newRole;
-    renderAdminUsers();
-    callScript('set_role', { email: u.email, role: newRole, admin_email: currentUser.email })
-      .then(function() {
-        toast(ok_msg);
-        // Si c'est l'utilisateur courant : update immédiat sans rechargement
-        if (currentUser && currentUser.email === u.email) {
-          currentUser.role = newRole;
-          try { localStorage.removeItem('lfiag_access'); } catch(e) {}
-          var ab = document.getElementById('adminHeaderBtn');
-          if (ab) ab.style.display = newRole === 'admin' ? 'flex' : 'none';
-        }
-        // Sinon : forcer le prochain check de cet utilisateur en vidant son cache
-        // (sera fait automatiquement à sa prochaine ouverture via TTL=0)
-      })
-      .catch(function(err) {
-        _au[i].role = u.role; // rollback
-        renderAdminUsers();
-        toast('⚠ Erreur : ' + err.message);
-      });
-  });
-}
-
 function adminDeleteUser(i) {
   var u = _au[i]; if (!u) return;
   showAdminConfirm(
