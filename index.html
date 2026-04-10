@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LFIAGtube</title>
-<meta name="cache-version" content="202604100520">
+<meta name="cache-version" content="202604100522">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1279,7 +1279,7 @@ async function handleCallback() {
     var cachedAccess = null;
     try {
       var ca = JSON.parse(localStorage.getItem('lfiag_access') || 'null');
-      if (ca && ca.email === currentUser.email && ca.ts && (Date.now() - ca.ts) < 7200000)
+      if (ca && ca.email === currentUser.email && ca.ts && (Date.now() - ca.ts) < 0) // TTL désactivé — toujours re-checker
         cachedAccess = ca;
     } catch(e) {}
 
@@ -2416,7 +2416,17 @@ function adminToggleRole(i) {
     _au[i].role = newRole;
     renderAdminUsers();
     callScript('set_role', {email: u.email, role: newRole, admin_email: currentUser.email})
-      .then(function() { toast(successMsg); })
+      .then(function() {
+        toast(successMsg);
+        // Si c'est l'utilisateur courant → vider son cache d'accès immédiatement
+        if (currentUser && currentUser.email === u.email) {
+          try { localStorage.removeItem('lfiag_access'); } catch(e) {}
+          currentUser.role = newRole;
+          // Mettre à jour le bouton Admin dans le header
+          var ab = document.getElementById('adminHeaderBtn');
+          if (ab) ab.style.display = newRole === 'admin' ? 'flex' : 'none';
+        }
+      })
       .catch(function(err) { _au[i].role = u.role; renderAdminUsers(); toast('⚠ Erreur : ' + err.message); });
   });
 }
