@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604111856">
+<meta name="cache-version" content="202604111900">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -272,8 +272,8 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
   .alune-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
   .alune-card{position:relative;border-radius:20px;overflow:hidden;cursor:pointer;background:#0c0c10;border:1px solid rgba(255,255,255,.08);transition:.4s transform,.4s box-shadow,.2s border-color}
   .alune-card--playing{transform:scale(1.04) translateY(-4px)!important;border-color:rgba(255,255,255,.25)!important;box-shadow:0 24px 60px rgba(0,0,0,.7)!important;z-index:10}
-  .alune-thumb--img{transition:opacity .5s ease}
-  .alune-thumb--video{transition:opacity .5s ease;opacity:0}
+  .alune-thumb--img{transition:opacity .5s ease;position:relative;z-index:1}
+  .alune-thumb--video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;transition:opacity .5s ease;opacity:0;z-index:2}
   .alune-thumb--video.is-visible{opacity:1}
   .alune-preview-bar{position:absolute;bottom:0;left:0;height:3px;width:0%;background:linear-gradient(90deg,var(--gold),#ff9500);z-index:10;transition:width .3s linear;border-radius:0 2px 0 0}
   .alune-mute-btn{position:absolute;top:10px;right:10px;z-index:10;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.2);border-radius:50%;width:32px;height:32px;display:none;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(6px);color:#fff;transition:.15s}
