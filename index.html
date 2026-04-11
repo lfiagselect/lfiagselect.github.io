@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604111410">
+<meta name="cache-version" content="202604111842">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -702,8 +702,12 @@ if ('serviceWorker' in navigator) {
             </div>
           </div>
         </div>
-        <div class="alune-card" onclick="setAluneCategory('L\'Effet Lara - 2026')" title="Voir toutes les vid&#xe9;os L&#x27;Effet Lara">
-          <img class="alune-thumb" src="/images/alune-effetlara.jpg" alt="L&#x27;Effet Lara" loading="lazy">
+        <div class="alune-card alune-card--preview" onclick="setAluneCategory('L\'Effet Lara - 2026')" title="Voir toutes les vid&#xe9;os L&#x27;Effet Lara"
+          onmouseenter="aluneStartPreview(this)" onmouseleave="aluneStopPreview(this)">
+          <img class="alune-thumb alune-thumb--img" src="/images/alune-effetlara.jpg" alt="L&#x27;Effet Lara" loading="lazy">
+          <video class="alune-thumb alune-thumb--video" src="/images/alune-effetlara-preview.mp4"
+            preload="none" playsinline muted loop
+            style="display:none;object-fit:cover"></video>
           <div class="alune-overlay"></div>
           <div class="alune-content">
             <div class="alune-tag">
@@ -1010,6 +1014,35 @@ window.addEventListener('orientationchange', function() {
     else if (!land && _iosFakeFS) _iosExitFakeFS();
   }, 150);
 });
+
+// ── Alune hover preview ─────────────────────────────────────
+function aluneStartPreview(card) {
+  var img = card.querySelector('.alune-thumb--img');
+  var vid = card.querySelector('.alune-thumb--video');
+  if (!vid) return;
+  img.style.display = 'none';
+  vid.style.display = 'block';
+  vid.muted = false;
+  vid.currentTime = 0;
+  vid.play().catch(function() {
+    // Autoplay avec son bloqué par le navigateur — jouer muet
+    vid.muted = true;
+    vid.play();
+  });
+  vid._ended = function() { aluneStopPreview(card); };
+  vid.addEventListener('ended', vid._ended);
+}
+
+function aluneStopPreview(card) {
+  var img = card.querySelector('.alune-thumb--img');
+  var vid = card.querySelector('.alune-thumb--video');
+  if (!vid) return;
+  vid.pause();
+  vid.currentTime = 0;
+  if (vid._ended) { vid.removeEventListener('ended', vid._ended); vid._ended = null; }
+  vid.style.display = 'none';
+  img.style.display = 'block';
+}
 
 function signOut() {
   sessionStorage.clear();
