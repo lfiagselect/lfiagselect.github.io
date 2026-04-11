@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604111849">
+<meta name="cache-version" content="202604111905">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -270,7 +270,15 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
   .alune-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:#ff453a;animation:pulse-dot 1.5s ease-in-out infinite}
   @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
   .alune-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
-  .alune-card{position:relative;border-radius:20px;overflow:hidden;cursor:pointer;background:#0c0c10;border:1px solid rgba(255,255,255,.08);transition:.25s transform,.25s box-shadow,.2s border-color}
+  .alune-card{position:relative;border-radius:20px;overflow:hidden;cursor:pointer;background:#0c0c10;border:1px solid rgba(255,255,255,.08);transition:.4s transform,.4s box-shadow,.2s border-color}
+  .alune-thumb--img{transition:opacity .5s ease}
+  .alune-thumb--video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity .5s ease;z-index:2;pointer-events:none}
+  .alune-thumb--video.is-visible{opacity:1}
+  .alune-card--playing{transform:scale(1.03) translateY(-3px)!important;border-color:rgba(255,255,255,.22)!important;box-shadow:0 20px 55px rgba(0,0,0,.65)!important;z-index:10}
+  .alune-preview-bar{position:absolute;bottom:0;left:0;height:3px;width:0%;background:linear-gradient(90deg,var(--gold),#ff9500);z-index:10;border-radius:0 2px 0 0}
+  .alune-mute-btn{position:absolute;top:10px;right:10px;z-index:10;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.2);border-radius:50%;width:32px;height:32px;display:none;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(6px);color:#fff;transition:.15s;pointer-events:auto}
+  .alune-card--playing .alune-mute-btn{display:flex}
+  .alune-mute-btn:hover{background:rgba(0,0,0,.8)}
   .alune-card:hover{transform:scale(1.025) translateY(-3px);border-color:rgba(255,255,255,.18);box-shadow:0 24px 60px rgba(0,0,0,.5)}
   .alune-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;transition:transform .35s ease,filter .35s ease}
   .alune-card:hover .alune-thumb{transform:scale(1.04);filter:brightness(1.05)}
@@ -708,6 +716,8 @@ if ('serviceWorker' in navigator) {
           <video class="alune-thumb alune-thumb--video" src="/images/alune-effetlara-preview.mp4"
             preload="none" playsinline
             style="display:none;object-fit:cover"></video>
+          <div class="alune-preview-bar"></div>
+          <button class="alune-mute-btn" onclick="event.stopPropagation();aluneMuteToggle(this)"><svg class="alune-mute-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
           <div class="alune-overlay"></div>
           <div class="alune-content">
             <div class="alune-tag">
@@ -1015,71 +1025,96 @@ window.addEventListener('orientationchange', function() {
   }, 150);
 });
 
-// ── Alune hover preview ─────────────────────────────────────
+// ── Alune preview ───────────────────────────────────────────
+var _aluneHoverTimer = null;
+
 function aluneStartPreview(card) {
   var img = card.querySelector('.alune-thumb--img');
   var vid = card.querySelector('.alune-thumb--video');
+  var bar = card.querySelector('.alune-preview-bar');
   if (!vid || vid._playing) return;
   vid._playing = true;
-  img.style.display = 'none';
-  vid.style.display = 'block';
-  vid.muted = false;
-  vid.currentTime = 0;
-  vid.play().catch(function() { vid.muted = true; vid.play(); });
-  if (vid._endedFn) vid.removeEventListener('ended', vid._endedFn);
-  vid._endedFn = function() { aluneStopPreview(card); };
-  vid.addEventListener('ended', vid._endedFn);
+  card.classList.add('alune-card--playing');
+  img.style.opacity = '0';
+  vid.muted = false; vid.volume = 0; vid.currentTime = 0;
+  vid.play().catch(function() { vid.muted = true; vid.volume = 1; vid.play(); });
+  vid.classList.add('is-visible');
+  if (vid._volIv) clearInterval(vid._volIv);
+  vid._volIv = setInterval(function() {
+    if (!vid.muted) vid.volume = Math.min(1, vid.volume + 0.05);
+    if (vid.volume >= 1) { clearInterval(vid._volIv); vid._volIv = null; }
+  }, 75);
+  if (vid._barIv) clearInterval(vid._barIv);
+  if (bar) vid._barIv = setInterval(function() {
+    if (vid.duration) bar.style.width = (vid.currentTime / vid.duration * 100) + '%';
+  }, 200);
+  if (vid._endFn) vid.removeEventListener('ended', vid._endFn);
+  vid._endFn = function() { aluneStopPreview(card); };
+  vid.addEventListener('ended', vid._endFn);
 }
 
 function aluneStopPreview(card) {
   var img = card.querySelector('.alune-thumb--img');
   var vid = card.querySelector('.alune-thumb--video');
-  if (!vid) return;
+  var bar = card.querySelector('.alune-preview-bar');
+  if (!vid || !vid._playing) return;
   vid._playing = false;
-  vid.pause();
-  vid.currentTime = 0;
-  if (vid._endedFn) { vid.removeEventListener('ended', vid._endedFn); vid._endedFn = null; }
-  vid.style.display = 'none';
-  img.style.display = 'block';
+  card.classList.remove('alune-card--playing');
+  if (vid._volIv) { clearInterval(vid._volIv); vid._volIv = null; }
+  if (vid._barIv) { clearInterval(vid._barIv); vid._barIv = null; }
+  if (vid._endFn) { vid.removeEventListener('ended', vid._endFn); vid._endFn = null; }
+  vid.pause(); vid.currentTime = 0;
+  vid.classList.remove('is-visible');
+  if (bar) bar.style.width = '0%';
+  img.style.opacity = '1';
 }
 
-// IntersectionObserver : auto-play quand vignette visible à 70%
+function aluneMuteToggle(btn) {
+  var vid = btn.closest('.alune-card').querySelector('.alune-thumb--video');
+  if (!vid) return;
+  vid.muted = !vid.muted;
+  var icon = btn.querySelector('.alune-mute-icon');
+  if (icon) icon.innerHTML = vid.muted
+    ? '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>'
+    : '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>';
+}
+
 (function() {
   if (!('IntersectionObserver' in window)) return;
-  var _aluneObserver = new IntersectionObserver(function(entries) {
+  var obs = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       var card = entry.target;
       if (entry.intersectionRatio >= 0.70) {
-        aluneStartPreview(card);
+        if (!card._ioTimer) card._ioTimer = setTimeout(function() {
+          card._ioTimer = null; aluneStartPreview(card);
+        }, 800);
       } else {
+        if (card._ioTimer) { clearTimeout(card._ioTimer); card._ioTimer = null; }
         aluneStopPreview(card);
       }
     });
-  }, { threshold: [0, 0.70, 1.0] });
-
-  // Appui long mobile (> 400ms) comme fallback
+  }, {threshold:[0,0.70,1.0]});
   function bindAluneCard(card) {
     if (!card.querySelector('.alune-thumb--video')) return;
-    _aluneObserver.observe(card);
-    // Appui long mobile
+    obs.observe(card);
+    if (!isMobile()) {
+      card.addEventListener('mouseenter', function() {
+        if (_aluneHoverTimer) clearTimeout(_aluneHoverTimer);
+        _aluneHoverTimer = setTimeout(function() { aluneStartPreview(card); }, 800);
+      });
+      card.addEventListener('mouseleave', function() {
+        if (_aluneHoverTimer) { clearTimeout(_aluneHoverTimer); _aluneHoverTimer = null; }
+        aluneStopPreview(card);
+      });
+    }
     var _lt;
-    card.addEventListener('touchstart', function(e) {
-      _lt = setTimeout(function() { aluneStartPreview(card); }, 400);
-    }, {passive:true});
+    card.addEventListener('touchstart', function() { _lt = setTimeout(function() { aluneStartPreview(card); }, 500); }, {passive:true});
     card.addEventListener('touchend', function() { clearTimeout(_lt); }, {passive:true});
     card.addEventListener('touchmove', function() { clearTimeout(_lt); }, {passive:true});
   }
-
-  // Init après chargement DOM
-  document.addEventListener('lfiag:ready', function() {
-    document.querySelectorAll('.alune-card--preview').forEach(bindAluneCard);
-  });
-  // Fallback si déjà prêt
-  if (document.readyState !== 'loading') {
-    setTimeout(function() {
-      document.querySelectorAll('.alune-card--preview').forEach(bindAluneCard);
-    }, 500);
-  }
+  function init() { document.querySelectorAll('.alune-card--preview').forEach(bindAluneCard); }
+  document.addEventListener('lfiag:ready', init);
+  if (document.readyState !== 'loading') setTimeout(init, 500);
 })();
 
 function signOut() {
