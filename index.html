@@ -2,8 +2,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https: blob: data:; frame-src https://drive.google.com https://accounts.google.com; script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com;">
 <title>LFIAGtube</title>
 <!-- Open Graph / WhatsApp / Messenger / iMessage -->
 <meta property="og:type" content="website">
@@ -19,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604121158">
+<meta name="cache-version" content="202604121024">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -351,8 +349,7 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
 .modal-title{flex:1;font-size:1rem;font-weight:800;line-height:1.4;letter-spacing:-.03em}
 .modal-close{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
 .modal-close:hover{background:rgba(255,255,255,.12);color:var(--text)}
-.modal-player{position:relative;background:#000;aspect-ratio:16/9;width:100%;user-select:none;-webkit-user-select:none}
-  .drive-btn-blocker{position:absolute;top:0;right:0;width:64px;height:52px;z-index:5;background:#000}
+.modal-player{position:relative;background:#000;aspect-ratio:16/9;width:100%}
   /* iOS fake-fullscreen */
   .ios-fake-fs{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:9999!important;padding:0!important;border-radius:0!important;max-height:none!important;background:#000!important}
   .ios-fake-fs .modal{width:100%!important;max-height:100vh!important;height:100vh!important;border-radius:0!important;margin:0!important}
@@ -363,7 +360,7 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
   .ios-fake-fs .ios-fs-btn{display:none!important}
   .ios-fs-btn{display:none;position:absolute;bottom:8px;right:8px;z-index:10;background:rgba(0,0,0,.72);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:.42rem .8rem;font-size:.76rem;cursor:pointer;backdrop-filter:blur(8px);gap:.35rem;align-items:center}
   .is-ios .ios-fs-btn{display:flex}
-  .ios-exit-fs-btn{display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;z-index:10000;background:rgba(0,0,0,.12);color:rgba(255,255,255,.28);border:1px solid rgba(255,255,255,.06);border-radius:20px;padding:.22rem .55rem;font-size:.6rem;cursor:pointer;backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);align-items:center;gap:.2rem;font-weight:400;transition:opacity .3s,background .3s;letter-spacing:.02em}.ios-exit-fs-btn:hover{background:rgba(0,0,0,.55);color:rgba(255,255,255,.8)}
+  .ios-exit-fs-btn{display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;z-index:10000;background:rgba(0,0,0,.28);color:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:.28rem .65rem;font-size:.68rem;cursor:pointer;backdrop-filter:blur(6px);align-items:center;gap:.25rem;font-weight:500;transition:opacity .2s,background .2s}.ios-exit-fs-btn:hover{background:rgba(0,0,0,.55);color:rgba(255,255,255,.8)}
   .ios-fake-fs-active .ios-exit-fs-btn{display:flex}
   .modal-player.pdf-mode{aspect-ratio:unset;height:75vh;display:flex;flex-direction:column}
   @media(max-width:640px){.modal-player.pdf-mode{height:80vh}}
@@ -783,7 +780,7 @@ if ('serviceWorker' in navigator) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="modal-player" id="modalPlayer"><div class="drive-btn-blocker"></div></div>
+    <div class="modal-player" id="modalPlayer"></div>
     <div class="modal-body">
       <div class="modal-meta" id="modalMeta"></div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap">
@@ -797,8 +794,14 @@ if ('serviceWorker' in navigator) {
           </button>
           <span class="modal-views" id="modalViews"></span>
         </div>
-
-
+        <a class="modal-drive-btn" id="modalDriveLink" target="_blank" rel="noopener noreferrer">
+          <svg width="13" height="13" viewBox="0 0 87.3 78" fill="currentColor" aria-hidden="true"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="M43.65 25 29.9 1.2C28.55 2 27.4 3.1 26.6 4.5L1.2 48.75C.4 50.15 0 51.7 0 53.25h27.5z" fill="#00ac47"/><path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.8l5.85 11.5z" fill="#ea4335"/><path d="M43.65 25 57.4 1.2C56.05.4 54.5 0 52.95 0H34.35c-1.55 0-3.1.45-4.45 1.2z" fill="#00832d"/><path d="M59.8 53.25H27.5L13.75 77.05c1.35.8 2.9 1.2 4.45 1.2h50.9c1.55 0 3.1-.4 4.45-1.2z" fill="#2684fc"/><path d="M73.4 26.5l-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3L43.65 25 59.8 53.25h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
+          Ouvrir dans Drive
+        </a>
+        <a class="modal-drive-btn" id="modalDriveLinkMob" target="_blank" rel="noopener noreferrer">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+          Plein &#xe9;cran
+        </a>
       </div>
     </div>
   </div>
@@ -2371,7 +2374,9 @@ function openVideo(id) {
   window._currentDriveLink = driveLink;
 
   document.getElementById('modalTitle').textContent = title;
-  // liens Drive retirés
+  document.getElementById('modalDriveLink').href = driveLink;
+  var mobLink = document.getElementById('modalDriveLinkMob');
+  if (mobLink) mobLink.href = driveLink;
 
   var dur = v.dur ? formatDuration(parseInt(v.dur)) : null;
   var date = v.modifiedTime
@@ -2426,8 +2431,6 @@ function openVideo(id) {
 }
 
 function buildIframePlayer(container, id) {
-  // Anti-téléchargement : bloquer clic droit sur le player
-  container.addEventListener('contextmenu', function(e) { e.preventDefault(); });
   var isTV = document.documentElement.classList.contains('is-tv');
   var _sp = document.createElement('div');
   _sp.id = 'playerSpinner';
