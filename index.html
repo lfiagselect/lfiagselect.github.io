@@ -19,7 +19,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604121148">
+<meta name="cache-version" content="202604121154">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -352,6 +352,8 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
 .modal-close{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
 .modal-close:hover{background:rgba(255,255,255,.12);color:var(--text)}
 .modal-player{position:relative;background:#000;aspect-ratio:16/9;width:100%;user-select:none;-webkit-user-select:none}
+  .drive-btn-blocker{display:none;position:absolute;top:0;right:0;width:56px;height:44px;z-index:5;background:transparent}
+  .ios-fake-fs .drive-btn-blocker{display:block}
   /* iOS fake-fullscreen */
   .ios-fake-fs{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:9999!important;padding:0!important;border-radius:0!important;max-height:none!important;background:#000!important}
   .ios-fake-fs .modal{width:100%!important;max-height:100vh!important;height:100vh!important;border-radius:0!important;margin:0!important}
@@ -362,7 +364,7 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
   .ios-fake-fs .ios-fs-btn{display:none!important}
   .ios-fs-btn{display:none;position:absolute;bottom:8px;right:8px;z-index:10;background:rgba(0,0,0,.72);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:.42rem .8rem;font-size:.76rem;cursor:pointer;backdrop-filter:blur(8px);gap:.35rem;align-items:center}
   .is-ios .ios-fs-btn{display:flex}
-  .ios-exit-fs-btn{display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;z-index:10000;background:rgba(0,0,0,.28);color:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:.28rem .65rem;font-size:.68rem;cursor:pointer;backdrop-filter:blur(6px);align-items:center;gap:.25rem;font-weight:500;transition:opacity .2s,background .2s}.ios-exit-fs-btn:hover{background:rgba(0,0,0,.55);color:rgba(255,255,255,.8)}
+  .ios-exit-fs-btn{display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;z-index:10000;background:rgba(0,0,0,.12);color:rgba(255,255,255,.28);border:1px solid rgba(255,255,255,.06);border-radius:20px;padding:.22rem .55rem;font-size:.6rem;cursor:pointer;backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);align-items:center;gap:.2rem;font-weight:400;transition:opacity .3s,background .3s;letter-spacing:.02em}.ios-exit-fs-btn:hover{background:rgba(0,0,0,.55);color:rgba(255,255,255,.8)}
   .ios-fake-fs-active .ios-exit-fs-btn{display:flex}
   .modal-player.pdf-mode{aspect-ratio:unset;height:75vh;display:flex;flex-direction:column}
   @media(max-width:640px){.modal-player.pdf-mode{height:80vh}}
@@ -782,7 +784,7 @@ if ('serviceWorker' in navigator) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="modal-player" id="modalPlayer"></div>
+    <div class="modal-player" id="modalPlayer"><div class="drive-btn-blocker"></div></div>
     <div class="modal-body">
       <div class="modal-meta" id="modalMeta"></div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap">
