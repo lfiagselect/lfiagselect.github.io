@@ -19,7 +19,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604121123">
+<meta name="cache-version" content="202604121143">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -2436,7 +2436,7 @@ function buildIframePlayer(container, id) {
   _if.id = 'videoIframe';
   // Sur TV : utiliser /preview?rm=minimal=false pour forcer les contrôles
   // Le paramètre rm=embedded force le player complet avec contrôles toujours visibles
-  _if.src = 'https://drive.google.com/file/d/' + id + '/preview' + (isTV ? '?rm=embedded' : '');
+  _if.src = 'https://drive.google.com/file/d/' + id + '/preview' + (isTV ? '?rm=embedded' : (isMobile() ? '?rm=minimal' : ''));
   _if.setAttribute('allow','autoplay; encrypted-media; fullscreen; picture-in-picture');
   _if.setAttribute('allowfullscreen','');
   _if.setAttribute('webkit-playsinline','');
