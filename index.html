@@ -19,7 +19,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604122145">
+<meta name="cache-version" content="202604122149">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1527,16 +1527,7 @@ async function handleCallback() {
 
   showScreen('loading');
   setLoadingMsg('Connexion…');
-  // Timeout de sécurité : forcer la fermeture du loader après 18s
-  window._loaderSafetyTimer = setTimeout(function() {
-    _hideLoader();
-    var content = document.getElementById('content');
-    if (content && !content.innerHTML.trim()) {
-      content.innerHTML = '<div class="empty-state"><h3>Chargement lent</h3>'
-        + '<p>Le serveur met du temps à répondre.</p>'
-        + '<button class="btn" onclick="handleCallback()" style="margin:1rem auto">&#8635; Réessayer</button></div>';
-    }
-  }, 18000);
+
 
   try {
     // ── Étape 1 : profil utilisateur (~0s depuis cache, ~0.2s depuis Google) ──
@@ -1590,51 +1581,35 @@ async function handleCallback() {
 
 // Charger et afficher les vidéos — jamais bloquant
 async function _loadVideosAndShow() {
-  // Safety timeout absolu — loader disparaît quoi qu'il arrive après 25s
-  var _safetyTimer = setTimeout(function() {
-    _hideLoader();
-    showScreen('app');
-    if (!allVideos.length) {
-      document.getElementById('content').innerHTML =
-        '<div class="empty-state"><h3>Connexion lente</h3><p>Le serveur ne répond pas.</p>' +
-        '<button class="btn" onclick="_loadVideosAndShow()" style="margin:1rem auto">↻ Réessayer</button></div>';
-    }
-  }, 25000);
-
+  var cached = null;
   try {
-    var cached = null;
-    try {
-      var raw = localStorage.getItem('lfiag_videos_cache_202604122145');
-      if (raw) { var p = JSON.parse(raw);
-        if (p && p.videos && p.videos.length > 0) { cached = p.videos; } }
-    } catch(e) {}
+    var raw = localStorage.getItem('lfiag_videos_cache_202604122145');
+    if (raw) { var p = JSON.parse(raw);
+      if (p && p.videos && p.videos.length > 0) cached = p.videos; }
+  } catch(e) {}
 
-    if (cached && cached.length > 0) {
-      clearTimeout(_safetyTimer);
-      allVideos = dedup(cached).map(function(v){
-        return Object.assign({},v,{_cat:categorize(v)}); });
-      renderAll();
-      var loaderDelay = window._loaderStart ? Math.max(500, 5300 - (Date.now() - window._loaderStart)) : 500;
-      setTimeout(refreshVideosBackground, loaderDelay);
-    } else {
-      setLoadingMsg('Chargement de la bibliothèque…');
-      try {
-        await fetchAndCacheVideos(true, false);
-        clearTimeout(_safetyTimer);
-      } catch(e) {
-        clearTimeout(_safetyTimer);
-        _hideLoader();
-        showScreen('app');
-        document.getElementById('content').innerHTML =
-          '<div class="empty-state"><h3>Connexion lente</h3><p>Le serveur met du temps à répondre.</p>' +
-          '<button class="btn" onclick="_loadVideosAndShow()" style="margin:1rem auto">↻ Réessayer</button></div>';
-      }
-    }
-  } catch(e) {
-    clearTimeout(_safetyTimer);
+  if (cached && cached.length > 0) {
+    // Cache dispo → afficher immédiatement
+    allVideos = dedup(cached).map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
+    _hideLoader();
+    renderAll();
+    setTimeout(refreshVideosBackground, 1000);
+  } else {
+    // Pas de cache → afficher l'app avec message, charger en background sans bloquer
     _hideLoader();
     showScreen('app');
-    console.warn('loadVideos:', e);
+    document.getElementById('content').innerHTML =
+      '<div class="empty-state" id="loadingSkeleton">' +
+      '<div style="margin-bottom:1rem">⏳ Chargement de la bibliothèque…</div>' +
+      '<p style="font-size:.8rem;color:var(--text3)">Première connexion — quelques secondes…</p></div>';
+    fetchAndCacheVideos(false, false)
+      .then(function() { /* renderAll() appelé dans fetchAndCacheVideos */ })
+      .catch(function(e) {
+        document.getElementById('content').innerHTML =
+          '<div class="empty-state"><h3>Connexion lente</h3>' +
+          '<p>' + escHtml(e.message) + '</p>' +
+          '<button class="btn" onclick="_loadVideosAndShow()" style="margin:1rem auto">↻ Réessayer</button></div>';
+      });
   }
 }
 function _checkAccessBackground() {
