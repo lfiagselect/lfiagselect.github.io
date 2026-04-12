@@ -19,7 +19,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604121158">
+<meta name="cache-version" content="202604122107">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1604,12 +1604,9 @@ async function _loadVideosAndShow() {
       allVideos = dedup(cached).map(function(v){
         return Object.assign({},v,{_cat:categorize(v)}); });
       renderAll(); // appelle showScreen('app')
-      // Rafraîchir en arrière-plan si cache > 5min
-      if (cacheAge > 300000) {
-        // Attendre la fin du loader avant de rafraîchir (évite double animation barre)
-        var loaderDelay = window._loaderStart ? Math.max(500, 5300 - (Date.now() - window._loaderStart)) : 500;
-        setTimeout(refreshVideosBackground, loaderDelay);
-      }
+      // Toujours rafraîchir en bg pour détecter nouvelles vidéos côté serveur
+      var loaderDelay = window._loaderStart ? Math.max(500, 5300 - (Date.now() - window._loaderStart)) : 500;
+      setTimeout(refreshVideosBackground, loaderDelay);
     } else {
       // Pas de cache (1ère connexion / vide-cache) :
       // Garder le loader visible pendant tout le fetch — l'effet waouh doit durer
@@ -1692,17 +1689,20 @@ function dedup(arr) {
 
 
 async function refreshVideosBackground() {
-  // Ne pas tourner si un refresh manuel est en cours
   if (window._refreshInProgress) return;
   try {
-    // Pas de ts : le serveur sert son cache (rapide). Invalidation via bouton Actualiser.
     var data = await callScript('videos', { email: currentUser.email });
     var fresh = dedup(data.videos || []);
-    try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: fresh, ts: Date.now()})); } catch(e) {}
-    // Comparer IDs ET catégories pour détecter les renommages de dossiers
+    var serverTs = data.cacheTs || '0';
+    var knownTs = localStorage.getItem('lfiag_server_ts') || '0';
+    try {
+      localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: fresh, ts: Date.now(), serverTs: serverTs}));
+      localStorage.setItem('lfiag_server_ts', serverTs);
+    } catch(e) {}
+    var tsChanged = serverTs !== '0' && serverTs !== knownTs;
     var a = fresh.map(function(v){return v.id+'|'+(v._category||'');}).sort().join(',');
     var b = allVideos.map(function(v){return v.id+'|'+(v._cat||'');}).sort().join(',');
-    if (a !== b) {
+    if (tsChanged || a !== b) {
       allVideos = dedup(fresh).map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
       renderAll();
     }
@@ -1715,7 +1715,11 @@ async function fetchAndCacheVideos(showErr, bustCache) {
     if (bustCache) params.ts = Date.now();
     var data = await callScript('videos', params);
     var videos = dedup(data.videos || []);
-    try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: videos, ts: Date.now()})); } catch(e) {}
+    var serverTs = data.cacheTs || '0';
+    try {
+      localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: videos, ts: Date.now(), serverTs: serverTs}));
+      localStorage.setItem('lfiag_server_ts', serverTs);
+    } catch(e) {}
     allVideos = videos.map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
     renderAll();
   } catch(e) {
