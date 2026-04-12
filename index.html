@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604111911">
+<meta name="cache-version" content="202604120718">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -694,8 +694,12 @@ if ('serviceWorker' in navigator) {
         &#xc0; la une
       </div>
       <div class="alune-grid">
-        <div class="alune-card" onclick="setAluneCategory('The Voice 2026')" title="Voir toutes les vid&#xe9;os The Voice 2026">
-          <img class="alune-thumb" src="/images/alune-thevoice.jpg" alt="The Voice 2026" loading="lazy">
+        <div class="alune-card alune-card--preview" onclick="setAluneCategory('The Voice 2026')" title="Voir toutes les vid&#xe9;os The Voice 2026"
+          onmouseenter="aluneStartPreview(this)" onmouseleave="aluneStopPreview(this)">
+          <img class="alune-thumb alune-thumb--img" src="/images/alune-thevoice.jpg" alt="The Voice 2026" loading="lazy">
+          <video class="alune-thumb--video" src="/images/alune-thevoice-preview.mp4" preload="none" playsinline></video>
+          <div class="alune-preview-bar"></div>
+          <button class="alune-mute-btn" onclick="event.stopPropagation();aluneMuteToggle(this)"><svg class="alune-mute-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
           <div class="alune-overlay"></div>
           <div class="alune-content">
             <div class="alune-tag">
