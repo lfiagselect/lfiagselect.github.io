@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604120725">
+<meta name="cache-version" content="202604120729">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1128,7 +1128,8 @@ function aluneMuteToggle(btn) {
 
   var obs = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
-      if (entry.intersectionRatio >= 0.70) {
+      var _thresh = parseFloat(entry.target.dataset.previewThresh || '0.70');
+      if (entry.intersectionRatio >= _thresh) {
         _visibleCards.set(entry.target, entry.intersectionRatio);
       } else {
         _visibleCards.delete(entry.target);
