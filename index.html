@@ -19,7 +19,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604122142">
+<meta name="cache-version" content="202604122145">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1285,7 +1285,7 @@ function initPullToRefresh() {
           return;
         }
         window._refreshInProgress = true;
-        try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
+        try { localStorage.removeItem('lfiag_videos_cache_202604122145'); } catch(e) {}
         // Bust cache serveur pour avoir les nouvelles vidéos
         fetchAndCacheVideos(true, true).then(function() {
           toast('✓ Bibliothèque actualisée');
@@ -1604,7 +1604,7 @@ async function _loadVideosAndShow() {
   try {
     var cached = null;
     try {
-      var raw = localStorage.getItem('lfiag_videos_cache');
+      var raw = localStorage.getItem('lfiag_videos_cache_202604122145');
       if (raw) { var p = JSON.parse(raw);
         if (p && p.videos && p.videos.length > 0) { cached = p.videos; } }
     } catch(e) {}
@@ -1709,7 +1709,7 @@ async function refreshVideosBackground() {
     var serverTs = data.cacheTs || '0';
     var knownTs = localStorage.getItem('lfiag_server_ts') || '0';
     try {
-      localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: fresh, ts: Date.now(), serverTs: serverTs}));
+      localStorage.setItem('lfiag_videos_cache_202604122145', JSON.stringify({videos: fresh, ts: Date.now(), serverTs: serverTs}));
       localStorage.setItem('lfiag_server_ts', serverTs);
     } catch(e) {}
     var tsChanged = serverTs !== '0' && serverTs !== knownTs;
@@ -1730,7 +1730,7 @@ async function fetchAndCacheVideos(showErr, bustCache) {
     var videos = dedup(data.videos || []);
     var serverTs = data.cacheTs || '0';
     try {
-      localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: videos, ts: Date.now(), serverTs: serverTs}));
+      localStorage.setItem('lfiag_videos_cache_202604122145', JSON.stringify({videos: videos, ts: Date.now(), serverTs: serverTs}));
       localStorage.setItem('lfiag_server_ts', serverTs);
     } catch(e) {}
     allVideos = videos.map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
@@ -2598,7 +2598,7 @@ function refreshWithFeedback() {
       if (btn) btn.classList.remove('loading');
       window._refreshInProgress = false;
       toast('⏳ Mise à jour en cours (40s)…');
-      try { localStorage.removeItem('lfiag_videos_cache'); } catch(e) {}
+      try { localStorage.removeItem('lfiag_videos_cache_202604122145'); } catch(e) {}
 
       // Etape 4 : apres 42s le cache serveur est pret, recharger
       setTimeout(function() {
