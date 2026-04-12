@@ -19,7 +19,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604122107">
+<meta name="cache-version" content="202604122139">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1826,17 +1826,14 @@ function setLoadingMsg(msg) {
 }
 
 function showAppUI() {
-  // Préparer les données sans afficher les éléments header
-  // (ils seront visibles uniquement quand showScreen('app') est appelé)
   var initial = (currentUser.name||currentUser.email||'?').charAt(0).toUpperCase();
   var avatar = document.getElementById('userAvatar');
   if (avatar) avatar.textContent = initial;
-  // Initiale mobile
   var dot = document.getElementById('mobUserDot');
-  if (dot && currentUser.email) {
-    dot.textContent = initial;
-    dot.title = currentUser.email;
-  }
+  if (dot && currentUser.email) { dot.textContent = initial; dot.title = currentUser.email; }
+  // Bouton admin : visible immédiatement si rôle connu depuis cache
+  var adminBtn = document.getElementById('adminHeaderBtn');
+  if (adminBtn) adminBtn.style.display = currentUser.role === 'admin' ? 'flex' : 'none';
   scheduleTokenRefresh();
 }
 
