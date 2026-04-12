@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604120718">
+<meta name="cache-version" content="202604120721">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1083,26 +1083,73 @@ function aluneMuteToggle(btn) {
 
 (function() {
   if (!('IntersectionObserver' in window)) return;
-  var obs = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry) {
-      var card = entry.target;
-      if (entry.intersectionRatio >= 0.70) {
-        if (!card._ioTimer) card._ioTimer = setTimeout(function() {
-          card._ioTimer = null; aluneStartPreview(card);
-        }, 800);
+
+  // Carte la plus centrée dans le viewport gagne
+  var _visibleCards = new Map(); // card → intersectionRatio
+
+  function _pickBest() {
+    if (_visibleCards.size === 0) return null;
+    var vpMid = window.innerHeight / 2;
+    var best = null, bestScore = -1;
+    _visibleCards.forEach(function(ratio, card) {
+      if (ratio < 0.70) return;
+      var rect = card.getBoundingClientRect();
+      var cardMid = rect.top + rect.height / 2;
+      var score = ratio - Math.abs(cardMid - vpMid) / window.innerHeight;
+      if (score > bestScore) { bestScore = score; best = card; }
+    });
+    return best;
+  }
+
+  function _updatePlaying() {
+    var best = _pickBest();
+    document.querySelectorAll('.alune-card--preview').forEach(function(card) {
+      var vid = card.querySelector('.alune-thumb--video');
+      if (!vid) return;
+      if (card === best) {
+        if (!vid._playing) {
+          if (!card._ioTimer) card._ioTimer = setTimeout(function() {
+            card._ioTimer = null;
+            // Arrêter toutes les autres d'abord
+            document.querySelectorAll('.alune-card--preview').forEach(function(c) {
+              if (c !== card) aluneStopPreview(c);
+            });
+            aluneStartPreview(card);
+          }, 800);
+        }
       } else {
         if (card._ioTimer) { clearTimeout(card._ioTimer); card._ioTimer = null; }
-        aluneStopPreview(card);
+        if (vid._playing) aluneStopPreview(card);
       }
     });
-  }, {threshold:[0,0.70,1.0]});
+  }
+
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.intersectionRatio >= 0.70) {
+        _visibleCards.set(entry.target, entry.intersectionRatio);
+      } else {
+        _visibleCards.delete(entry.target);
+        if (entry.target._ioTimer) { clearTimeout(entry.target._ioTimer); entry.target._ioTimer = null; }
+        aluneStopPreview(entry.target);
+      }
+    });
+    _updatePlaying();
+  }, {threshold:[0,0.40,0.70,1.0]});
+
   function bindAluneCard(card) {
     if (!card.querySelector('.alune-thumb--video')) return;
     obs.observe(card);
     if (!isMobile()) {
       card.addEventListener('mouseenter', function() {
+        // Desktop : arrêter les autres avant de lancer
         if (_aluneHoverTimer) clearTimeout(_aluneHoverTimer);
-        _aluneHoverTimer = setTimeout(function() { aluneStartPreview(card); }, 800);
+        _aluneHoverTimer = setTimeout(function() {
+          document.querySelectorAll('.alune-card--preview').forEach(function(c) {
+            if (c !== card) aluneStopPreview(c);
+          });
+          aluneStartPreview(card);
+        }, 800);
       });
       card.addEventListener('mouseleave', function() {
         if (_aluneHoverTimer) { clearTimeout(_aluneHoverTimer); _aluneHoverTimer = null; }
@@ -1114,6 +1161,7 @@ function aluneMuteToggle(btn) {
     card.addEventListener('touchend', function() { clearTimeout(_lt); }, {passive:true});
     card.addEventListener('touchmove', function() { clearTimeout(_lt); }, {passive:true});
   }
+
   function init() { document.querySelectorAll('.alune-card--preview').forEach(bindAluneCard); }
   document.addEventListener('lfiag:ready', init);
   if (document.readyState !== 'loading') setTimeout(init, 500);
