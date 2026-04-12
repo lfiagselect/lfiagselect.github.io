@@ -19,7 +19,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604122139">
+<meta name="cache-version" content="202604122142">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1590,39 +1590,52 @@ async function handleCallback() {
 
 // Charger et afficher les vidéos — jamais bloquant
 async function _loadVideosAndShow() {
+  // Safety timeout absolu — loader disparaît quoi qu'il arrive après 25s
+  var _safetyTimer = setTimeout(function() {
+    _hideLoader();
+    showScreen('app');
+    if (!allVideos.length) {
+      document.getElementById('content').innerHTML =
+        '<div class="empty-state"><h3>Connexion lente</h3><p>Le serveur ne répond pas.</p>' +
+        '<button class="btn" onclick="_loadVideosAndShow()" style="margin:1rem auto">↻ Réessayer</button></div>';
+    }
+  }, 25000);
+
   try {
-    var cached = null, cacheAge = Infinity;
+    var cached = null;
     try {
       var raw = localStorage.getItem('lfiag_videos_cache');
       if (raw) { var p = JSON.parse(raw);
-        if (p && p.videos && p.videos.length > 0) {
-          cached = p.videos; cacheAge = Date.now() - (p.ts || 0); } }
+        if (p && p.videos && p.videos.length > 0) { cached = p.videos; } }
     } catch(e) {}
 
     if (cached && cached.length > 0) {
-      // Cache local disponible : afficher instantanément
+      clearTimeout(_safetyTimer);
       allVideos = dedup(cached).map(function(v){
         return Object.assign({},v,{_cat:categorize(v)}); });
-      renderAll(); // appelle showScreen('app')
-      // Toujours rafraîchir en bg pour détecter nouvelles vidéos côté serveur
+      renderAll();
       var loaderDelay = window._loaderStart ? Math.max(500, 5300 - (Date.now() - window._loaderStart)) : 500;
       setTimeout(refreshVideosBackground, loaderDelay);
     } else {
-      // Pas de cache (1ère connexion / vide-cache) :
-      // Garder le loader visible pendant tout le fetch — l'effet waouh doit durer
       setLoadingMsg('Chargement de la bibliothèque…');
       try {
         await fetchAndCacheVideos(true, false);
-        // renderAll() dans fetchAndCacheVideos ferme le loader avec durée minimale 4.5s
+        clearTimeout(_safetyTimer);
       } catch(e) {
+        clearTimeout(_safetyTimer);
         _hideLoader();
         showScreen('app');
         document.getElementById('content').innerHTML =
           '<div class="empty-state"><h3>Connexion lente</h3><p>Le serveur met du temps à répondre.</p>' +
-          '<button class="btn" onclick="_loadVideosAndShow()" style="margin:1rem auto">蘵 Réessayer</button></div>';
+          '<button class="btn" onclick="_loadVideosAndShow()" style="margin:1rem auto">↻ Réessayer</button></div>';
       }
     }
-  } catch(e) { console.warn('loadVideos:', e); }
+  } catch(e) {
+    clearTimeout(_safetyTimer);
+    _hideLoader();
+    showScreen('app');
+    console.warn('loadVideos:', e);
+  }
 }
 function _checkAccessBackground() {
   return callScript('check', { email: currentUser.email })
