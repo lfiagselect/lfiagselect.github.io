@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604120721">
+<meta name="cache-version" content="202604120725">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1086,9 +1086,11 @@ function aluneMuteToggle(btn) {
 
   // Carte la plus centrée dans le viewport gagne
   var _visibleCards = new Map(); // card → intersectionRatio
+  var _scrolled = false;
+  window.addEventListener('scroll', function() { _scrolled = true; }, {once:true, passive:true});
 
   function _pickBest() {
-    if (_visibleCards.size === 0) return null;
+    if (!_scrolled || _visibleCards.size === 0) return null;
     var vpMid = window.innerHeight / 2;
     var best = null, bestScore = -1;
     _visibleCards.forEach(function(ratio, card) {
