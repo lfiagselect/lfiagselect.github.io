@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604120754">
+<meta name="cache-version" content="202604121015">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -868,6 +868,8 @@ if ('serviceWorker' in navigator) {
   .cat-vignette:hover .cat-vignette-img{transform:scale(1.07);filter:brightness(1.08)}
   .cat-vignette-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.82) 0%,rgba(0,0,0,.25) 50%,transparent 100%)}
   .cat-vignette-name{position:absolute;bottom:0;left:0;right:0;padding:.6rem .7rem .7rem;font-size:.72rem;font-weight:700;letter-spacing:.02em;line-height:1.25;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.8)}
+  .badge-new{position:absolute;top:7px;left:7px;z-index:10;background:#ff3b30;color:#fff;font-size:.58rem;font-weight:800;letter-spacing:.06em;padding:.18rem .45rem;border-radius:4px;text-transform:uppercase;box-shadow:0 2px 6px rgba(255,59,48,.5);pointer-events:none}
+  .alune-badge-new{position:absolute;top:10px;left:10px;z-index:6;background:#ff3b30;color:#fff;font-size:.62rem;font-weight:800;letter-spacing:.06em;padding:.2rem .5rem;border-radius:5px;text-transform:uppercase;box-shadow:0 2px 8px rgba(255,59,48,.5);pointer-events:none}
 
   /* ── Bouton retour univers ── */
   .back-to-grid{display:inline-flex;align-items:center;gap:.5rem;font-size:.78rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:rgba(255,255,255,.8);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:.4rem 1rem;cursor:pointer;margin-bottom:1.1rem;transition:color .2s,background .2s,border-color .2s}
@@ -1170,6 +1172,54 @@ function aluneMuteToggle(btn) {
   document.addEventListener('lfiag:ready', init);
   if (document.readyState !== 'loading') setTimeout(init, 500);
 })();
+
+
+// ── Pastilles NEW ────────────────────────────────────────────
+var NEW_TTL = 7 * 24 * 3600 * 1000; // 7 jours
+
+function _catSeenKey(cat) {
+  return 'lfiag_seen_' + (currentUser && currentUser.email ? currentUser.email + '_' : '') + cat;
+}
+
+function _catHasNew(cat) {
+  var seenTs;
+  try { seenTs = parseInt(localStorage.getItem(_catSeenKey(cat)) || '0'); } catch(e) { seenTs = 0; }
+  var now = Date.now();
+  return allVideos.some(function(v) {
+    if (v._cat !== cat) return false;
+    var mt = v.modifiedTime ? new Date(v.modifiedTime).getTime() : 0;
+    return mt > seenTs && (now - mt) < NEW_TTL;
+  });
+}
+
+function _markCatSeen(cat) {
+  try { localStorage.setItem(_catSeenKey(cat), Date.now().toString()); } catch(e) {}
+}
+
+function _updateAluneNew() {
+  // Vignettes À la une : The Voice 2026 et L'Effet Lara
+  var aluneMap = {
+    'The Voice 2026': 'The Voice 2026',
+    "L'Effet Lara - 2026": "L'Effet Lara - 2026"
+  };
+  document.querySelectorAll('.alune-card').forEach(function(card) {
+    var onclick = card.getAttribute('onclick') || '';
+    var catMatch = onclick.match(/setAluneCategory\(['"]([^'"]+)['"]\)/);
+    if (!catMatch) return;
+    var cat = catMatch[1];
+    var existing = card.querySelector('.alune-badge-new');
+    if (_catHasNew(cat)) {
+      if (!existing) {
+        var b = document.createElement('div');
+        b.className = 'alune-badge-new';
+        b.textContent = 'NEW';
+        card.appendChild(b);
+      }
+    } else {
+      if (existing) existing.remove();
+    }
+  });
+}
 
 function signOut() {
   sessionStorage.clear();
@@ -1870,16 +1920,19 @@ function renderCatGrid() {
       (img ? '<img class="cat-vignette-img" src="' + img + '" alt="' + escAttr(cat) + '">' : '<div class="cat-vignette-img" style="background:rgba(255,255,255,.06)"></div>') +
       '<div class="cat-vignette-overlay"></div>' +
       '<div class="cat-vignette-name">' + escHtml(cat) + '</div>' +
+      (_catHasNew(cat) ? '<div class="badge-new">NEW</div>' : '') +
       '</div>';
   }).join('');
 }
 
 function selectCatFromGrid(cat) {
   activeCategory = cat;
+  if (cat !== 'Tout') { _markCatSeen(cat); }
   renderMobCatbar();
   renderToolbar();
   renderCatGrid();
   renderVideos();
+  _updateAluneNew();
   if (cat === 'Tout') {
     _scrollToEl(document.getElementById('catGridSection'), -4);
   } else {
@@ -1945,6 +1998,7 @@ function renderAll() {
   updateHeroWidgets();
   updateAluneSection();
   try{document.dispatchEvent(new CustomEvent('lfiag:ready'));}catch(e){}
+  setTimeout(_updateAluneNew, 100);
 }
 
 function updateAluneSection() {
@@ -1958,7 +2012,7 @@ function updateAluneSection() {
 }
 
 function setAluneCategory(cat) {
-  // Utiliser le flux normal → activeCategory mis à jour → backBtn affiché
+  _markCatSeen(cat);
   selectCatFromGrid(cat);
 }
 
