@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604122316">
+<meta name="cache-version" content="202604130135">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1034,6 +1034,8 @@ window.addEventListener('orientationchange', function() {
 var _aluneHoverTimer = null;
 
 function aluneStartPreview(card) {
+  // Ne jamais jouer si le modal est ouvert
+  if (document.getElementById('modal').classList.contains('open')) return;
   var img = card.querySelector('.alune-thumb--img');
   var vid = card.querySelector('.alune-thumb--video');
   var bar = card.querySelector('.alune-preview-bar');
@@ -2365,7 +2367,18 @@ function renderVideos() {
     '<div class="video-grid">' + applySortToVideos(filtered).map(function(v){return videoCard(v);}).join('') + '</div>';
 }
 
+function stopAllPreviews() {
+  document.querySelectorAll('.alune-card--playing').forEach(function(card) {
+    aluneStopPreview(card);
+  });
+  // Pause toutes les balises <video> de la page (sécurité)
+  document.querySelectorAll('video').forEach(function(v) {
+    v.pause(); v.currentTime = 0;
+  });
+}
+
 function openVideo(id) {
+  stopAllPreviews(); // ← stopper son des vignettes AVANT tout
   var v = allVideos.find(function(x){ return x.id === id; });
   if (!v) return;
 
@@ -2493,6 +2506,7 @@ function closeModal() {
   modal.classList.remove('open');
   document.getElementById('modalPlayer').innerHTML='';
   document.body.style.overflow='';
+  stopAllPreviews(); // sécurité : au cas où une preview a démarré pendant le modal
   updateHeroWidgets();
 }
 
@@ -2549,7 +2563,7 @@ function toggleLike(id, val) {
     if(!window._sharedStats[id]) window._sharedStats[id]={views:0,likes:0};
     window._sharedStats[id].likes=l[id]===1?1:0;
   }
-  renderVideos();
+  // Ne pas re-render toute la grille pour un like — juste mettre à jour le modal
   updateModalLikes(id);
 }
 function updateModalLikes(id) {
