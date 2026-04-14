@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604141747">
+<meta name="cache-version" content="202604141805">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1638,13 +1638,13 @@ function _checkAccessBackground() {
       access.ts = Date.now();
       access.email = currentUser.email;
       try { localStorage.setItem('lfiag_access', JSON.stringify(access)); } catch(e) {}
-      if (!access.authorized) {
+      // v10: status='ok' = autorisé, status='error' = refusé
+      if (access.status !== 'ok') {
         signOut();
         toast('⚠ Accès non autorisé');
         return;
       }
-      // Mettre à jour le rôle (admin/user)
-      currentUser.role = access.role;
+      currentUser.role = access.role || 'member';
       // Rafraîchir le bouton admin si nécessaire
       var adminBtn = document.getElementById('adminHeaderBtn');
       if (adminBtn) adminBtn.style.display = currentUser.role === 'admin' ? 'flex' : 'none';
