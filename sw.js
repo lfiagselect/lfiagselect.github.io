@@ -1,6 +1,6 @@
 // LFIAGtube — Service Worker v3
 // Stratégie : network-first pour index.html (toujours la dernière version)
-const CACHE_NAME = 'lfiag-shell-202604130135';
+const CACHE_NAME = 'lfiag-shell-202604141747';
 const SHELL_ASSETS = [
   '/manifest.json',
   '/icon-192.jpeg',
