@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604141838">
+<meta name="cache-version" content="202604142039">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -2444,7 +2444,19 @@ function buildIframePlayer(container, id) {
   // Player HTML5 natif
   var vid = document.createElement('video');
   vid.id = 'videoPlayer';
-  vid.src = src;
+  // Encoder l'URL pour Safari iOS (chars non-ASCII, apostrophes, +, etc.)
+  try {
+    // encodeURI respecte la structure de l'URL (garde ://, /, ?)
+    // mais encode les chars non-ASCII et spéciaux dans le path
+    var srcEncoded = src.split('/').map(function(seg, i) {
+      // Garder le protocole et domaine intacts (premiers segments)
+      if (i < 3) return seg;
+      return encodeURIComponent(decodeURIComponent(seg));
+    }).join('/');
+    vid.src = srcEncoded;
+  } catch(e) {
+    vid.src = src;
+  }
   vid.controls = true;
   vid.autoplay = true;
   vid.setAttribute('playsinline', '');
