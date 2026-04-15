@@ -18,7 +18,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604150800">
+<meta name="cache-version" content="202604150817">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -913,44 +913,15 @@ var CAT_IMAGES = {
   "2019 - 2021 Papillon": "/images/categories/2019_-_2021_Papillon.jpg",
   "2024 - Aujourd\u2019hui": "/images/categories/2024_-_Aujourdhui.jpg",
   "The Voice 2026": "/images/categories/The_Voice_2026.jpg",
+  "L\u2019Effet Lara - 2026": "/images/categories/LEffet_Lara_-_2026.jpg",
   "L'Effet Lara - 2026": "/images/categories/LEffet_Lara_-_2026.jpg",
   "Lara Fabian - Divers": "/images/categories/Lara_Fabian_-_Divers.jpg",
-  "Lara Fabian - Livres": "/images/categories/Lara_Fabian_-_Livres.jpg",
-  "Lara Fabian au Cin\u00e9ma": "/images/categories/Lara_Fabian_au_Cinma.jpg",
-  "Lara Fabian aux Enfoir\u00e9s": "/images/categories/Lara_Fabian_aux_Enfoirs.jpg",
   "Lara Fabian Documentaires": "/images/categories/Lara_Fabian_Documentaires.jpg",
-  "Star Acad\u00e9mie 2025": "/images/categories/Star_Acadmie_2025.jpg",
+  "Lara Fabian au Cin\u00e9ma": "/images/categories/Lara_Fabian_au_Cinema.jpg",
+  "Lara Fabian aux Enfoir\u00e9s": "/images/categories/Lara_Fabian_aux_Enfoires.jpg",
+  "Star Academie 2025": "/images/categories/Star_Academie_2025.jpg",
   "The Voice Kids 2024": "/images/categories/The_Voice_Kids_2024.jpg"
 }
-
-// ============================================
-// CONFIG — à personnaliser
-// ============================================
-const LOGO_SRC='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAQDAwMDAgQDAwMEBAQFBgoGBgUFBgwICQcKDgwPDg4MDQ0PERYTDxAVEQ0NExoTFRcYGRkZDxIbHRsYHRYYGRj/2wBDAQQEBAYFBgsGBgsYEA0QGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBj/wAARCABAAEADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD4Toqv57e1OErH0rtuY8rJqKjDsfSl3N7UxWH0VEXYelMMzj0/KlcfKyxRVU3D+35Un2mT2/KlzoORkYNaGk6TqWtarBpmlWVxe3k7bYre3QvJIcZwFHJ4BrOWvVPgprPhDwv8TLTxD4wGptb2iF7b7AisyznhWbcR8oBY/WpV7XLk7Gg/wH1+x+Gd74r1S4NvPZ3KW0+neUS8RbHLvnAIJwQM4PBNc3rXgZ9IsI7r7Q0kcgIV9vG4dVPGRX2d8UPG+nN8MxqNx4e1D/hHZZrazaC5nS1aTzHHKkE5woLYzg+tfMnjnWYLi01I2unyafp1xc/6NZPIZDbuu3I3Hk5Ug/iainVfNqKcNNDxt044qs4Ir3rR/hn4Fi+H8XjHxJdzLp0vhqG8jZdQUB9Sa8MLw7Y1eQAR7W27eOpOK6e9+AXwztftbWfieHVtQsp7qUaFFrttHNexO7rZRK+0hW2x+Y5G4sHVVCnGdZSQkj5XPWkrpfH+hWHhn4la1oWlXlveWdndNFDNb3QukK9ceaEQORnaWCjJB4rmqwkaIUHmtfTDNc3kFlbxmWaZhEiD+IngCscVe0u+bTtXt79F3NA4dRnGSOnNVCbWwpJPc+19P0S++I/7Pdp4U8RvbrqNpHFJC0km6JpIMqjEgdCpIOPevA/iP4d8QeEVfTNckju2lnknS7gUlG3quRk85BGMfTHFQ6T8ddY0qzjt4NOyI0Eak3J4Udvu/X86yfGPxSuvFumfYn0wWykglmuDKePTIGKhQle4XVrGxoPxQ0XSfh2vh+58Ox3N0sKxR3hXDW5EhcumCNxYHad2Risiy8deErYxy33ga3ubqOKeFZ1EKhvNZ/ndChDsocAbs9PTGPP2kFQu2aIYanSlKUN3/wAOd+KzbE4ujChVfuwtbTsrfkja8Xa1oWt6jbT6B4Xg0CCODy3t4ZmlDtuJ3bm5PBA55rnacaYacjhRN9ll/wBn86cLeUen51borX2aMudlYQyj0/OneVJ7fnU9FVyoVyv5Unt+dNMEp9Pzq1RRyIfMU/s0v+z+dH2aX/Z/OrlFT7ND52f/2Q==';
-const CLIENT_ID = '770493413843-ovgjb1u0hnc3lcgab6otfs92q8hm2knn.apps.googleusercontent.com';
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxnNSmAUGIuzBJ2s2f5MmnqZrMjZO9VqNjd7kCyELD-KdZ2XBjWTrW7qpl4HcLgk4bB/exec'; // URL du Apps Script déployé
-const REDIRECT_URI = 'https://lfiagselect.github.io';
-const SCOPES = 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
-
-// ============================================
-// STATE
-// ============================================
-let currentUser = null;
-let allVideos = [];
-let activeCategory='Tout', searchQuery='', sortOrder='date_desc';
-let settings = {
-  rules: [
-    { keyword: 'interview', cat: 'Interview' },
-    { keyword: 'live', cat: 'Live' },
-    { keyword: 'concert', cat: 'Concert' },
-    { keyword: 'documentaire', cat: 'Documentaire' },
-    { keyword: 'making', cat: 'Making-of' },
-    { keyword: 'répétition', cat: 'Répétition' },
-    { keyword: 'repetition', cat: 'Répétition' },
-    { keyword: 'enfoirés', cat: 'Les Enfoirés' },
-    { keyword: 'enfoires', cat: 'Les Enfoirés' },
-  ]
-};
 try { const s = JSON.parse(localStorage.getItem('lfiag_settings_v2')||'{}'); if(s.rules) settings.rules=s.rules; } catch(e){}
 
 // ============================================
@@ -2007,7 +1978,7 @@ function updateAluneSection() {
   if (!sec) return;
   var cats = allVideos.map(function(v){ return v._cat; });
   var hasVoice  = cats.indexOf('The Voice 2026') >= 0;
-  var hasEffet  = cats.some(function(c){ return c && (c.indexOf('EFFET LARA') >= 0 || c.indexOf('Effet Lara') >= 0); });
+  var hasEffet  = cats.some(function(c){ return c && normCat(c).indexOf('effet lara') >= 0; });
   sec.style.display = (hasVoice || hasEffet) ? '' : 'none';
 }
 
