@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604150724">
+<meta name="cache-version" content="202604150725">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1978,7 +1978,7 @@ function updateAluneSection() {
   if (!sec) return;
   var cats = allVideos.map(function(v){ return v._cat; });
   var hasVoice  = cats.indexOf('The Voice 2026') >= 0;
-  var hasEffet  = cats.some(function(c){ return c && (c.toLowerCase().indexOf('effet lara') >= 0 || c.toLowerCase().indexOf('leffet') >= 0); }); });
+  var hasEffet  = cats.some(function(c){ return c && (c.toLowerCase().indexOf('effet lara') >= 0 || c.toLowerCase().indexOf('leffet') >= 0); });
   sec.style.display = (hasVoice || hasEffet) ? '' : 'none';
 }
 
