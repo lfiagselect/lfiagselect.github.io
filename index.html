@@ -1638,13 +1638,14 @@ function _checkAccessBackground() {
       access.ts = Date.now();
       access.email = currentUser.email;
       try { localStorage.setItem('lfiag_access', JSON.stringify(access)); } catch(e) {}
-      if (!access.authorized) {
+      // Accepter authorized:true (v9.1) OU status:'ok' (v9.3)
+      var isOk = access.authorized === true || access.status === 'ok';
+      if (!isOk) {
         signOut();
         toast('⚠ Accès non autorisé');
         return;
       }
-      // Mettre à jour le rôle (admin/user)
-      currentUser.role = access.role;
+      currentUser.role = access.role || 'member';
       // Rafraîchir le bouton admin si nécessaire
       var adminBtn = document.getElementById('adminHeaderBtn');
       if (adminBtn) adminBtn.style.display = currentUser.role === 'admin' ? 'flex' : 'none';
