@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604151943">
+<meta name="cache-version" content="202604151952">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -715,7 +715,7 @@ if ('serviceWorker' in navigator) {
             </div>
           </div>
         </div>
-        <div class="alune-card alune-card--preview" data-cat="L’Effet Lara - 2026" onclick="setAluneCategory('L’Effet Lara - 2026')" title="Voir toutes les vid&#xe9;os L&#x27;Effet Lara"
+        <div class="alune-card alune-card--preview" data-cat="L'Effet Lara - 2026" onclick="setAluneCategory(this.dataset.cat)" title="Voir toutes les vid&#xe9;os L&#x27;Effet Lara"
           onmouseenter="aluneStartPreview(this)" onmouseleave="aluneStopPreview(this)">
           <img class="alune-thumb alune-thumb--img" src="/images/alune-effetlara.jpg" alt="L&#x27;Effet Lara" loading="lazy">
           <video class="alune-thumb alune-thumb--video" src="/images/alune-effetlara-preview.mp4" preload="none" playsinline></video>
@@ -911,16 +911,19 @@ var CAT_IMAGES = {
   "2017 - 2018 Camouflage": "/images/categories/2017_-_2018_Camouflage.jpg",
   "2019 - 2021 Papillon": "/images/categories/2019_-_2021_Papillon.jpg",
   "2024 - Aujourd’hui": "/images/categories/2024_-_Aujourdhui.jpg",
-  "The Voice 2026": "/images/categories/The_Voice_2026.jpg",
+  "2024 - Aujourd'hui": "/images/categories/2024_-_Aujourdhui.jpg",
   "L’Effet Lara - 2026": "/images/categories/LEffet_Lara_-_2026.jpg",
   "L'Effet Lara - 2026": "/images/categories/LEffet_Lara_-_2026.jpg",
   "Lara Fabian - Divers": "/images/categories/Lara_Fabian_-_Divers.jpg",
+  "Lara Fabian - Livres": "/images/categories/Lara_Fabian_-_Livres.jpg",
   "Lara Fabian Documentaires": "/images/categories/Lara_Fabian_Documentaires.jpg",
   "Lara Fabian au Cinéma": "/images/categories/Lara_Fabian_au_Cinma.jpg",
   "Lara Fabian aux Enfoirés": "/images/categories/Lara_Fabian_aux_Enfoirs.jpg",
-  "Star Académie 2025": "/images/categories/Star_Acadmie_2025.jpg",
+  "Star Academie 2025": "/images/categories/Star_Acadmie_2025.jpg",
+  "Star Academy France": "/images/categories/Star_Acadmie_2025.jpg",
+  "The Voice 2026": "/images/categories/The_Voice_2026.jpg",
   "The Voice Kids 2024": "/images/categories/The_Voice_Kids_2024.jpg"
-}
+};
 try { const s = JSON.parse(localStorage.getItem('lfiag_settings_v2')||'{}'); if(s.rules) settings.rules=s.rules; } catch(e){}
 
 // ============================================
