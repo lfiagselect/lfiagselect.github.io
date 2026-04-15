@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604152029">
+<meta name="cache-version" content="202604152038">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -1984,6 +1984,9 @@ function _scrollToEl(el, extraOffset) {
 function renderAll() {
   if (window._loaderSafetyTimer) { clearTimeout(window._loaderSafetyTimer); window._loaderSafetyTimer = null; }
   showScreen('app');
+  // Injecter PDFs statiques (Lara Fabian - Livres)
+  var _PDFS = [{"id": "1ssmXBK3mXtsiPWSrawKqjb2YZZcMA1Dj", "name": "Lara Fabian - Je passe à table.pdf", "mimeType": "application/pdf", "size": "7640667", "createdTime": "2026-04-07T18:45:58.602Z", "modifiedTime": "2026-04-07T18:45:58.602Z", "thumbnailLink": "https://drive.google.com/thumbnail?id=1ssmXBK3mXtsiPWSrawKqjb2YZZcMA1Dj&sz=w640", "webViewLink": "https://drive.google.com/file/d/1ssmXBK3mXtsiPWSrawKqjb2YZZcMA1Dj/view", "_category": "Lara Fabian - Livres", "_cat": "Lara Fabian - Livres"}, {"id": "1fRG0WiZPqFhwZdd3MqrFuupeesU3-W58", "name": "Lara Fabian - Derrière la voix.pdf", "mimeType": "application/pdf", "size": "7975554", "createdTime": "2025-04-24T13:22:00.298Z", "modifiedTime": "2025-04-24T13:22:12.598Z", "thumbnailLink": "https://drive.google.com/thumbnail?id=1fRG0WiZPqFhwZdd3MqrFuupeesU3-W58&sz=w640", "webViewLink": "https://drive.google.com/file/d/1fRG0WiZPqFhwZdd3MqrFuupeesU3-W58/view", "_category": "Lara Fabian - Livres", "_cat": "Lara Fabian - Livres"}];
+  _PDFS.forEach(function(p){ if (!allVideos.some(function(v){return v.id===p.id;})) allVideos.push(p); });
   var loader = document.getElementById('lfiagLoader');
   if (loader && !loader._hiding) {
     loader._hiding = true;
@@ -2275,6 +2278,16 @@ function videoCard(v, isNew) {
   const progressBar = seen
     ? '<div class="progress-bar"><div class="progress-bar-fill" style="width:100%"></div></div>'
     : '';
+  if (v.mimeType === 'application/pdf') {
+    return '<div class="video-card" style="cursor:pointer" onclick="openVideo(' + JSON.stringify(v.id) + ')">' +
+      '<div class="vc-thumb" style="aspect-ratio:3/4;background:#1a1a2e;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.5rem;">' +
+      (v.thumbnailLink ? '<img src="' + v.thumbnailLink + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.25;" loading="lazy">' : '') +
+      '<svg width="32" height="32" viewBox="0 0 24 24" fill="#c49b64"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5z"/></svg>' +
+      '<span style="color:#c49b64;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">PDF</span>' +
+      '</div>' +
+      '<div class="vc-info"><div class="vc-title">' + escHtml(v.name.replace(/\.pdf$/i,'')) + '</div>' +
+      '<div class="vc-meta" style="color:#c49b64;">📖 Lire</div></div></div>';
+  }
   return '<div class="video-card" tabindex="0" onclick="openVideo(\'' + v.id + '\')">'
     + '<div class="thumb-wrap">' + thumb
     + '<div class="play-overlay"><div class="play-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>'
@@ -2387,6 +2400,7 @@ function openVideo(id) {
   if (!v) return;
 
   var title     = v.name.replace(/\.[^.]+$/, '');
+  if (v.mimeType === 'application/pdf') { window.open(v.webViewLink, '_blank'); return; }
   var driveLink = v.webViewLink || ('https://drive.google.com/file/d/' + id + '/view');
   window._currentDriveLink = driveLink;
 
