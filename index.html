@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604152045">
+<meta name="cache-version" content="202604162024">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -2708,7 +2708,7 @@ function adminAddUser() {
   if (!e) { toast('⚠ Email requis'); return; }
   var btn = document.getElementById('adminAddBtn');
   if (btn) { btn.textContent = '…'; btn.disabled = true; }
-  callScript('add_user', {email: e, name: n, admin_email: currentUser.email})
+  callScript('add_user', {email: currentUser.email, target_email: e, name: n})
     .then(function() {
       document.getElementById('newUserEmail').value = '';
       document.getElementById('newUserName').value = '';
@@ -2733,7 +2733,7 @@ function adminToggleRole(i) {
   showAdminConfirm(question, label, function() {
     _au[i].role = newRole;
     renderAdminUsers();
-    callScript('set_role', {email:u.email, role:newRole, admin_email:currentUser.email})
+    callScript('set_role', {email:currentUser.email, target_email:u.email, role:newRole})
       .then(function() {
         toast(ok_msg);
         if (currentUser && currentUser.email === u.email) {
@@ -2757,7 +2757,7 @@ function adminDeleteUser(i) {
     function() {
       _au.splice(i, 1);
       renderAdminUsers();
-      callScript('toggle_user', {email: u.email, active: 'false', admin_email: currentUser.email})
+      callScript('toggle_user', {email: currentUser.email, target_email: u.email, active: 'false'})
         .then(function() { toast('✓ Accès supprimé : ' + u.email); })
         .catch(function(err) { _au.splice(i, 0, u); renderAdminUsers(); toast('Erreur : ' + err.message); });
     }
