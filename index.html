@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604162024">
+<meta name="cache-version" content="202604170639">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -546,7 +546,7 @@ if ('serviceWorker' in navigator) {
 <div class="admin-dropdown" id="adminDropdown">
   <div class="admin-dropdown-head">
     <span class="admin-dropdown-title">&#x1F6E1; Gestion des acc&#xe8;s</span>
-    <button class="btn" onclick="adminInvalidateCache()" style="font-size:.68rem;padding:.2rem .5rem;background:rgba(255,214,10,.08);border-color:rgba(255,214,10,.2);color:var(--gold)" title="Vider le cache Drive">&#8635; Cache</button>
+    <button class="btn" onclick="adminInvalidateCache(event)" style="font-size:.68rem;padding:.2rem .5rem;background:rgba(255,214,10,.08);border-color:rgba(255,214,10,.2);color:var(--gold)" title="Vider le cache Drive">&#8635; Cache</button>
     <button class="admin-dropdown-close" onclick="toggleAdminDropdown()">&#x2715;</button>
   </div>
   <div class="admin-add-row">
@@ -1734,7 +1734,7 @@ async function fetchAndCacheVideos(showErr, bustCache) {
 
 
 async function sendAccessRequest() {
-  const name = document.getElementById('requestName').value.trim() || currentUser?.email;
+  const name = document.getElementById('requestName').value.trim() || (currentUser ? currentUser.email : '');
   try {
     await callScript('request', { email: currentUser.email, name });
     document.getElementById('requestSent').style.display = 'block';
@@ -2400,7 +2400,7 @@ function openVideo(id) {
   if (!v) return;
 
   var title     = v.name.replace(/\.[^.]+$/, '');
-  if (v.mimeType === 'application/pdf') { window.open(v.webViewLink, '_blank'); return; }
+  if (v.mimeType === 'application/pdf') { window.open(v.webViewLink, '_blank', 'noopener,noreferrer'); return; }
   var driveLink = v.webViewLink || ('https://drive.google.com/file/d/' + id + '/view');
   window._currentDriveLink = driveLink;
 
@@ -2419,7 +2419,7 @@ function openVideo(id) {
 
   // TV : ouvrir directement le lien Drive dans le navigateur
   if (document.documentElement.classList.contains('is-tv')) {
-    window.open(driveLink, '_blank');
+    window.open(driveLink, '_blank', 'noopener,noreferrer');
     // Enregistrer quand même dans l'historique et les vues
     try {
       var vwt=JSON.parse(localStorage.getItem('lfiag_views')||'{}');
@@ -2608,7 +2608,7 @@ function refreshWithFeedback() {
   if (btn) btn.classList.add('loading');
 
   // Etape 1 : invalider le cache serveur (~5s)
-  callScript('invalidate', { admin_email: currentUser.email })
+  callScript('invalidate', { email: currentUser.email })
     .catch(function(){})
     .finally(function() {
       // Etape 2 : lancer la reindexation Drive cote serveur (feu et oubli, ~32s)
@@ -2655,11 +2655,11 @@ function _closeAdminOut(e) {
   }
 }
 function toggleAdminPanel() { toggleAdminDropdown(); }
-function adminInvalidateCache() {
-  var btn = event.target;
+function adminInvalidateCache(e) {
+  var btn = (e && e.target) || event.target;
   btn.disabled = true;
   btn.textContent = '⏳ En cours…';
-  callScript('invalidate', { admin_email: currentUser.email })
+  callScript('invalidate', { email: currentUser.email })
     .then(function() {
       btn.disabled = false;
       btn.innerHTML = '&#8635; Cache';
@@ -2755,10 +2755,12 @@ function adminDeleteUser(i) {
   showAdminConfirm(
     'Supprimer l’accès de ' + u.name + ' (' + u.email + ') ?',
     function() {
-      _au.splice(i, 1);
-      renderAdminUsers();
       callScript('toggle_user', {email: currentUser.email, target_email: u.email, active: 'false'})
-        .then(function() { toast('✓ Accès supprimé : ' + u.email); })
+        .then(function() {
+          _au.splice(i, 1);
+          renderAdminUsers();
+          toast('✓ Accès supprimé : ' + u.email);
+        })
         .catch(function(err) { _au.splice(i, 0, u); renderAdminUsers(); toast('Erreur : ' + err.message); });
     }
   );
