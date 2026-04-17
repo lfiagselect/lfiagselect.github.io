@@ -17,7 +17,7 @@
 <meta name="twitter:title" content="LFIAGtube">
 <meta name="twitter:description" content="Vos vidéos LFIAG, dans une vraie plateforme.">
 <meta name="twitter:image" content="https://lfiagselect.github.io/images/logo-alune.png">
-<meta name="cache-version" content="202604170639">
+<meta name="cache-version" content="202604170735">
 <meta name="google-site-verification" content="YNSrzhwAJ3tSYbJZaZknRYN1Py0XBlTLz3i2wArZwG4">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -2649,6 +2649,13 @@ function _closeAdminOut(e) {
   var dd = document.getElementById('adminDropdown');
   var btn = document.getElementById('adminHeaderBtn');
   if (!dd) return;
+  // Ignorer si clic dans un overlay/modal par-dessus (z-index >= 500)
+  var node = e.target;
+  while (node && node !== document.body) {
+    var z = parseInt((node.style && node.style.zIndex) || '0', 10);
+    if (z >= 500) return;
+    node = node.parentNode;
+  }
   if (!dd.contains(e.target) && btn && !btn.contains(e.target)) {
     dd.classList.remove('open');
     document.removeEventListener('click', _closeAdminOut, true);
