@@ -715,6 +715,7 @@ async function handleCallback() {
     // puis charger les vidéos et vérifier l'accès
     await new Promise(function(r){ setTimeout(r, 100); });
     showAppUI();
+    window._bgRefreshDone = false; // reset: garantit re-render au premier refresh de session
     _loadVideosAndShow();
 
     // ── Étape 4 : check accès en ARRIÈRE-PLAN (jamais bloquant) ──
@@ -746,7 +747,10 @@ async function _loadVideosAndShow() {
         return Object.assign({},v,{_cat:categorize(v)}); });
       renderAll(); // appelle showScreen('app')
       // TOUJOURS rafraîchir en arrière-plan à chaque login (instant update Drive)
-      var loaderDelay = window._loaderStart ? Math.max(400, 5300 - (Date.now() - window._loaderStart)) : 400;
+      // loaderDelay : laisser le loader se fermer avant de relancer le rendu (~4500ms)
+      // mais pas plus de 5300ms pour ne pas bloquer les mises à jour en cas de connexion rapide
+      var elapsed = window._loaderStart ? (Date.now() - window._loaderStart) : 9999;
+      var loaderDelay = elapsed < 4500 ? Math.max(400, 4600 - elapsed) : 400;
       setTimeout(function(){ refreshVideosBackground(true); }, loaderDelay);
     } else {
       // Pas de cache (1ère connexion / vide-cache) :
@@ -833,18 +837,25 @@ function dedup(arr) {
 async function refreshVideosBackground(forceFresh) {
   // Ne pas tourner si un refresh manuel est en cours
   if (window._refreshInProgress) return;
+  // Flag: premier refresh de la session (login) — toujours re-render pour garantir fraîcheur
+  var isLoginRefresh = !window._bgRefreshDone;
+  window._bgRefreshDone = true;
   try {
     // forceFresh=true → bypass serveur cache (bouton Actualiser + login)
     var params = { email: currentUser.email };
     if (forceFresh) params.ts = Date.now();
     var data = await callScript('videos', params);
     var fresh = dedup(data.videos || []);
+    // Normaliser _cat via categorize() AVANT comparaison (fix: asymétrie _category vs _cat)
+    var freshNorm = fresh.map(function(v){ return Object.assign({}, v, {_cat: categorize(v)}); });
+    // Mettre à jour le cache localStorage
     try { localStorage.setItem('lfiag_videos_cache', JSON.stringify({videos: fresh, ts: Date.now()})); } catch(e) {}
-    // Comparer IDs ET catégories pour détecter les renommages de dossiers
-    var a = fresh.map(function(v){return v.id+'|'+(v._category||'');}).sort().join(',');
+    // Comparer IDs ET catégories normalisées (symétrique des deux côtés)
+    var a = freshNorm.map(function(v){return v.id+'|'+(v._cat||'');}).sort().join(',');
     var b = allVideos.map(function(v){return v.id+'|'+(v._cat||'');}).sort().join(',');
-    if (a !== b) {
-      allVideos = dedup(fresh).map(function(v){ return Object.assign({},v,{_cat:categorize(v)}); });
+    // Re-render si contenu différent OU si c'est le premier refresh de session (login/reconnexion/refresh token)
+    if (a !== b || isLoginRefresh) {
+      allVideos = dedup(freshNorm);
       renderAll();
     }
   } catch(e) { console.warn('bg refresh:', e.message); }
