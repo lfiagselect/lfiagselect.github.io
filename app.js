@@ -1527,7 +1527,7 @@ function videoCard(v, isNew) {
     +'<span style="font-family:var(--font-display);font-size:2rem;font-weight:700;color:'+_fg+';letter-spacing:-.02em;">'+_init+'</span></div>';
   var _thumbUrl = v.thumbnailLink ? v.thumbnailLink.replace('=s220', isMobile()?'=s320':'=s560') : null;
   var thumb = _fbk + (_thumbUrl
-    ? '<img src="'+_thumbUrl+'" alt="'+escHtml(v.name)+'" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">'
+    ? '<img src="'+escAttr(_thumbUrl)+'" alt="'+escAttr(v.name)+'" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">'
     : '');
   const dur = v.videoMediaMetadata && v.videoMediaMetadata.durationMillis
     ? formatDuration(parseInt(v.videoMediaMetadata.durationMillis)) : '';
@@ -1541,16 +1541,16 @@ function videoCard(v, isNew) {
     ? '<div class="progress-bar"><div class="progress-bar-fill" style="width:100%"></div></div>'
     : '';
   if (v.mimeType === 'application/pdf') {
-    return '<div class="video-card" style="cursor:pointer" onclick="openVideo(' + JSON.stringify(v.id) + ')">' +
+    return '<div class="video-card" style="cursor:pointer" data-vid="' + escAttr(v.id) + '" onclick="openVideo(this.dataset.vid)">' +
       '<div class="vc-thumb" style="aspect-ratio:3/4;background:#1a1a2e;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.5rem;">' +
-      (v.thumbnailLink ? '<img src="' + v.thumbnailLink + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.25;" loading="lazy">' : '') +
+      (v.thumbnailLink ? '<img src="' + escAttr(v.thumbnailLink) + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.25;" loading="lazy" decoding="async" alt="">' : '') +
       '<svg width="32" height="32" viewBox="0 0 24 24" fill="#c49b64"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5z"/></svg>' +
       '<span style="color:#c49b64;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">PDF</span>' +
       '</div>' +
       '<div class="vc-info"><div class="vc-title">' + escHtml(v.name.replace(/\.pdf$/i,'')) + '</div>' +
       '<div class="vc-meta" style="color:#c49b64;">📖 Lire</div></div></div>';
   }
-  return '<div class="video-card" tabindex="0" onclick="openVideo(\'' + v.id + '\')">'
+  return '<div class="video-card" tabindex="0" data-vid="' + escAttr(v.id) + '" onclick="openVideo(this.dataset.vid)" onkeydown="if(event.key===\'Enter\')openVideo(this.dataset.vid)">'
     + '<div class="thumb-wrap">' + thumb
     + '<div class="play-overlay"><div class="play-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>'
     + newBadge + vuBadge + ncBadge + durBadge + progressBar + '</div>'
@@ -1631,7 +1631,7 @@ function renderStreamingRows(el){
 }
 
 function spRow(label, catId, videos, isNew){
-  var clickAttr = catId ? ('onclick="selectCatFromGrid(\''+catId.replace(/'/g,"\\'")+'\')"') : '';
+  var clickAttr = catId ? ('data-catid="'+escAttr(catId)+'" onclick="selectCatFromGrid(this.dataset.catid)"') : '';
   var titleClass = isNew ? 'sp-row-title new-title' : 'sp-row-title';
   var cards = videos.map(function(v){
     var c = videoCard(v, isNew);
@@ -1760,7 +1760,9 @@ function stopAllPreviews() {
       thumbWrap.appendChild(p);
     }
     if (p.dataset.vid !== id){
-      p.innerHTML = '<iframe src="https://drive.google.com/file/d/'+id+'/preview?autoplay=1&mute=1" allow="autoplay" frameborder="0"></iframe>';
+      // Sanitize id: only allow Google Drive file ID chars [A-Za-z0-9_-]
+      var safeId = String(id).replace(/[^A-Za-z0-9_-]/g, '');
+      p.innerHTML = '<iframe src="https://drive.google.com/file/d/'+safeId+'/preview?autoplay=1&mute=1" allow="autoplay" frameborder="0"></iframe>';
       p.dataset.vid = id;
     }
     requestAnimationFrame(function(){ p.classList.add('show'); });

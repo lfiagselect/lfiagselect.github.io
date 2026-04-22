@@ -1,7 +1,6 @@
-// LFIAGtube — Service Worker v4
-// Stratégie : network-first pour HTML/JS/CSS (toujours la dernière version)
-// Cache-first uniquement pour icons/manifest/images statiques
-const CACHE_VERSION = 'lfiag-v4-202604200000';
+// LFIAGtube — Service Worker v5
+// Stratégie: network-first HTML (freshness), stale-while-revalidate JS/CSS (perf), cache-first assets
+const CACHE_VERSION = 'lfiag-v5-202604220000';
 const CACHE_NAME = CACHE_VERSION;
 const SHELL_ASSETS = [
   '/manifest.json',
@@ -62,11 +61,11 @@ self.addEventListener('fetch', event => {
   if (req.method !== 'GET') { event.respondWith(fetch(req)); return; }
 
   const path = url.pathname;
-  const isNav = req.mode === 'navigate' || path === '/' || path === '/index.html';
-  const isAppCode = /\.(js|css|html)$/i.test(path);
+  const isNav = req.mode === 'navigate' || path === '/' || path === '/index.html' || /\.html$/i.test(path);
+  const isJsCss = /\.(js|css|mjs)$/i.test(path);
 
-  // Network-first pour HTML + JS + CSS (code app change souvent)
-  if (isNav || isAppCode) {
+  // Network-first pour HTML (freshness max: shell change souvent)
+  if (isNav) {
     event.respondWith(
       fetch(req, { cache: 'no-cache' })
         .then(response => {
@@ -77,6 +76,23 @@ self.addEventListener('fetch', event => {
           return response;
         })
         .catch(() => caches.match(req).then(cached => cached || caches.match('/index.html')))
+    );
+    return;
+  }
+
+  // Stale-while-revalidate pour JS/CSS (instant load + background refresh)
+  if (isJsCss) {
+    event.respondWith(
+      caches.match(req).then(cached => {
+        const networkFetch = fetch(req).then(fresh => {
+          if (fresh && fresh.ok) {
+            const clone = fresh.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
+          }
+          return fresh;
+        }).catch(() => cached);
+        return cached || networkFetch;
+      })
     );
     return;
   }
