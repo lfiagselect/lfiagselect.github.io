@@ -796,7 +796,11 @@ function _checkAccessBackground() {
 // ============================================
 function callScript(action, params, retry) {
   params=params||{}; retry=retry||0;
+  var MAX_RETRY=3;
+  // Exponential backoff: 0ms, 1s, 2s, 4s
+  var backoff=retry===0?0:Math.min(1000*Math.pow(2,retry-1),4000);
   return new Promise(function(resolve,reject){
+    setTimeout(function(){
     var cb='cb_'+Math.random().toString(36).slice(2), done=false;
     var slowTimer=setTimeout(function(){
       if(!done) setLoadingMsg('Connexion lente… encore quelques secondes');
@@ -804,8 +808,10 @@ function callScript(action, params, retry) {
     var timer=setTimeout(function(){
       if(done)return; done=true; clearTimeout(slowTimer); delete window[cb];
       var el=document.getElementById(cb); if(el)el.remove();
-      if(retry<1) callScript(action,params,retry+1).then(resolve).catch(reject);
-      else reject(new Error('Serveur introuvable. Réessayez.'));
+      if(retry<MAX_RETRY){
+        console.warn('[callScript] retry '+(retry+1)+'/'+MAX_RETRY+' action='+action);
+        callScript(action,params,retry+1).then(resolve).catch(reject);
+      } else reject(new Error('Serveur introuvable après '+MAX_RETRY+' tentatives. Réessayez.'));
     },12000);
     window[cb]=function(data){
       if(done)return; done=true; clearTimeout(timer); clearTimeout(slowTimer); delete window[cb];
@@ -815,8 +821,16 @@ function callScript(action, params, retry) {
     var s=document.createElement('script');
     s.id=cb;
     s.src=SCRIPT_URL+'?'+new URLSearchParams(Object.assign({action:action,callback:cb},params)).toString();
-    s.onerror=function(){if(done)return;done=true;clearTimeout(timer);delete window[cb];reject(new Error('Erreur réseau'));};
+    s.onerror=function(){
+      if(done)return;done=true;clearTimeout(timer);clearTimeout(slowTimer);delete window[cb];
+      var el=document.getElementById(cb); if(el)el.remove();
+      if(retry<MAX_RETRY){
+        console.warn('[callScript] network err retry '+(retry+1)+'/'+MAX_RETRY);
+        callScript(action,params,retry+1).then(resolve).catch(reject);
+      } else reject(new Error('Erreur réseau après '+MAX_RETRY+' tentatives'));
+    };
     document.body.appendChild(s);
+    },backoff);
   });
 }
 
@@ -1527,7 +1541,7 @@ function videoCard(v, isNew) {
     +'<span style="font-family:var(--font-display);font-size:2rem;font-weight:700;color:'+_fg+';letter-spacing:-.02em;">'+_init+'</span></div>';
   var _thumbUrl = v.thumbnailLink ? v.thumbnailLink.replace('=s220', isMobile()?'=s320':'=s560') : null;
   var thumb = _fbk + (_thumbUrl
-    ? '<img src="'+escAttr(_thumbUrl)+'" alt="'+escAttr(v.name)+'" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">'
+    ? '<img src="'+escAttr(_thumbUrl)+'" alt="'+escAttr(v.name)+'" loading="lazy" decoding="async" onload="this.classList.add(\'loaded\')" onerror="this.style.display=\'none\'">'
     : '');
   const dur = v.videoMediaMetadata && v.videoMediaMetadata.durationMillis
     ? formatDuration(parseInt(v.videoMediaMetadata.durationMillis)) : '';
@@ -1541,7 +1555,7 @@ function videoCard(v, isNew) {
     ? '<div class="progress-bar"><div class="progress-bar-fill" style="width:100%"></div></div>'
     : '';
   if (v.mimeType === 'application/pdf') {
-    return '<div class="video-card" style="cursor:pointer" data-vid="' + escAttr(v.id) + '" onclick="openVideo(this.dataset.vid)">' +
+    return '<div class="video-card" style="cursor:pointer" tabindex="0" role="button" aria-label="'+escAttr('Ouvrir PDF: '+v.name.replace(/\.pdf$/i,""))+'" data-vid="' + escAttr(v.id) + '" onclick="openVideo(this.dataset.vid)" onkeydown="if(event.key===\'Enter\')openVideo(this.dataset.vid)">' +
       '<div class="vc-thumb" style="aspect-ratio:3/4;background:#1a1a2e;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.5rem;">' +
       (v.thumbnailLink ? '<img src="' + escAttr(v.thumbnailLink) + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.25;" loading="lazy" decoding="async" alt="">' : '') +
       '<svg width="32" height="32" viewBox="0 0 24 24" fill="#c49b64"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5z"/></svg>' +
@@ -1550,9 +1564,9 @@ function videoCard(v, isNew) {
       '<div class="vc-info"><div class="vc-title">' + escHtml(v.name.replace(/\.pdf$/i,'')) + '</div>' +
       '<div class="vc-meta" style="color:#c49b64;">📖 Lire</div></div></div>';
   }
-  return '<div class="video-card" tabindex="0" data-vid="' + escAttr(v.id) + '" onclick="openVideo(this.dataset.vid)" onkeydown="if(event.key===\'Enter\')openVideo(this.dataset.vid)">'
+  return '<div class="video-card" tabindex="0" role="button" aria-label="'+escAttr('Lire vidéo: '+v.name.replace(/\.[^.]+$/,""))+'" data-vid="' + escAttr(v.id) + '" onclick="openVideo(this.dataset.vid)" onkeydown="if(event.key===\'Enter\')openVideo(this.dataset.vid)">'
     + '<div class="thumb-wrap">' + thumb
-    + '<div class="play-overlay"><div class="play-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>'
+    + '<div class="play-overlay" role="button" aria-label="Lire '+escAttr(v.name.replace(/\.[^.]+$/,""))+'"><div class="play-btn" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>'
     + newBadge + vuBadge + ncBadge + durBadge + progressBar + '</div>'
     + '<div class="card-body">'
     + '<div class="card-category">' + escHtml(v._cat) + '</div>'
@@ -1701,13 +1715,46 @@ function renderVideos() {
     ? '<span class="back-to-grid" onclick="selectCatFromGrid(\'Tout\')">'
       + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>'
       + ' Retour aux univers</span>' : '';
+  // Pagination: batch N=20, IntersectionObserver append
+  var PAGE = 20;
+  var sorted = applySortToVideos(filtered);
+  var first = sorted.slice(0, PAGE);
   el.innerHTML =
     (backBtn ? '<div>' + backBtn + '</div>' : '') +
     '<div class="section-header"><span class="section-title">' +
     (activeCategory!=='Tout'?escHtml(activeCategory):'Résultats') +
     '</span><span class="section-count">' + filtered.length + ' vidéo' + (filtered.length>1?'s':'') + '</span>' +
     '<div class="section-divider"></div></div>' +
-    '<div class="video-grid">' + applySortToVideos(filtered).map(function(v){return videoCard(v);}).join('') + '</div>';
+    '<div class="video-grid" id="videoGrid">' + first.map(function(v){return videoCard(v);}).join('') + '</div>' +
+    (sorted.length > PAGE ? '<div id="pagSentinel" style="height:1px;margin-top:2rem;"></div>' : '');
+  if (sorted.length > PAGE) _pagInit(sorted, PAGE);
+}
+
+// Pagination state + IntersectionObserver
+var _pagObserver = null;
+function _pagInit(sorted, pageSize) {
+  var offset = pageSize;
+  var grid = document.getElementById('videoGrid');
+  var sentinel = document.getElementById('pagSentinel');
+  if (!grid || !sentinel) return;
+  if (_pagObserver) { try{_pagObserver.disconnect();}catch(e){} }
+  if (!('IntersectionObserver' in window)) {
+    // Fallback: render tout
+    grid.insertAdjacentHTML('beforeend', sorted.slice(offset).map(function(v){return videoCard(v);}).join(''));
+    sentinel.remove();
+    return;
+  }
+  _pagObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (!entry.isIntersecting) return;
+      var next = sorted.slice(offset, offset + pageSize);
+      if (!next.length) { _pagObserver.disconnect(); sentinel.remove(); return; }
+      grid.insertAdjacentHTML('beforeend', next.map(function(v){return videoCard(v);}).join(''));
+      offset += pageSize;
+      if (offset >= sorted.length) { _pagObserver.disconnect(); sentinel.remove(); }
+    });
+  }, { rootMargin: '400px 0px', threshold: 0 });
+  _pagObserver.observe(sentinel);
 }
 
 function stopAllPreviews() {
@@ -1825,10 +1872,10 @@ function openVideo(id) {
     try {
       var vwt=JSON.parse(localStorage.getItem('lfiag_views')||'{}');
       vwt[id]=(vwt[id]||0)+1;
-      localStorage.setItem('lfiag_views',JSON.stringify(vwt));
+      lsSetDebounced('lfiag_views',JSON.stringify(vwt));
       var _hht=JSON.parse(localStorage.getItem('lfiag_history')||'{}');
       _hht[id]={ts:Date.now()};
-      localStorage.setItem('lfiag_history',JSON.stringify(_hht));
+      lsSetDebounced('lfiag_history',JSON.stringify(_hht));
     } catch(e) {}
     setTimeout(function(){ updateHeroWidgets(); }, 100);
     return;
@@ -1844,7 +1891,7 @@ function openVideo(id) {
   try {
     var vw=JSON.parse(localStorage.getItem('lfiag_views')||'{}');
     vw[id]=(vw[id]||0)+1;
-    localStorage.setItem('lfiag_views',JSON.stringify(vw));
+    lsSetDebounced('lfiag_views',JSON.stringify(vw));
     if(!window._sharedStats) window._sharedStats={};
     if(!window._sharedStats[id]) window._sharedStats[id]={views:0,likes:0};
     window._sharedStats[id].views=vw[id];
@@ -1855,7 +1902,7 @@ function openVideo(id) {
   try {
     var _hh = JSON.parse(localStorage.getItem('lfiag_history')||'{}');
     _hh[id] = {ts: Date.now()};
-    localStorage.setItem('lfiag_history', JSON.stringify(_hh));
+    lsSetDebounced('lfiag_history', JSON.stringify(_hh));
   } catch(e) {}
   setTimeout(function(){ updateModalLikes(id); }, 50);
   // Rafraîchir le bouton hero
@@ -1923,11 +1970,66 @@ function closeModal() {
   if(vid){ try{ var h=JSON.parse(localStorage.getItem('lfiag_history')||'{}'); h[vid]={ts:Date.now()}; localStorage.setItem('lfiag_history',JSON.stringify(h)); }catch(e){} modal._currentVideoId=null; }
   if(typeof _iosFakeFS !== 'undefined' && _iosFakeFS) _iosExitFakeFS();
   modal.classList.remove('open');
+  modal.removeAttribute('aria-modal');
+  modal.removeAttribute('role');
   document.getElementById('modalPlayer').innerHTML='';
   document.body.style.overflow='';
-  stopAllPreviews(); // sécurité : au cas où une preview a démarré pendant le modal
+  stopAllPreviews();
   updateHeroWidgets();
+  // Restore focus to previously-focused element (a11y)
+  if (modal._lastFocused && typeof modal._lastFocused.focus === 'function') {
+    try { modal._lastFocused.focus(); } catch(e) {}
+    modal._lastFocused = null;
+  }
 }
+
+// ============================================
+// Focus trap modal (WCAG 2.1 a11y)
+// ============================================
+function _modalFocusables(modal) {
+  return Array.from(modal.querySelectorAll(
+    'button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"]),iframe'
+  )).filter(function(el){
+    return el.offsetParent !== null || el.tagName === 'IFRAME';
+  });
+}
+function _trapModalFocus(e) {
+  var modal = document.getElementById('modal');
+  if (!modal || !modal.classList.contains('open')) return;
+  if (e.key !== 'Tab') return;
+  var focusables = _modalFocusables(modal);
+  if (!focusables.length) { e.preventDefault(); return; }
+  var first = focusables[0], last = focusables[focusables.length-1];
+  var active = document.activeElement;
+  if (e.shiftKey) {
+    if (active === first || !modal.contains(active)) { e.preventDefault(); last.focus(); }
+  } else {
+    if (active === last || !modal.contains(active)) { e.preventDefault(); first.focus(); }
+  }
+}
+document.addEventListener('keydown', _trapModalFocus);
+
+// Hook openVideo to save last-focused + set ARIA
+(function(){
+  var _origOpen = window.openVideo;
+  if (typeof _origOpen !== 'function') return;
+  window.openVideo = function(id) {
+    var modal = document.getElementById('modal');
+    if (modal) {
+      modal._lastFocused = document.activeElement;
+      modal.setAttribute('aria-modal', 'true');
+      modal.setAttribute('role', 'dialog');
+      modal.setAttribute('aria-label', 'Lecteur vidéo');
+    }
+    var r = _origOpen.apply(this, arguments);
+    // Auto-focus first focusable after open
+    setTimeout(function(){
+      var f = _modalFocusables(modal);
+      if (f.length) f[0].focus();
+    }, 100);
+    return r;
+  };
+})();
 
 
 
@@ -1952,6 +2054,31 @@ function saveSettings() { localStorage.setItem('lfiag_settings_v2',JSON.stringif
 // ============================================
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+// ============================================
+// Debounced localStorage writes (perf iOS main thread)
+// ============================================
+var _lsCache = {}; var _lsTimers = {};
+function lsSetDebounced(key, value, delay) {
+  delay = delay || 200;
+  _lsCache[key] = value;
+  if (_lsTimers[key]) clearTimeout(_lsTimers[key]);
+  _lsTimers[key] = setTimeout(function(){
+    try { localStorage.setItem(key, _lsCache[key]); } catch(e) {}
+    delete _lsTimers[key];
+  }, delay);
+}
+function lsGetCached(key) {
+  if (key in _lsCache) return _lsCache[key];
+  try { return localStorage.getItem(key); } catch(e) { return null; }
+}
+// Flush pending writes on page unload
+window.addEventListener('beforeunload', function(){
+  Object.keys(_lsTimers).forEach(function(k){
+    clearTimeout(_lsTimers[k]);
+    try { localStorage.setItem(k, _lsCache[k]); } catch(e) {}
+  });
+});
 function getSharedStats() {
   var views = {}; var likes = {};
   try { views = JSON.parse(localStorage.getItem('lfiag_views')||'{}'); } catch(e) {}

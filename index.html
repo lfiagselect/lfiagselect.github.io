@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <!-- Content Security Policy: harden XSS + CDN allowlist -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://accounts.google.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; frame-src https://drive.google.com https://docs.google.com https://accounts.google.com https://content.googleapis.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com https://www.googleapis.com https://accounts.google.com https://oauth2.googleapis.com https://content.googleapis.com; worker-src 'self' blob:; manifest-src 'self'; base-uri 'self'; form-action 'self' https://script.google.com; object-src 'none'; frame-ancestors 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://script.google.com https://script.googleusercontent.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https://drive.google.com https://*.googleusercontent.com; frame-src https://drive.google.com https://docs.google.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com; worker-src 'self' blob:; manifest-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'self';">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <title>LFIAGtube</title>
@@ -362,7 +362,8 @@ main{max-width:100%;margin:0 auto;padding:1.2rem 2rem 5rem}
 .video-card{background:rgba(20,20,22,.8);border:1px solid rgba(255,255,255,.07);border-radius:18px;overflow:hidden;cursor:pointer;transition:.2s border-color;content-visibility:auto;contain-intrinsic-size:auto 280px}
 .video-card:hover{transform:scale(1.02) translateY(-2px);border-color:rgba(255,255,255,.16);box-shadow:0 16px 40px rgba(0,0,0,.4)}
 .thumb-wrap{position:relative;aspect-ratio:16/9;background:#0c0c10;overflow:hidden}
-.thumb-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:translateZ(0)}
+.thumb-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:translateZ(0);filter:blur(14px);opacity:0;transition:filter .4s ease,opacity .4s ease}
+.thumb-wrap img.loaded{filter:blur(0);opacity:1}
 
 .play-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.32);opacity:0;transition:.2s opacity}
 .video-card:hover .play-overlay{opacity:1}
@@ -952,7 +953,7 @@ if ('serviceWorker' in navigator) {
   <div class="admin-dropdown-head">
     <span class="admin-dropdown-title">&#x1F6E1; Gestion des acc&#xe8;s</span>
     <button class="btn" onclick="adminInvalidateCache(event)" style="font-size:.68rem;padding:.2rem .5rem;background:rgba(255,214,10,.08);border-color:rgba(255,214,10,.2);color:var(--gold)" title="Vider le cache Drive">&#8635; Cache</button>
-    <button class="admin-dropdown-close" onclick="toggleAdminDropdown()">&#x2715;</button>
+    <button class="admin-dropdown-close" onclick="toggleAdminDropdown()" aria-label="Fermer menu admin">&#x2715;</button>
   </div>
   <div class="admin-add-row">
     <input type="email" id="newUserEmail" placeholder="email@exemple.com" autocomplete="off">
@@ -1084,7 +1085,7 @@ if ('serviceWorker' in navigator) {
     <div class="settings-panel" id="settingsPanel" role="region" aria-label="Mon compte">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
         <strong style="font-size:.9rem">Mon compte</strong>
-        <button class="btn" onclick="document.getElementById('settingsPanel').classList.remove('open');document.body.style.overflow=''" style="font-size:.72rem;padding:.3rem .65rem">&#x2715;</button>
+        <button class="btn" onclick="document.getElementById('settingsPanel').classList.remove('open');document.body.style.overflow=''" style="font-size:.72rem;padding:.3rem .65rem" aria-label="Fermer paramètres">&#x2715;</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:.65rem">
         <div style="display:flex;align-items:center;gap:.85rem;padding:.9rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px">
@@ -1117,7 +1118,7 @@ if ('serviceWorker' in navigator) {
             <source src="/images/alune-thevoice-preview.mp4" type="video/mp4">
           </video>
           <div class="alune-preview-bar"></div>
-          <button class="alune-mute-btn" onclick="event.stopPropagation();aluneMuteToggle(this)"><svg class="alune-mute-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
+          <button class="alune-mute-btn" onclick="event.stopPropagation();aluneMuteToggle(this)" aria-label="Activer/désactiver son aperçu"><svg class="alune-mute-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
           <div class="alune-overlay"></div>
           <div class="alune-content">
             <div class="alune-tag">
@@ -1143,7 +1144,7 @@ if ('serviceWorker' in navigator) {
             <source src="/images/alune-effetlara-preview.mp4" type="video/mp4">
           </video>
           <div class="alune-preview-bar"></div>
-          <button class="alune-mute-btn" onclick="event.stopPropagation();aluneMuteToggle(this)"><svg class="alune-mute-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
+          <button class="alune-mute-btn" onclick="event.stopPropagation();aluneMuteToggle(this)" aria-label="Activer/désactiver son aperçu"><svg class="alune-mute-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
           <div class="alune-overlay"></div>
           <div class="alune-content">
             <div class="alune-tag">
