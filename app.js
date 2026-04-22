@@ -1935,7 +1935,32 @@ function buildIframePlayer(container, id) {
   container.appendChild(_sp);
   container.appendChild(_if);
 
-  // Boutons iOS/TV "Plein écran" retirés (demande Nicolas 2026-04-22)
+  // Bouton plein écran mobile (iOS fake-fs, Android/TV requestFullscreen)
+  var _isMobile = window.matchMedia && window.matchMedia('(max-width:1023px)').matches;
+  var isIOSua = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if (_isMobile || isTV) {
+    var fsBtn = document.createElement('button');
+    fsBtn.id = 'mobFsBtn';
+    fsBtn.setAttribute('aria-label','Plein écran');
+    fsBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
+    fsBtn.style.cssText = 'position:absolute;bottom:10px;right:10px;z-index:20;background:rgba(0,0,0,.75);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);';
+    fsBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      if (isIOSua) {
+        if (_iosFakeFS) _iosExitFakeFS(); else _iosEnterFakeFS();
+      } else {
+        var el = document.getElementById('modalPlayer') || document.getElementById('modal');
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+          (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        } else if (el && el.requestFullscreen) {
+          el.requestFullscreen().catch(function(){});
+        } else if (el && el.webkitRequestFullscreen) {
+          el.webkitRequestFullscreen();
+        }
+      }
+    });
+    container.appendChild(fsBtn);
+  }
 }
 
 function iframeLoaded() {
