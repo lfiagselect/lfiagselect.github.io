@@ -1935,29 +1935,7 @@ function buildIframePlayer(container, id) {
   container.appendChild(_sp);
   container.appendChild(_if);
 
-  // iOS : bouton fullscreen (orientationchange + manuel)
-  var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
-  if (isIOS) {
-    var iosBtn = document.createElement('button');
-    iosBtn.className = 'ios-fs-btn';
-    iosBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg> Plein écran';
-    iosBtn.addEventListener('click', function() { if(_iosFakeFS) _iosExitFakeFS(); else _iosEnterFakeFS(); });
-    container.appendChild(iosBtn);
-  }
-
-  // Sur TV : bouton plein écran accessible au D-pad
-  if(isTV) {
-    var fsBtn = document.createElement('button');
-    fsBtn.id = 'tvFullscreenBtn';
-    fsBtn.textContent = '⛶ Plein écran';
-    fsBtn.style.cssText = 'position:absolute;bottom:12px;right:12px;z-index:10;background:rgba(0,0,0,.7);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:.45rem .9rem;font-size:.82rem;cursor:pointer;';
-    fsBtn.addEventListener('click', function(){
-      var el = document.getElementById('modalPlayer') || document.getElementById('modal');
-      if(el && el.requestFullscreen) el.requestFullscreen();
-      else if(el && el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    });
-    container.appendChild(fsBtn);
-  }
+  // Boutons iOS/TV "Plein écran" retirés (demande Nicolas 2026-04-22)
 }
 
 function iframeLoaded() {
