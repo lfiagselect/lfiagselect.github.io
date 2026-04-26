@@ -8,6 +8,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <title>LFIAGtube</title>
+<script>(function(){var ua=navigator.userAgent||'';var isTV=/Silk|SilkBrowser/i.test(ua)||/AppleTV|tvOS/i.test(ua)||/Tizen/i.test(ua)||/WebOS|Web0S/i.test(ua)||/SMART-TV|SmartTV/i.test(ua)||/CrKey/i.test(ua)||/Android.*TV|TV.*Android/i.test(ua)||(screen.width>=1280&&!('ontouchstart' in window)&&window.matchMedia&&window.matchMedia('(hover:none)').matches);if(isTV)document.documentElement.classList.add('is-tv');})();</script>
 <!-- Open Graph / WhatsApp / Messenger / iMessage -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://lfiagselect.github.io">
@@ -1298,6 +1299,15 @@ if ('serviceWorker' in navigator) {
   @keyframes lfiagTypeWriter{to{max-width:320px}}
   #lfiagLoader{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .8s ease,transform .8s ease;overflow:hidden}
   #lfiagLoader.lfiag-hide{opacity:0;transform:scale(1.05);pointer-events:none}
+  /* TV: loader compact (sinon gigantesque sur 1920+) */
+  .is-tv #lfiagLoader .lfi-loader{width:280px !important;height:200px !important}
+  .is-tv #lfiagLoader .lfi-icon{width:200px !important;max-width:none !important;border-radius:6px}
+  .is-tv #lfiagLoader .lfi-halo{width:340px !important;height:340px !important}
+  .is-tv #lfiagLoader .lfi-ring-1{width:300px !important;height:300px !important}
+  .is-tv #lfiagLoader .lfi-ring-2{width:360px !important;height:360px !important}
+  .is-tv #lfiagLoader .lfi-ring-3{width:420px !important;height:420px !important}
+  .is-tv #lfiagLoader .lfi-bar-wrap{width:200px !important;margin-top:2rem !important}
+  .is-tv #lfiagLoader .lfi-msg{font-size:.85rem !important;margin-top:1.4rem !important;letter-spacing:.3em !important}
 
   /* ── Grille catégories vignettes ── */
   .cat-grid-section{margin-bottom:2.2rem}
