@@ -2820,10 +2820,19 @@ if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream) document.d
   function nfxRender(){
     var host = document.getElementById('nfxApp');
     if (!host) return;
-    if (typeof allVideos === 'undefined' || !allVideos.length) { host.innerHTML='<p style="padding:4rem;color:#888;text-align:center">Chargement…</p>'; return; }
+    if (typeof allVideos === 'undefined' || !allVideos.length) {
+      host.innerHTML='<p style="padding:4rem;color:#888;text-align:center">Chargement…</p>';
+      return;
+    }
+    document.body.classList.add('nfx-active');
     var ac = (typeof activeCategory!=='undefined') ? activeCategory : 'Tout';
-    if (ac === 'Tout' || ac === '__new__') _renderHome(host);
-    else _renderCatView(host, ac);
+    if (ac === 'Tout' || ac === '__new__') {
+      document.body.classList.remove('nfx-catview');
+      _renderHome(host);
+    } else {
+      document.body.classList.add('nfx-catview');
+      _renderCatView(host, ac);
+    }
   }
 
   // Monkey-patch renderAll to also call nfxRender
