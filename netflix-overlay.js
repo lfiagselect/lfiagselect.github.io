@@ -56,8 +56,26 @@
   function escAttr(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
   function escHtml(s){ return String(s==null?'':s).replace(/[&<>]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
 
-  function getAllVideos(){
-    return Array.isArray(window.allVideos) ? window.allVideos : [];
+  // `let allVideos` au top-level d'app.js n'est PAS sur window.
+  // On lit donc l'état depuis le DOM rendu par renderStreamingRows().
+  function readCatsFromDom(){
+    var rows = document.querySelectorAll('.sp-rows .sp-row');
+    var cats = [];
+    rows.forEach(function(row){
+      var titleEl = row.querySelector('.sp-row-title');
+      if (!titleEl) return;
+      var label = (titleEl.textContent||'').trim();
+      // Skip system rows
+      if (/Derniers ajouts|Continuer/i.test(label)) return;
+      // Get catId from data-catid attribute (set by spRow)
+      var dataCatId = titleEl.getAttribute('data-catid');
+      var catId = dataCatId || label;
+      cats.push(catId);
+    });
+    return cats;
+  }
+  function hasRenderedContent(){
+    return !!document.querySelector('.sp-rows .sp-row');
   }
   function selectCat(cat){
     if (typeof window.setAluneCategory === 'function') return window.setAluneCategory(cat);
@@ -69,10 +87,11 @@
     if (_bbInstalled) return;
     var hero = document.querySelector('.hero');
     if (!hero) return;
-    var videos = getAllVideos();
-    if (!videos.length) return;
-    var slides = BILLBOARD_SLIDES.filter(function(s){ return videos.some(function(v){return v._cat === s.cat;}); });
-    if (!slides.length) return;
+    if (!hasRenderedContent()) return;
+    var domCats = readCatsFromDom();
+    var slides = BILLBOARD_SLIDES.filter(function(s){ return domCats.indexOf(s.cat) !== -1; });
+    // Fallback: si aucune cat match strict, montre les slides quand même (la nav par cat fail mais visuel OK)
+    if (!slides.length) slides = BILLBOARD_SLIDES.slice();
 
     var bb = document.createElement('section');
     bb.className = 'nfx-billboard';
@@ -155,9 +174,7 @@
     if (_top10Installed) return;
     var rows = document.querySelector('.sp-rows');
     if (!rows) return;
-    var videos = getAllVideos();
-    if (!videos.length) return;
-    var cats = Array.from(new Set(videos.map(function(v){return v._cat;}).filter(Boolean))).sort();
+    var cats = readCatsFromDom();
     if (cats.length < 3) return;
     cats = cats.slice(0, 10);
 
@@ -198,17 +215,23 @@
   }
 
   document.addEventListener('lfiag:ready', function(){
-    setTimeout(apply, 80);
+    setTimeout(apply, 200);
   });
 
   var poll = 0;
   var pollIv = setInterval(function(){
     poll++;
     if (_bbInstalled && _top10Installed) { clearInterval(pollIv); return; }
-    if (poll > 30) { clearInterval(pollIv); return; }
-    if (getAllVideos().length && document.querySelector('.sp-rows')) {
+    if (poll > 60) { clearInterval(pollIv); return; }
+    if (hasRenderedContent()) {
       apply();
       if (_bbInstalled && _top10Installed) clearInterval(pollIv);
     }
   }, 500);
+
+  var mo = new MutationObserver(function(){
+    if (hasRenderedContent() && (!_bbInstalled || !_top10Installed)) apply();
+  });
+  if (document.body) mo.observe(document.body, {childList:true, subtree:true});
+  else document.addEventListener('DOMContentLoaded', function(){ mo.observe(document.body, {childList:true, subtree:true}); });
 })();
