@@ -272,17 +272,33 @@
     window.addEventListener('scroll', apply, {passive:true});
   }
 
-  // ── Cat-view body class toggle ─────────────
+  // ── Cat-view body class toggle (manual, click-driven) ─
   function installCatViewWatcher(){
-    function update(){
-      var content = document.getElementById('content');
-      var hasContent = content && content.children && content.children.length > 0 && content.style.display !== 'none';
-      document.body.classList.toggle('nfx-catview', !!hasContent);
+    // Hook into setAluneCategory / selectCatFromGrid to mark cat-view
+    var origSetAlune = window.setAluneCategory;
+    if (typeof origSetAlune === 'function'){
+      window.setAluneCategory = function(cat){
+        var r = origSetAlune.apply(this, arguments);
+        if (cat && cat !== 'Tout') document.body.classList.add('nfx-catview');
+        else document.body.classList.remove('nfx-catview');
+        return r;
+      };
     }
-    update();
-    var mo = new MutationObserver(update);
-    var content = document.getElementById('content');
-    if (content) mo.observe(content, {childList:true, attributes:true, attributeFilter:['style','class']});
+    var origSelectCat = window.selectCatFromGrid;
+    if (typeof origSelectCat === 'function'){
+      window.selectCatFromGrid = function(cat){
+        var r = origSelectCat.apply(this, arguments);
+        if (cat && cat !== 'Tout') document.body.classList.add('nfx-catview');
+        else document.body.classList.remove('nfx-catview');
+        return r;
+      };
+    }
+    // Also expose a back-to-home helper
+    window.nfxBackHome = function(){
+      document.body.classList.remove('nfx-catview');
+      if (typeof window.setAluneCategory === 'function') window.setAluneCategory('Tout');
+      window.scrollTo({top:0, behavior:'smooth'});
+    };
   }
 
   function apply(){
@@ -296,16 +312,23 @@
     setTimeout(apply, 200);
   });
 
-  // Scroll shadow + cat-view watcher: install once DOM is ready, regardless of poll
-  if (document.readyState !== 'loading'){
+  // Scroll shadow installs immediately. Cat-view watcher waits for app fns to be defined.
+  function _bootstrapWatchers(){
     installScrollShadow();
-    installCatViewWatcher();
-  } else {
-    document.addEventListener('DOMContentLoaded', function(){
-      installScrollShadow();
-      installCatViewWatcher();
-    });
+    var hookTries = 0;
+    var hookIv = setInterval(function(){
+      hookTries++;
+      if (typeof window.setAluneCategory === 'function' || typeof window.selectCatFromGrid === 'function'){
+        installCatViewWatcher();
+        clearInterval(hookIv);
+      } else if (hookTries > 30){
+        installCatViewWatcher(); // bind whatever exists, expose nfxBackHome anyway
+        clearInterval(hookIv);
+      }
+    }, 300);
   }
+  if (document.readyState !== 'loading') _bootstrapWatchers();
+  else document.addEventListener('DOMContentLoaded', _bootstrapWatchers);
 
   var poll = 0;
   var pollIv = setInterval(function(){
