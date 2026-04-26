@@ -2586,15 +2586,3 @@ if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream) document.d
     return Promise.reject();
   };
 })();
-
-/* expose globals — anti-mangle pour onclick inline */
-if (typeof window !== 'undefined') {
-  ['signIn','signOut','sendAccessRequest','toggleAdminDropdown','adminAddUser','adminInvalidateCache',
-   'refreshWithFeedback','heroContinueWatching','setAluneCategory','aluneStartPreview','aluneStopPreview',
-   'aluneMuteToggle','openCatDrawer','closeCatDrawer','toggleDeskDrawer','closeDeskDrawer','closeMobileFilters',
-   'resetMobileFilters','openVideo','closeModal','toggleLike','selectCatFromGrid','selectCatFromDrawer',
-   '_iosExitFakeFS','setSort','setAluneCategory'
-  ].forEach(function(name){
-    if (typeof eval(name) === 'function') window[name] = eval(name);
-  });
-}
