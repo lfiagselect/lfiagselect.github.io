@@ -56,26 +56,23 @@
   function escAttr(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
   function escHtml(s){ return String(s==null?'':s).replace(/[&<>]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
 
-  // `let allVideos` au top-level d'app.js n'est PAS sur window.
-  // On lit donc l'état depuis le DOM rendu par renderStreamingRows().
+  // App home rend `.cat-grid` (coverflow) ET `.alune-section`. On lit cats depuis [data-cat].
   function readCatsFromDom(){
-    var rows = document.querySelectorAll('.sp-rows .sp-row');
+    var nodes = document.querySelectorAll('.cat-grid .cov-card[data-cat], .cat-grid [data-cat]');
+    var seen = {};
     var cats = [];
-    rows.forEach(function(row){
-      var titleEl = row.querySelector('.sp-row-title');
-      if (!titleEl) return;
-      var label = (titleEl.textContent||'').trim();
-      // Skip system rows
-      if (/Derniers ajouts|Continuer/i.test(label)) return;
-      // Get catId from data-catid attribute (set by spRow)
-      var dataCatId = titleEl.getAttribute('data-catid');
-      var catId = dataCatId || label;
-      cats.push(catId);
+    nodes.forEach(function(n){
+      var c = n.getAttribute('data-cat');
+      if (c && !seen[c]) { seen[c] = 1; cats.push(c); }
     });
     return cats;
   }
   function hasRenderedContent(){
-    return !!document.querySelector('.sp-rows .sp-row');
+    return readCatsFromDom().length >= 3;
+  }
+  function getInsertionPoint(){
+    // Inserts top10 row AVANT le coverflow .cat-grid-section
+    return document.getElementById('catGridSection') || document.querySelector('.cat-grid-section') || document.querySelector('.alune-section');
   }
   function selectCat(cat){
     if (typeof window.setAluneCategory === 'function') return window.setAluneCategory(cat);
@@ -172,8 +169,8 @@
   // ── TOP 10 ROW ─────────────────────────────
   function installTop10(){
     if (_top10Installed) return;
-    var rows = document.querySelector('.sp-rows');
-    if (!rows) return;
+    var insertBefore = getInsertionPoint();
+    if (!insertBefore) return;
     var cats = readCatsFromDom();
     if (cats.length < 3) return;
     cats = cats.slice(0, 10);
@@ -194,7 +191,7 @@
       +   '<div class="nfx-top10-scroll">'+cards+'</div>'
       + '</div>';
 
-    rows.insertBefore(section, rows.firstChild);
+    insertBefore.parentNode.insertBefore(section, insertBefore);
 
     section.querySelectorAll('.nfx-top10-card').forEach(function(card){
       card.addEventListener('click', function(){ selectCat(card.dataset.cat); });
