@@ -9,11 +9,6 @@
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <title>LFIAGtube</title>
 <script>(function(){var ua=navigator.userAgent||'';var isTV=/Silk|SilkBrowser/i.test(ua)||/AppleTV|tvOS/i.test(ua)||/Tizen/i.test(ua)||/WebOS|Web0S/i.test(ua)||/SMART-TV|SmartTV/i.test(ua)||/CrKey/i.test(ua)||/Android.*TV|TV.*Android/i.test(ua)||(screen.width>=1280&&!('ontouchstart' in window)&&window.matchMedia&&window.matchMedia('(hover:none)').matches);if(isTV)document.documentElement.classList.add('is-tv');})();</script>
-<script>
-/* CACHE PURGE — force fresh load après bug Phase B */
-if("serviceWorker"in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})})}
-if("caches"in window){caches.keys().then(function(ks){ks.forEach(function(k){caches.delete(k)})})}
-</script>
 <!-- Open Graph / WhatsApp / Messenger / iMessage -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://lfiagselect.github.io">
@@ -36,7 +31,7 @@ if("caches"in window){caches.keys().then(function(ks){ks.forEach(function(k){cac
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LFIAGtube">
-<link rel="preload" href="/app.min.js?v=20260426-clean" as="script">
+<link rel="preload" href="/app.min.js" as="script">
 <link rel="preload" href="/images/hero-small.jpg" as="image" fetchpriority="high">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -975,6 +970,15 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <!-- Swiper 11 (coverflow) — CDN + SRI integrity hardening -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" integrity="sha384-gAPqlBuTCdtVcYt9ocMOYWrnBZ4XSL6q+4eXqwNycOr4iFczhNKtnYhF3NEXJM51" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" integrity="sha384-2UI1PfnXFjVMQ7/ZDEF70CR943oH3v6uZrFQGGqJYlvhh4g6z6uVktxYbOlAczav" crossorigin="anonymous" defer></script>
+<link rel="stylesheet" href="netflix-overlay.css?v=3">
+
+<style>
+/* TUDUM-like splash */
+#lfiagLoader .lfi-msg{font-family:'Poppins','Inter',sans-serif;font-weight:900;letter-spacing:.5em;font-size:1.2rem;color:#ffd60a;text-shadow:0 0 30px rgba(255,214,10,.6);animation:tudumPulse 1.4s ease-in-out infinite}
+@keyframes tudumPulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
+</style>
 </head>
 <body>
 <button class="ios-exit-fs-btn" id="iosExitFsBtn" onclick="_iosExitFakeFS()" aria-label="Quitter plein écran">× Quitter</button>
@@ -1109,156 +1113,7 @@ if ('serviceWorker' in navigator) {
 <!-- SCREEN: APP -->
 <div id="screen-app" class="screen">
   <main id="main-content">
-    <section class="hero" aria-label="En-t&#xea;te">
-      <picture>
-        <source type="image/webp" srcset="/images/hero-small.webp 800w,/images/hero-bg.webp 1920w" sizes="100vw">
-        <img class="hero-bg-img" src="/images/hero-small.jpg" srcset="/images/hero-small.jpg 800w,/images/hero-bg.jpg 1920w" sizes="100vw" alt="" aria-hidden="true" fetchpriority="high" decoding="async">
-      </picture>
-      <div class="hero-bg-gradient"></div>
-      <div class="hero-glow" aria-hidden="true"></div>
-      <div class="hero-content">
-        <div class="hero-kicker" style="background:none;border:none;padding:0;margin-bottom:.9rem">
-          <picture>
-            <source type="image/webp" srcset="/images/logo-alune.webp">
-            <img src="/images/logo-alune.png" alt="LFIAGtube" loading="lazy" style="height:56px;width:auto;display:block;filter:drop-shadow(0 2px 16px rgba(0,0,0,.6))">
-          </picture>
-        </div>
-        <h1>Vos vid&#xe9;os LFIAG, dans une vraie plateforme d&#xe9;di&#xe9;e.</h1>
-        <div class="hero-copy">
-          <p>Navigation immersive, lecture instantan&#xe9;e, cat&#xe9;gories intelligentes.<span class="hero-signoff">Le meilleur reste &#xe0; venir &#x1F90D;</span></p>
-        </div>
-        <div class="hero-actions">
-          <div class="hero-counter" id="heroCounter" style="display:none">
-            <span class="hero-counter-num" id="heroCounterNum">0</span> <span class="hero-counter-label">vid&#xe9;os disponibles</span>
-          </div>
-          <div class="hero-btns">
-            <button class="btn btn-ghost-hero" id="heroContinueBtn" style="display:none" onclick="heroContinueWatching()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              Reprendre la lecture
-            </button>
-            <button class="btn" id="heroRefreshBtn" onclick="refreshWithFeedback()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0 0 20.49 15"/></svg>
-              Actualiser
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-
-
-
-
-    <div class="settings-panel" id="settingsPanel" role="region" aria-label="Mon compte">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-        <strong style="font-size:.9rem">Mon compte</strong>
-        <button class="btn" onclick="document.getElementById('settingsPanel').classList.remove('open');document.body.style.overflow=''" style="font-size:.72rem;padding:.3rem .65rem" aria-label="Fermer paramètres">&#x2715;</button>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:.65rem">
-        <div style="display:flex;align-items:center;gap:.85rem;padding:.9rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px">
-          <div id="accountAvatar" style="width:46px;height:46px;border-radius:50%;background:rgba(255,214,10,.12);border:1px solid rgba(255,214,10,.2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;color:var(--gold);flex-shrink:0">?</div>
-          <div style="min-width:0"><div id="accountName" style="font-size:.9rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</div><div id="accountEmail" style="font-size:.76rem;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:.15rem">—</div></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem">
-          <div style="padding:.6rem .75rem;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid rgba(255,255,255,.06)"><div style="font-size:.65rem;color:var(--text3);margin-bottom:.2rem">Rôle</div><div id="accountRole" style="font-size:.8rem;font-weight:600;color:var(--gold)">—</div></div>
-          <div style="padding:.6rem .75rem;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid rgba(255,255,255,.06)"><div style="font-size:.65rem;color:var(--text3);margin-bottom:.2rem">Vidéos vues</div><div id="accountSeen" style="font-size:.8rem;font-weight:600;color:var(--text)">—</div></div>
-        </div>
-        <div style="padding:.6rem .75rem;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid rgba(255,255,255,.06)"><div style="font-size:.65rem;color:var(--text3);margin-bottom:.2rem">Vidéos disponibles</div><div id="accountVideos" style="font-size:.8rem;font-weight:600;color:var(--text)">—</div></div>
-      </div>
-    </div>
-
-    <!-- Section À la une -->
-    <section class="alune-section" id="aluneSection">
-      <div class="alune-title">
-        <span class="alune-badge">&#x25cf; En ce moment</span>
-        &#xc0; la une
-      </div>
-      <div class="alune-grid">
-        <div class="alune-card alune-card--preview" data-cat="The Voice 2026" onclick="setAluneCategory('The Voice 2026')" title="Voir toutes les vid&#xe9;os The Voice 2026"
-          onmouseenter="aluneStartPreview(this)" onmouseleave="aluneStopPreview(this)">
-          <picture>
-            <source type="image/webp" srcset="/images/alune-thevoice.webp">
-            <img class="alune-thumb alune-thumb--img" src="/images/alune-thevoice.jpg" alt="The Voice 2026" loading="lazy">
-          </picture>
-          <video class="alune-thumb--video" preload="none" playsinline>
-            <source media="(max-width:767px)" src="/images/alune-thevoice-preview-480.mp4" type="video/mp4">
-            <source src="/images/alune-thevoice-preview.mp4" type="video/mp4">
-          </video>
-          <div class="alune-preview-bar"></div>
-          <button class="alune-mute-btn" onclick="event.stopPropagation();aluneMuteToggle(this)" aria-label="Activer/désactiver son aperçu"><svg class="alune-mute-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
-          <div class="alune-overlay"></div>
-          <div class="alune-content">
-            <div class="alune-tag">
-              <svg width="7" height="7" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"/></svg>
-              The Voice 2026
-            </div>
-            <div class="alune-name">The Voice<br>La plus belle voix</div>
-            <div class="alune-desc">Diffusion tous les samedis &#xe0; 21h10 sur TF1, disponible sur LFIAGtube le lundi</div>
-            <div class="alune-cta">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/></svg>
-              Voir les vid&#xe9;os
-            </div>
-          </div>
-        </div>
-        <div class="alune-card alune-card--preview" data-cat="L'Effet Lara - 2026" onclick="setAluneCategory(this.dataset.cat)" title="Voir toutes les vid&#xe9;os L&#x27;Effet Lara"
-          onmouseenter="aluneStartPreview(this)" onmouseleave="aluneStopPreview(this)">
-          <picture>
-            <source type="image/webp" srcset="/images/alune-effetlara.webp">
-            <img class="alune-thumb alune-thumb--img" src="/images/alune-effetlara.jpg" alt="L&#x27;Effet Lara" loading="lazy">
-          </picture>
-          <video class="alune-thumb alune-thumb--video" preload="none" playsinline>
-            <source media="(max-width:767px)" src="/images/alune-effetlara-preview-480.mp4" type="video/mp4">
-            <source src="/images/alune-effetlara-preview.mp4" type="video/mp4">
-          </video>
-          <div class="alune-preview-bar"></div>
-          <button class="alune-mute-btn" onclick="event.stopPropagation();aluneMuteToggle(this)" aria-label="Activer/désactiver son aperçu"><svg class="alune-mute-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
-          <div class="alune-overlay"></div>
-          <div class="alune-content">
-            <div class="alune-tag">
-              <svg width="7" height="7" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"/></svg>
-              Nouveau
-            </div>
-            <div class="alune-name">L&#x27;Effet Lara</div>
-            <div class="alune-desc">Diffusion d&#xe8;s le dimanche 12 avril sur TVA, disponible sur LFIAGtube les lundis</div>
-            <div class="alune-cta">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/></svg>
-              Voir les vid&#xe9;os
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-      <section id="newSection" style="display:none">
-        <div id="newSectionInner"></div>
-      </section>
-
-      <section id="catGridSection" style="display:none">
-        <div class="cat-grid-section">
-          <div class="cat-grid-title">Choisissez votre univers</div>
-          <div id="catGrid" class="cat-grid"></div>
-        </div>
-      </section>
-
-    <!-- Desktop cat bar + drawer -->
-    <div class="desk-cat-bar" id="deskCatBar">
-      <button class="desk-cat-btn" id="deskCatBtn" onclick="toggleDeskDrawer()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-        Cat&#xe9;gories&nbsp;<span class="desk-cat-active" id="deskCatActive">Tout</span>
-        <svg class="desk-cat-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-      <div class="desk-sort-group" id="deskSortGroup"></div>
-    </div>
-    <div class="desk-drawer-overlay" id="deskDrawerOverlay" onclick="closeDeskDrawer()"></div>
-    <div class="desk-drawer" id="deskDrawer">
-      <div class="desk-drawer-search">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" id="deskDrawerSearch" placeholder="Filtrer les cat&#xe9;gories&#x2026;" autocomplete="off">
-      </div>
-      <div class="desk-drawer-list" id="deskDrawerList"></div>
-    </div>
-    <div class="toolbar" id="toolbar" role="navigation" aria-label="Filtres"></div>
-    <div id="content" role="region" aria-live="polite" aria-label="Biblioth&#xe8;que vid&#xe9;o"></div>
+    <div id="nfxApp" class="nfx-app"></div>
   </main>
 </div>
 
@@ -1472,7 +1327,6 @@ if ('serviceWorker' in navigator) {
 <button id="backToTop" class="back-to-top" aria-label="Retour en haut" title="Retour en haut">
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
 </button>
-<script src="app.min.js?v=20260426-clean" defer></script>
-<script src="netflix-overlay.js?v=1" defer></script>
+<script src="app.min.js" defer></script>
 </body>
 </html>

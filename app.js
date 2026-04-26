@@ -2586,3 +2586,258 @@ if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream) document.d
     return Promise.reject();
   };
 })();
+
+/* ============================================
+   LFIAGtube — NETFLIX REWRITE v3 (monkey-patch)
+   ============================================ */
+(function(){
+  'use strict';
+
+  var POSTERS = {
+    "1985 - 1990 Les débuts":"/images/categories-v2-poster/1985_-_1990_Les_dbuts.webp",
+    "1991 - 1993 Lara Fabian (Français)":"/images/categories-v2-poster/1991_-_1993_Lara_Fabian_Franais.webp",
+    "1994 - 1995 Carpe Diem":"/images/categories-v2-poster/1994_-_1995_Carpe_Diem.webp",
+    "1996 - 1999 Pure":"/images/categories-v2-poster/1996_-_1999_Pure.webp",
+    "1999 -2001 Lara Fabian (Anglais)":"/images/categories-v2-poster/1999_-2001_Lara_Fabian_Anglais.webp",
+    "2001 - 2003 Nue & ETI":"/images/categories-v2-poster/2001_-_2003_Nue__ETI.webp",
+    "2004 A Wonderful Life":"/images/categories-v2-poster/2004_A_Wonderful_Life.webp",
+    "2005 - 2008 9":"/images/categories-v2-poster/2005_-_2008_9.webp",
+    "2009 - 2010 TLFM & EWIM":"/images/categories-v2-poster/2009_-_2010_TLFM__EWIM.webp",
+    "2010 - 2012 Mademoiselle Zhivago":"/images/categories-v2-poster/2010_-_2012_Mademoiselle_Zhivago.webp",
+    "2013 - 2014 Le Secret":"/images/categories-v2-poster/2013_-_2014_Le_Secret.webp",
+    "2015 - 2016 Ma Vie dans La Tienne":"/images/categories-v2-poster/2015_-_2016_Ma_Vie_dans_La_Tienne.webp",
+    "2017 - 2018 Camouflage":"/images/categories-v2-poster/2017_-_2018_Camouflage.webp",
+    "2019 - 2021 Papillon":"/images/categories-v2-poster/2019_-_2021_Papillon.webp",
+    "2024 - Aujourd'hui":"/images/categories-v2-poster/2024_-_Aujourdhui.webp",
+    "2024 - Aujourd’hui":"/images/categories-v2-poster/2024_-_Aujourdhui.webp",
+    "L'Effet Lara - 2026":"/images/categories-v2-poster/LEffet_Lara_-_2026.webp",
+    "L’Effet Lara - 2026":"/images/categories-v2-poster/LEffet_Lara_-_2026.webp",
+    "Lara Fabian - Concerts":"/images/categories-v2-poster/Lara_Fabian_-_Concerts.webp",
+    "Lara Fabian - Divers":"/images/categories-v2-poster/Lara_Fabian_-_Divers.webp",
+    "Lara Fabian - Livres":"/images/categories-v2-poster/Lara_Fabian_-_Livres.webp",
+    "Lara Fabian Documentaires":"/images/categories-v2-poster/Lara_Fabian_Documentaires.webp",
+    "Lara Fabian au Cinéma":"/images/categories-v2-poster/Lara_Fabian_au_Cinma.webp",
+    "Lara Fabian aux Enfoirés":"/images/categories-v2-poster/Lara_Fabian_aux_Enfoirs.webp",
+    "Star Academie 2025":"/images/categories-v2-poster/Star_Acadmie_2025.webp",
+    "The Voice 2026":"/images/categories-v2-poster/The_Voice_2026.webp",
+    "The Voice Kids 2024":"/images/categories-v2-poster/The_Voice_Kids_2024.webp"
+  };
+
+  var BB_SLIDES = [
+    {cat:'The Voice 2026',tag:'★ Top 1 · Cette semaine',title:'The Voice 2026',match:'98% Recommandé',year:'2026',badge:'TF1',sub:'Saison en cours',
+     desc:'Lara Fabian sublime la nouvelle saison de The Voice. Tous les samedis à 21h10 sur TF1.',
+     bg:'/images/categories-v2/The_Voice_2026.webp',vid:'/images/alune-thevoice-preview.mp4',rating:'TV-G'},
+    {cat:"L'Effet Lara - 2026",tag:'✦ Nouveauté 2026',title:"L'Effet Lara",match:'95% Recommandé',year:'2026',badge:'TVA',sub:'Saison 1',
+     desc:"Lara Fabian au cœur d'une nouvelle aventure musicale sur TVA.",
+     bg:'/images/categories-v2/LEffet_Lara_-_2026.webp',vid:'/images/alune-effetlara-preview.mp4',rating:'TV-G'},
+    {cat:'Star Academie 2025',tag:'⚡ Phénomène',title:'Star Académie 2025',match:'97% Recommandé',year:'2025',badge:'TVA',sub:'Édition complète',
+     desc:'Revivez la 7e Académie québécoise avec Lara Fabian au piano.',
+     bg:'/images/categories-v2/Star_Acadmie_2025.webp',rating:'TV-G'}
+  ];
+
+  var prefersRM = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  function _eA(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function _eH(s){ return String(s==null?'':s).replace(/[&<>]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
+
+  function _vCardHtml(v){
+    var thumb = v.thumbnailLink ? v.thumbnailLink.replace('=s220','=s320') : '';
+    var name = v.name ? v.name.replace(/\.[^.]+$/,'') : '';
+    var dur='';
+    if (v.videoMediaMetadata && v.videoMediaMetadata.durationMillis){
+      var ms=parseInt(v.videoMediaMetadata.durationMillis);
+      var s=Math.round(ms/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60);
+      dur = h ? h+'h '+(m<10?'0':'')+m : m+':'+((s%60)<10?'0':'')+(s%60);
+    }
+    var hist = (function(){try{return JSON.parse(localStorage.getItem('lfiag_history')||'{}')}catch(_){return{}}})();
+    var seen = !!hist[v.id];
+    var prog = (hist[v.id] && hist[v.id].progress) || 0;
+    return '<div class="nfx-vcard" data-vid="'+_eA(v.id)+'" tabindex="0" role="button" aria-label="'+_eA(name)+'">'
+      + '<div class="nfx-vthumb">'
+      +   (thumb ? '<img src="'+_eA(thumb)+'" alt="'+_eA(name)+'" loading="lazy">' : '<div class="nfx-vfb">'+_eH(name.substring(0,2).toUpperCase())+'</div>')
+      +   '<div class="nfx-vplay"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>'
+      +   (dur?'<div class="nfx-vdur">'+dur+'</div>':'')
+      +   (seen?'<div class="nfx-vseen">✓</div>':'')
+      +   (prog>0&&prog<100?'<div class="nfx-vprog"><div style="width:'+prog+'%"></div></div>':'')
+      + '</div>'
+      + '<div class="nfx-vbody"><div class="nfx-vcat">'+_eH(v._cat||'')+'</div><div class="nfx-vtitle">'+_eH(name)+'</div></div>'
+      + '</div>';
+  }
+
+  function _rowHtml(label, vids, opts){
+    opts = opts || {};
+    if (!vids.length) return '';
+    var cards = vids.map(_vCardHtml).join('');
+    var cta = opts.catCta ? '<button class="nfx-rowcta" data-cat="'+_eA(opts.catCta)+'" type="button">Tout voir ›</button>' : '';
+    return '<section class="nfx-row">'
+      + '<div class="nfx-rowhead"><h3 class="nfx-rowtitle">'+_eH(label)+'</h3>'+cta+'</div>'
+      + '<div class="nfx-rowtrack">'
+      +   '<button class="nfx-rowarr left" type="button" aria-label="Précédent"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      +   '<div class="nfx-rowscroll">'+cards+'</div>'
+      +   '<button class="nfx-rowarr right" type="button" aria-label="Suivant"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>'
+      + '</div>'
+      + '</section>';
+  }
+
+  function _top10Html(cats){
+    var ranked = cats.slice(0,10);
+    var cards = ranked.map(function(cat,i){
+      var poster = POSTERS[cat] || (CAT_IMAGES[cat]||'').replace('/categories-v2/','/categories-v2-poster/');
+      return '<div class="nfx-t10card" data-cat="'+_eA(cat)+'" tabindex="0" role="button" aria-label="'+_eA(cat+' · '+(i+1))+'">'
+        + '<span class="nfx-t10num" aria-hidden="true">'+(i+1)+'</span>'
+        + '<div class="nfx-t10poster"><img src="'+_eA(poster)+'" alt="'+_eA(cat)+'" loading="lazy"></div>'
+        + '</div>';
+    }).join('');
+    return '<section class="nfx-row nfx-t10row">'
+      + '<div class="nfx-rowhead"><h3 class="nfx-rowtitle">★ Top 10 · Cette semaine</h3></div>'
+      + '<div class="nfx-rowtrack">'
+      +   '<button class="nfx-rowarr left" type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      +   '<div class="nfx-rowscroll">'+cards+'</div>'
+      +   '<button class="nfx-rowarr right" type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>'
+      + '</div>'
+      + '</section>';
+  }
+
+  function _bbHtml(slides){
+    return slides.map(function(s,i){
+      var vidH = s.vid ? '<video class="nfx-bbvid" muted loop playsinline preload="metadata" data-src="'+_eA(s.vid)+'"></video>' : '';
+      return '<div class="nfx-bbslide'+(i===0?' active':'')+'" data-slide="'+i+'" data-cat="'+_eA(s.cat)+'">'
+        + '<div class="nfx-bbbg" style="background-image:url(\''+_eA(s.bg)+'\')"></div>'
+        + vidH
+        + '<div class="nfx-bbcontent">'
+        +   '<div class="nfx-bbtag">'+_eH(s.tag)+'</div>'
+        +   '<h1 class="nfx-bbtitle">'+_eH(s.title)+'</h1>'
+        +   '<div class="nfx-bbmeta">'
+        +     '<span class="match">'+_eH(s.match)+'</span>'
+        +     '<span>'+_eH(s.year)+'</span>'
+        +     '<span class="badge">'+_eH(s.badge)+'</span>'
+        +     '<span>'+_eH(s.sub)+'</span>'
+        +   '</div>'
+        +   '<p class="nfx-bbdesc">'+_eH(s.desc)+'</p>'
+        +   '<div class="nfx-bbactions">'
+        +     '<button class="nfx-bbbtn play" data-cat="'+_eA(s.cat)+'" type="button"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Lecture</button>'
+        +     '<button class="nfx-bbbtn info" data-cat="'+_eA(s.cat)+'" type="button"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Plus d\'infos</button>'
+        +   '</div>'
+        + '</div>'
+        + (s.vid?'<button class="nfx-bbmute" type="button" aria-label="Son"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg></button>':'')
+        + '<div class="nfx-bbrating">'+_eH(s.rating)+'</div>'
+        + '</div>';
+    }).join('') + '<div class="nfx-bbdots">'+slides.map(function(_,i){return '<button type="button" class="'+(i===0?'active':'')+'" data-dot="'+i+'" aria-label="Diapo '+(i+1)+'"></button>';}).join('')+'</div>';
+  }
+
+  function _bindBb(bb){
+    var slidesEl = bb.querySelectorAll('.nfx-bbslide');
+    var dots = bb.querySelectorAll('.nfx-bbdots button');
+    var idx=0, timer=null;
+    function go(i){
+      var oe = slidesEl[idx];
+      oe.classList.remove('active');
+      if (dots[idx]) dots[idx].classList.remove('active');
+      var ov = oe.querySelector('video'); if (ov) try{ov.pause();ov.classList.remove('show');}catch(_){}
+      idx = ((i%slidesEl.length)+slidesEl.length)%slidesEl.length;
+      var ne = slidesEl[idx];
+      ne.classList.add('active');
+      if (dots[idx]) dots[idx].classList.add('active');
+      var nv = ne.querySelector('video');
+      if (nv && nv.dataset.src && !nv.src) nv.src = nv.dataset.src;
+      if (nv && !prefersRM){
+        setTimeout(function(){
+          if (ne.classList.contains('active')){
+            try{nv.currentTime=0;nv.play().then(function(){nv.classList.add('show');}).catch(function(){});}catch(_){}
+          }
+        },1800);
+      }
+    }
+    function restart(){clearInterval(timer); if (prefersRM) return; timer=setInterval(function(){go(idx+1);},9000);}
+    dots.forEach(function(d,i){d.addEventListener('click',function(){go(i);restart();});});
+    bb.querySelectorAll('.nfx-bbmute').forEach(function(b){
+      b.addEventListener('click',function(){var s=b.closest('.nfx-bbslide'); var v=s.querySelector('video'); if (v) v.muted=!v.muted;});
+    });
+    bb.querySelectorAll('.nfx-bbbtn').forEach(function(b){
+      b.addEventListener('click',function(){if (typeof setAluneCategory==='function') setAluneCategory(b.dataset.cat);});
+    });
+    if (!prefersRM) setTimeout(function(){go(0);},200);
+    restart();
+  }
+
+  function _bindRows(c){
+    c.querySelectorAll('.nfx-rowarr').forEach(function(b){
+      b.addEventListener('click',function(){
+        var t = b.parentElement.querySelector('.nfx-rowscroll');
+        if (!t) return;
+        t.scrollBy({left:(b.classList.contains('right')?1:-1)*t.clientWidth*0.85,behavior:'smooth'});
+      });
+    });
+    c.querySelectorAll('.nfx-rowcta[data-cat],.nfx-t10card[data-cat]').forEach(function(el){
+      el.addEventListener('click',function(){if (typeof setAluneCategory==='function') setAluneCategory(el.dataset.cat);});
+      el.addEventListener('keydown',function(e){if (e.key==='Enter' && typeof setAluneCategory==='function') setAluneCategory(el.dataset.cat);});
+    });
+    c.querySelectorAll('.nfx-vcard[data-vid]').forEach(function(card){
+      card.addEventListener('click',function(){if (typeof openVideo==='function') openVideo(card.dataset.vid);});
+      card.addEventListener('keydown',function(e){if (e.key==='Enter' && typeof openVideo==='function') openVideo(card.dataset.vid);});
+    });
+  }
+
+  function _renderHome(host){
+    var cats = [...new Set(allVideos.map(function(v){return v._cat;}).filter(function(c){return c && c!=='Autres';}))].sort();
+    if (!cats.length) { host.innerHTML='<p style="padding:4rem;color:#888;text-align:center">Aucune vidéo disponible.</p>'; return; }
+    var validSlides = BB_SLIDES.filter(function(s){return cats.indexOf(s.cat)!==-1;});
+    if (!validSlides.length) validSlides = BB_SLIDES.slice();
+
+    var bbS = '<section class="nfx-billboard" aria-label="Sélection">'+_bbHtml(validSlides)+'</section>';
+    var t10 = _top10Html(cats);
+
+    var hist=(function(){try{return JSON.parse(localStorage.getItem('lfiag_history')||'{}')}catch(_){return{}}})();
+    var watched = Object.keys(hist).map(function(id){return allVideos.find(function(v){return v.id===id;});}).filter(Boolean).slice(0,15);
+    var contRow = watched.length ? _rowHtml('Continuer à regarder', watched) : '';
+
+    var recent = allVideos.slice().sort(function(a,b){return new Date(b.createdTime||b.modifiedTime||0)-new Date(a.createdTime||a.modifiedTime||0);}).slice(0,12);
+    var newRow = _rowHtml('✦ Derniers ajouts', recent);
+
+    var catRows = cats.map(function(cat){
+      var list = allVideos.filter(function(v){return v._cat===cat;}).slice(0,20);
+      return _rowHtml(cat, list, {catCta:cat});
+    }).join('');
+
+    host.innerHTML = bbS + '<div class="nfx-rowswrap">' + t10 + contRow + newRow + catRows + '</div>';
+    var bb = host.querySelector('.nfx-billboard'); if (bb) _bindBb(bb);
+    _bindRows(host);
+  }
+
+  function _renderCatView(host, cat){
+    var list = allVideos.filter(function(v){return v._cat===cat;});
+    var cards = list.map(_vCardHtml).join('') || '<p style="color:#888">Aucune vidéo dans cette catégorie.</p>';
+    host.innerHTML = '<div class="nfx-cathead">'
+      + '<button class="nfx-back" type="button" aria-label="Retour"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg> Retour</button>'
+      + '<h2 class="nfx-cattitle">'+_eH(cat)+'</h2>'
+      + '<p class="nfx-catcount">'+list.length+' vidéo'+(list.length>1?'s':'')+'</p>'
+      + '</div>'
+      + '<div class="nfx-catgrid">'+cards+'</div>';
+    host.querySelector('.nfx-back').addEventListener('click',function(){if (typeof setAluneCategory==='function') setAluneCategory('Tout');});
+    _bindRows(host);
+  }
+
+  function nfxRender(){
+    var host = document.getElementById('nfxApp');
+    if (!host) return;
+    if (typeof allVideos === 'undefined' || !allVideos.length) { host.innerHTML='<p style="padding:4rem;color:#888;text-align:center">Chargement…</p>'; return; }
+    var ac = (typeof activeCategory!=='undefined') ? activeCategory : 'Tout';
+    if (ac === 'Tout' || ac === '__new__') _renderHome(host);
+    else _renderCatView(host, ac);
+  }
+
+  // Monkey-patch renderAll to also call nfxRender
+  document.addEventListener('lfiag:ready', function(){ setTimeout(nfxRender, 100); });
+
+  // Re-render on category change (intercept setAluneCategory)
+  var origSetAluneCategory = window.setAluneCategory;
+  if (typeof origSetAluneCategory === 'function') {
+    window.setAluneCategory = function(cat){
+      var r = origSetAluneCategory.apply(this, arguments);
+      setTimeout(nfxRender, 50);
+      return r;
+    };
+  }
+
+  window.nfxRender = nfxRender;
+})();
