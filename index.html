@@ -646,20 +646,37 @@ body.ios-fake-fs-active{overflow:hidden}
   .is-tv .video-card-preview{display:none !important}
   /* 5. Coverflow simplifié TV: désactive 3D rotate (plat = bcp moins GPU) */
   .is-tv .cov-card.swiper-slide{transform-style:flat !important}
-  /* 6. Transitions courtes (sinon perçu comme lag) */
-  .is-tv *,.is-tv *::before,.is-tv *::after{transition-duration:.18s !important;animation-duration:.4s !important}
-  /* 7. Force GPU-layer cards = scrolling fluide */
-  .is-tv .video-card,.is-tv .alune-card,.is-tv .cov-card,.is-tv .cat-vignette{transform:translateZ(0);will-change:auto;backface-visibility:hidden}
+  /* 6. Transitions instant TV (jank si transitions sur scroll/focus) */
+  .is-tv *,.is-tv *::before,.is-tv *::after{transition-duration:0s !important;animation-duration:.3s !important}
+  /* 7. PAS de translateZ global (multi-layers GPU = jank FireTV). Seulement focus actif */
+  .is-tv .video-card:focus,.is-tv .video-card:focus-visible,.is-tv .alune-card:focus,.is-tv .alune-card:focus-visible{transform:translateZ(0)}
   /* 8. Désactive shimmer/shadows complexes loader */
   .is-tv .lfi-bar-shimmer,.is-tv .lfi-particles,.is-tv .lfi-sky{display:none !important}
-  /* 9. Box-shadow simplifié (multi-shadows = repaints) */
-  .is-tv .video-card,.is-tv .alune-card{box-shadow:0 4px 12px rgba(0,0,0,.6) !important}
-  /* 10. Cards proportions raisonnables (pas trop grosses) */
-  .is-tv .video-grid{grid-template-columns:repeat(5,1fr) !important;gap:1rem !important}
-  .is-tv .alune-grid{gap:1rem !important}
-  .is-tv .alune-card{aspect-ratio:16/9 !important;max-height:280px !important}
+  /* 9. Box-shadow simplifié */
+  .is-tv .video-card,.is-tv .alune-card{box-shadow:0 4px 10px rgba(0,0,0,.5) !important}
+  /* 10. Cards plus petites = moins scroll. 6 cols 1080p, 7 cols 1440p+, 8 cols 4K */
+  .is-tv .video-grid{grid-template-columns:repeat(6,1fr) !important;gap:.7rem !important}
+  @media(min-width:1440px){.is-tv .video-grid{grid-template-columns:repeat(7,1fr) !important}}
+  @media(min-width:1920px){.is-tv .video-grid{grid-template-columns:repeat(8,1fr) !important}}
+  .is-tv .cat-grid{grid-template-columns:repeat(7,1fr) !important;gap:.7rem !important}
+  .is-tv .alune-grid{gap:.8rem !important}
+  .is-tv .alune-card{aspect-ratio:16/9 !important;max-height:240px !important}
+  /* Hero compact TV (gain above-the-fold massif) */
+  .is-tv .hero{min-height:220px !important;padding:1.5rem 2rem !important}
+  .is-tv .hero h1{font-size:2rem !important;line-height:1.05 !important;margin-bottom:.5rem !important}
+  .is-tv .hero-copy p{font-size:.85rem !important;margin:0 !important}
+  .is-tv .hero-actions{margin-top:.7rem !important}
+  /* Sections plus serrées TV */
+  .is-tv main{padding:1rem 2rem 3rem !important}
+  .is-tv .section-header{margin-bottom:.5rem !important;padding:.5rem 0 !important}
+  .is-tv .alune-section,.is-tv .cat-grid-section{margin-bottom:1.2rem !important}
   /* 11. Hide widgets desktop-only inutiles TV */
   .is-tv .back-to-top,.is-tv .video-card-preview{display:none !important}
+  /* 12. Coverflow plus compact */
+  .is-tv .cov-stage{min-height:240px !important;padding:.5rem 0 1rem !important}
+  .is-tv .cov-card.swiper-slide{width:200px !important;height:200px !important}
+  /* 13. CSS contain pour isoler repaints scroll-perf */
+  .is-tv .video-card,.is-tv .alune-card,.is-tv .cat-vignette{contain:layout paint}
   .is-tv :focus-visible{transition:outline .15s,transform .15s !important}
   .is-tv .video-grid{scroll-snap-type:y proximity;grid-template-columns:repeat(4,1fr) !important;gap:1.4rem !important}
   .is-tv .video-card{scroll-snap-align:start}

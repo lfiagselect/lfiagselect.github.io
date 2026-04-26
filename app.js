@@ -155,17 +155,14 @@ function aluneStartPreview(card) {
   if (!vid || vid._playing) return;
   vid._playing = true;
   card.classList.add('alune-card--playing');
-  // Fix bug "écran noir + son": muted=true requis pour autoplay browser policy.
-  // is-visible appliqué APRÈS premier frame décodé (loadeddata) → pas de flash noir.
+  // Fix "écran noir + son": muted=true autoplay-safe, is-visible après play() resolve
   vid.muted = true; vid.volume = 0; vid.currentTime = 0;
-  // Force load explicit (preload=none → certains WebView ne déclenchent pas sur play seul)
   try { if (vid.readyState < 2) vid.load(); } catch(_) {}
-  // Attend frame dispo avant fade-in image→video
-  var _onReady = function(){
-    if (!vid._playing) return; // stoppé entre temps
+  var _showVideo = function(){
+    if (!vid._playing) return;
     img.style.opacity = '0';
     vid.classList.add('is-visible');
-    // Unmute progressif après play confirmé (user a ouvert l'app = gesture implicite OK)
+    // Unmute après play confirmé
     setTimeout(function(){
       if (!vid._playing) return;
       vid.muted = false;
@@ -174,15 +171,18 @@ function aluneStartPreview(card) {
         if (!vid.muted) vid.volume = Math.min(1, vid.volume + 0.05);
         if (vid.volume >= 1) { clearInterval(vid._volIv); vid._volIv = null; }
       }, 75);
-    }, 200);
+    }, 300);
   };
-  if (vid.readyState >= 2) _onReady();
-  else { vid.addEventListener('loadeddata', _onReady, { once:true }); }
-  vid.play().catch(function(err) {
-    // Si rejet: fallback muted forcé (sécurité)
+  // Belt+suspenders: 3 triggers pour _showVideo (premier qui fire gagne)
+  var _shown = false;
+  var _safeShow = function(){ if (_shown) return; _shown = true; _showVideo(); };
+  vid.addEventListener('playing', _safeShow, { once:true });
+  vid.addEventListener('loadeddata', _safeShow, { once:true });
+  // Fallback timer: si rien fire en 800ms, force show (FireTV WebView events parfois manquent)
+  setTimeout(function(){ if (vid._playing && !_shown) _safeShow(); }, 800);
+  vid.play().then(_safeShow).catch(function(err) {
     vid.muted = true;
-    vid.play().catch(function(){
-      // Échec total: revert image
+    vid.play().then(_safeShow).catch(function(){
       vid._playing = false;
       card.classList.remove('alune-card--playing');
       img.style.opacity = '1';
