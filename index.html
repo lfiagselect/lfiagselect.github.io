@@ -1106,7 +1106,10 @@ if ('serviceWorker' in navigator) {
 <!-- SCREEN: APP -->
 <div id="screen-app" class="screen">
   <main id="main-content">
-    <section class="hero" aria-label="En-t&#xea;te">
+    <!-- Phase B: Netflix billboard host (rendu par renderNetflixBillboard()) -->
+    <section class="nfx-billboard" id="nfxBillboard" aria-label="Sélection en vedette" style="display:none"></section>
+    <!-- Hero original conservé en fallback (caché tant que billboard rendu) -->
+    <section class="hero" aria-label="En-t&#xea;te" id="heroFallback">
       <picture>
         <source type="image/webp" srcset="/images/hero-small.webp 800w,/images/hero-bg.webp 1920w" sizes="100vw">
         <img class="hero-bg-img" src="/images/hero-small.jpg" srcset="/images/hero-small.jpg 800w,/images/hero-bg.jpg 1920w" sizes="100vw" alt="" aria-hidden="true" fetchpriority="high" decoding="async">
@@ -1442,33 +1445,15 @@ if ('serviceWorker' in navigator) {
   .video-card-preview{position:absolute;inset:0;z-index:4;opacity:0;pointer-events:none;transition:opacity .3s ease;background:#000;border-radius:inherit;overflow:hidden}
   .video-card-preview.show{opacity:1}
   .video-card-preview iframe,.video-card-preview video{width:100%;height:100%;border:0;object-fit:cover}
-</style>
-<div id="lfiagLoader">
-  <div class="lfi-sky"></div>
-  <div class="lfi-loader">
-    <div class="lfi-halo"></div>
-    <div class="lfi-ring lfi-ring-1"></div>
-    <div class="lfi-ring lfi-ring-2"></div>
-    <div class="lfi-ring lfi-ring-3"></div>
-    <div class="lfi-particles">
-      <span></span><span></span><span></span><span></span><span></span><span></span>
-    </div>
-    <div class="lfi-icon-wrap">
-      <picture>
-        <source type="image/webp" srcset="/images/hero-small.webp">
-        <img src="/images/hero-small.jpg" alt="LFIAGtube" class="lfi-icon">
-      </picture>
-    </div>
-  </div>
-  <div class="lfi-bar-wrap">
-    <div class="lfi-bar"></div>
-    <div class="lfi-bar-shimmer"></div>
-  </div>
-  <span id="lfiagLoaderMsg" class="lfi-msg">Chargement…</span>
-</div>
-<button id="backToTop" class="back-to-top" aria-label="Retour en haut" title="Retour en haut">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-</button>
-<script src="app.min.js" defer></script>
-</body>
-</html>
+
+  /* ============================================
+     PHASE B — NETFLIX BILLBOARD + TOP 10 + CARDS
+     ============================================ */
+  .nfx-billboard{position:relative;height:78vh;min-height:520px;width:100vw;margin-left:calc(50% - 50vw);overflow:hidden;margin-bottom:-140px;display:block}
+  .nfx-billboard-slide{position:absolute;inset:0;opacity:0;transition:opacity .9s ease;pointer-events:none}
+  .nfx-billboard-slide.active{opacity:1;pointer-events:auto}
+  .nfx-bb-bg{position:absolute;inset:0;background-size:cover;background-position:center top;animation:nfxBbZoom 22s ease-out forwards}
+  .nfx-bb-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s}
+  .nfx-bb-vid.show{opacity:1}
+  @keyframes nfxBbZoom{from{transform:scale(1.05)}to{transform:scale(1)}}
+  .nfx-bil
