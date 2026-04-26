@@ -9,6 +9,17 @@
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <title>LFIAGtube</title>
 <script>(function(){var ua=navigator.userAgent||'';var isTV=/Silk|SilkBrowser/i.test(ua)||/AppleTV|tvOS/i.test(ua)||/Tizen/i.test(ua)||/WebOS|Web0S/i.test(ua)||/SMART-TV|SmartTV/i.test(ua)||/CrKey/i.test(ua)||/Android.*TV|TV.*Android/i.test(ua)||(screen.width>=1280&&!('ontouchstart' in window)&&window.matchMedia&&window.matchMedia('(hover:none)').matches);if(isTV)document.documentElement.classList.add('is-tv');})();</script>
+<script>
+/* KILL SW + caches anciens (rollback phase B) — auto-recovery */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    regs.forEach(function(r){ r.unregister(); });
+  });
+}
+if ('caches' in window) {
+  caches.keys().then(function(keys){ keys.forEach(function(k){ caches.delete(k); }); });
+}
+</script>
 <!-- Open Graph / WhatsApp / Messenger / iMessage -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://lfiagselect.github.io">
@@ -1451,6 +1462,4 @@ if ('serviceWorker' in navigator) {
   .nfx-bb-bg{position:absolute;inset:0;background-size:cover;background-position:center top;animation:nfxBbZoom 22s ease-out forwards}
   .nfx-bb-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s}
   .nfx-bb-vid.show{opacity:1}
-  @keyframes nfxBbZoom{from{transform:scale(1.05)}to{transform:scale(1)}}
-  .nfx-billboard::after{content:'';position:absolute;inset:0;background:linear-gradient(77deg,rgba(0,0,0,.78) 0%,rgba(0,0,0,.5) 30%,rgba(0,0,0,.15) 58%,transparent 82%),linear-gradient(180deg,transparent 50%,rgba(0,0,0,.85) 100%);pointer-events:none;z-index:2}
-  .nfx-bb-content{position:absolute;left:4%;bottom:24%;max-width:600px;z-index:3;color:#fff
+  @keyframes nfxBbZoom{from{transform:scale(1.05)}to{transform
