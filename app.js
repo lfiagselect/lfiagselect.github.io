@@ -1187,7 +1187,7 @@ function initCoverflow(root, cats){
       grabCursor: !isTV,
       centeredSlides: true,
       slidesPerView: 'auto',
-      loop: cats.length >= 5,
+      loop: cats.length >= 5 && !isTV, // TV: pas de loop (race condition rapid D-pad)
       loopAdditionalSlides: 2,
       initialSlide: Math.floor(cats.length/2),
       speed: isTV ? 380 : (isMobile ? 600 : 520),
@@ -1235,37 +1235,44 @@ function initCoverflow(root, cats){
       });
     });
 
-    // ── TV-spécifique: D-pad ←/→ navigue Swiper, Enter/OK ouvre catégorie active
-    // Évite focus shift natif (scroll viewport erratique) + désactive scroll-into-view auto
+    // ── TV: D-pad nav coverflow, throttle anti-stuck
     if (isTV) {
       root.setAttribute('tabindex', '0');
       root.classList.add('cov-tv');
-      // Focus root au lieu des slides individuelles → pas de scrollIntoView par browser
+      var _busy = false;
+      var _lastKey = 0;
+      // Reset busy on transition end (Swiper event)
+      swiper.on('transitionEnd', function(){ _busy = false; });
       var _tvKeyHandler = function(e) {
         if (!root._swiper) return;
-        // Vérifie focus dans coverflow (root ou slide)
         var inCov = root.contains(document.activeElement) || document.activeElement === root;
         if (!inCov) return;
+        var now = Date.now();
+        // Throttle 250ms entre keys (sinon Swiper loop race)
+        if (now - _lastKey < 250) {
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.keyCode === 37 || e.keyCode === 39) {
+            e.preventDefault(); e.stopPropagation();
+          }
+          return;
+        }
         if (e.key === 'ArrowLeft' || e.keyCode === 37) {
           e.preventDefault(); e.stopPropagation();
-          root._swiper.slidePrev();
+          _lastKey = now; _busy = true;
+          try { root._swiper.slidePrev(280); } catch(_) { _busy = false; }
         } else if (e.key === 'ArrowRight' || e.keyCode === 39) {
           e.preventDefault(); e.stopPropagation();
-          root._swiper.slideNext();
+          _lastKey = now; _busy = true;
+          try { root._swiper.slideNext(280); } catch(_) { _busy = false; }
         } else if (e.key === 'Enter' || e.keyCode === 13 || e.keyCode === 32) {
           e.preventDefault(); e.stopPropagation();
           var active = root.querySelector('.swiper-slide-active');
           if (active && active.dataset.cat) selectCatFromGrid(active.dataset.cat);
         }
-        // ↑/↓ laisse passer (sortie coverflow vers nav verticale globale)
       };
-      // Cleanup ancien handler si existant
       if (root._tvKeyHandler) document.removeEventListener('keydown', root._tvKeyHandler, true);
       root._tvKeyHandler = _tvKeyHandler;
       document.addEventListener('keydown', _tvKeyHandler, true);
-      // Slides non-tabbables individuellement (sinon focus auto-scroll viewport)
       root.querySelectorAll('.swiper-slide').forEach(function(s){ s.setAttribute('tabindex','-1'); });
-      // Auto-focus root quand coverflow visible
       setTimeout(function(){ if (document.activeElement === document.body) root.focus({preventScroll:true}); }, 200);
     }
 
