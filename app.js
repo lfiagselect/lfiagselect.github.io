@@ -2587,6 +2587,14 @@ if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream) document.d
   };
 })();
 
+
+/* ============================================
+   PROD INIT BOOTSTRAP (manquant dans le source)
+   ============================================ */
+if (typeof handleCallback === 'function') {
+  setTimeout(function(){ try { handleCallback(); } catch(e) { console.error('handleCallback:', e); } }, 0);
+}
+
 /* ============================================
    LFIAGtube — NETFLIX REWRITE v3 (monkey-patch)
    ============================================ */
