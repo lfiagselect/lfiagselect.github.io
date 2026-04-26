@@ -1,7 +1,7 @@
 /* ============================================
-   LFIAGtube — Netflix Overlay v1
+   LFIAGtube — Netflix Overlay v2 (WOW edition)
    Surcouche DOM. Aucune modif app.js / app.min.js.
-   Active: body.netflix-overlay-on
+   Active: body.netflix-overlay-on (+ body.nfx-active)
    ============================================ */
 (function(){
   'use strict';
@@ -38,6 +38,15 @@
     "The Voice Kids 2024":             "/images/categories-v2-poster/The_Voice_Kids_2024.webp"
   };
 
+  // Map cat → landscape (16:9) image for big-tile row. Returns null if no resolvable mapping.
+  function landscapeFor(cat){
+    var imageMap = window.CAT_IMAGES || {};
+    if (imageMap[cat]) return imageMap[cat];
+    var poster = POSTERS[cat];
+    if (poster) return poster.replace('/categories-v2-poster/','/categories-v2/');
+    return null;
+  }
+
   var BILLBOARD_SLIDES = [
     { cat:'The Voice 2026', tag:'★ Top 1 · Cette semaine', title:'The Voice 2026', match:'98% Recommandé', year:'2026', badge:'TF1', sub:'Saison en cours',
       desc:"Lara Fabian sublime la nouvelle saison de The Voice. Diffusion tous les samedis à 21h10 sur TF1.",
@@ -51,21 +60,18 @@
   ];
 
   var rm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  var _bbInstalled = false, _top10Installed = false;
+  var _bbInstalled = false, _top10Installed = false, _catRowInstalled = false;
 
   function escAttr(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
   function escHtml(s){ return String(s==null?'':s).replace(/[&<>]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
 
-  // App home rend `.cat-grid` (coverflow) ET `.alune-section`. On lit cats depuis [data-cat].
   function readCatsFromDom(){
-    // App.js crée: #catGrid > .cov-stage.swiper > .swiper-slide.cov-card[data-cat]
     var nodes = document.querySelectorAll('#catGrid .cov-card[data-cat], .cov-card[data-cat], [data-cat]');
     var seen = {};
     var cats = [];
     nodes.forEach(function(n){
       var c = n.getAttribute('data-cat');
       if (!c) return;
-      // Skip non-category data-cat (alune cards, billboard, etc.)
       if (c === '__new__' || c === 'Tout') return;
       if (!seen[c]) { seen[c] = 1; cats.push(c); }
     });
@@ -75,7 +81,6 @@
     return readCatsFromDom().length >= 3;
   }
   function getInsertionPoint(){
-    // Inserts top10 row AVANT le coverflow .cat-grid-section
     return document.getElementById('catGridSection') || document.querySelector('.cat-grid-section') || document.querySelector('.alune-section');
   }
   function selectCat(cat){
@@ -91,7 +96,6 @@
     if (!hasRenderedContent()) return;
     var domCats = readCatsFromDom();
     var slides = BILLBOARD_SLIDES.filter(function(s){ return domCats.indexOf(s.cat) !== -1; });
-    // Fallback: si aucune cat match strict, montre les slides quand même (la nav par cat fail mais visuel OK)
     if (!slides.length) slides = BILLBOARD_SLIDES.slice();
 
     var bb = document.createElement('section');
@@ -205,13 +209,86 @@
     _top10Installed = true;
   }
 
+  // ── CATEGORY ROW (big landscape tiles) ─────
+  function installCatRow(){
+    if (_catRowInstalled) return;
+    var insertBefore = getInsertionPoint();
+    if (!insertBefore) return;
+    var cats = readCatsFromDom();
+    if (cats.length < 3) return;
+
+    // Place row AFTER top10 (which inserts before insertBefore), so insertBefore still works
+    var section = document.createElement('section');
+    section.className = 'nfx-row nfx-catrow';
+    section.setAttribute('aria-label','Toutes les catégories');
+
+    var cards = cats.map(function(cat){
+      var img = landscapeFor(cat);
+      if (!img) return '';
+      return '<div class="nfx-catcard" data-cat="'+escAttr(cat)+'" tabindex="0" role="button" aria-label="'+escAttr(cat)+'">'
+        + '<img src="'+escAttr(img)+'" alt="'+escAttr(cat)+'" loading="lazy" onerror="this.parentNode.style.opacity=.25">'
+        + '<div class="nfx-catcard-label">'+escHtml(cat)+'</div>'
+        + '</div>';
+    }).filter(Boolean).join('');
+    if (!cards) { _catRowInstalled = true; return; }
+
+    section.innerHTML =
+      '<div class="nfx-row-head"><h2 class="nfx-row-title">🎬 Choisissez votre univers</h2><button type="button" class="nfx-row-cta" aria-label="Voir tout">Tout voir ›</button></div>'
+      + '<div class="nfx-row-track">'
+      +   '<button type="button" class="nfx-row-arrow left" aria-label="Précédent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      +   '<div class="nfx-row-scroll">'+cards+'</div>'
+      +   '<button type="button" class="nfx-row-arrow right" aria-label="Suivant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="9 18 15 12 9 6"/></svg></button>'
+      + '</div>';
+
+    insertBefore.parentNode.insertBefore(section, insertBefore);
+
+    var scroll = section.querySelector('.nfx-row-scroll');
+    section.querySelectorAll('.nfx-catcard').forEach(function(card){
+      card.addEventListener('click', function(){ selectCat(card.dataset.cat); });
+      card.addEventListener('keydown', function(e){ if (e.key==='Enter'||e.key===' ') { e.preventDefault(); selectCat(card.dataset.cat); } });
+    });
+    section.querySelector('.nfx-row-arrow.left').addEventListener('click', function(){
+      scroll.scrollBy({left:-scroll.clientWidth*.85, behavior:'smooth'});
+    });
+    section.querySelector('.nfx-row-arrow.right').addEventListener('click', function(){
+      scroll.scrollBy({left:scroll.clientWidth*.85, behavior:'smooth'});
+    });
+
+    _catRowInstalled = true;
+  }
+
   function enableHoverExpand(){
     document.body.classList.add('netflix-overlay-on');
+    document.body.classList.add('nfx-active');
+  }
+
+  // ── Scroll-shadow nav (Netflix-grade) ──────
+  function installScrollShadow(){
+    var apply = function(){
+      var y = window.scrollY || document.documentElement.scrollTop;
+      document.body.classList.toggle('nfx-scrolled', y > 40);
+    };
+    apply();
+    window.addEventListener('scroll', apply, {passive:true});
+  }
+
+  // ── Cat-view body class toggle ─────────────
+  function installCatViewWatcher(){
+    function update(){
+      var content = document.getElementById('content');
+      var hasContent = content && content.children && content.children.length > 0 && content.style.display !== 'none';
+      document.body.classList.toggle('nfx-catview', !!hasContent);
+    }
+    update();
+    var mo = new MutationObserver(update);
+    var content = document.getElementById('content');
+    if (content) mo.observe(content, {childList:true, attributes:true, attributeFilter:['style','class']});
   }
 
   function apply(){
     try { installBillboard(); } catch(e){ console.warn('[netflix-overlay] billboard:', e); }
     try { installTop10();    } catch(e){ console.warn('[netflix-overlay] top10:', e); }
+    try { installCatRow();   } catch(e){ console.warn('[netflix-overlay] catrow:', e); }
     try { enableHoverExpand(); } catch(e){}
   }
 
@@ -219,19 +296,30 @@
     setTimeout(apply, 200);
   });
 
+  // Scroll shadow + cat-view watcher: install once DOM is ready, regardless of poll
+  if (document.readyState !== 'loading'){
+    installScrollShadow();
+    installCatViewWatcher();
+  } else {
+    document.addEventListener('DOMContentLoaded', function(){
+      installScrollShadow();
+      installCatViewWatcher();
+    });
+  }
+
   var poll = 0;
   var pollIv = setInterval(function(){
     poll++;
-    if (_bbInstalled && _top10Installed) { clearInterval(pollIv); return; }
+    if (_bbInstalled && _top10Installed && _catRowInstalled) { clearInterval(pollIv); return; }
     if (poll > 60) { clearInterval(pollIv); return; }
     if (hasRenderedContent()) {
       apply();
-      if (_bbInstalled && _top10Installed) clearInterval(pollIv);
+      if (_bbInstalled && _top10Installed && _catRowInstalled) clearInterval(pollIv);
     }
   }, 500);
 
   var mo = new MutationObserver(function(){
-    if (hasRenderedContent() && (!_bbInstalled || !_top10Installed)) apply();
+    if (hasRenderedContent() && (!_bbInstalled || !_top10Installed || !_catRowInstalled)) apply();
   });
   if (document.body) mo.observe(document.body, {childList:true, subtree:true});
   else document.addEventListener('DOMContentLoaded', function(){ mo.observe(document.body, {childList:true, subtree:true}); });
