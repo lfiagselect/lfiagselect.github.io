@@ -58,12 +58,16 @@
 
   // App home rend `.cat-grid` (coverflow) ET `.alune-section`. On lit cats depuis [data-cat].
   function readCatsFromDom(){
-    var nodes = document.querySelectorAll('.cat-grid .cov-card[data-cat], .cat-grid [data-cat]');
+    // App.js crée: #catGrid > .cov-stage.swiper > .swiper-slide.cov-card[data-cat]
+    var nodes = document.querySelectorAll('#catGrid .cov-card[data-cat], .cov-card[data-cat], [data-cat]');
     var seen = {};
     var cats = [];
     nodes.forEach(function(n){
       var c = n.getAttribute('data-cat');
-      if (c && !seen[c]) { seen[c] = 1; cats.push(c); }
+      if (!c) return;
+      // Skip non-category data-cat (alune cards, billboard, etc.)
+      if (c === '__new__' || c === 'Tout') return;
+      if (!seen[c]) { seen[c] = 1; cats.push(c); }
     });
     return cats;
   }
