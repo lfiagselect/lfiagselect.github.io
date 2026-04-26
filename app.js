@@ -1365,8 +1365,6 @@ function renderAll() {
   renderVideos();
   updateHeroWidgets();
   updateAluneSection();
-  // Phase B: Netflix billboard hero (auto-rotate)
-  try { renderNetflixBillboard(); } catch(e){ console.warn('billboard:', e); }
   try{document.dispatchEvent(new CustomEvent('lfiag:ready'));}catch(e){}
   setTimeout(_updateAluneNew, 100);
 }
@@ -1689,121 +1687,10 @@ function getRecentVideos(n) {
 }
 
 /* Streaming-pro home: render horizontal rows (one per category + recent) */
-// ── Phase B: Top 10 row (posters portrait + chiffres géants Netflix-style) ──
-function spTop10Row(cats){
-  var ranked = cats.slice(0, 10);
-  var cards = ranked.map(function(cat, i){
-    var poster = (typeof CAT_POSTERS!=='undefined' && CAT_POSTERS[cat]) || (CAT_IMAGES[cat]||'').replace('/categories-v2/','/categories-v2-poster/');
-    return '<div class="sp-row-card" data-catid="'+escAttr(cat)+'" onclick="selectCatFromGrid(this.dataset.catid)" tabindex="0" role="button" aria-label="'+escAttr(cat+' · classement '+(i+1))+'">'
-      + '<span class="sp-top10-num" aria-hidden="true">'+(i+1)+'</span>'
-      + '<div class="sp-top10-poster"><img src="'+escAttr(poster)+'" alt="'+escAttr(cat)+'" loading="lazy" onerror="this.style.opacity=.3"></div>'
-      + '</div>';
-  }).join('');
-  return '<div class="sp-row sp-top10">'
-    + '<div class="sp-row-head"><span class="sp-row-title">★ Top 10 LFIAGtube · Cette semaine</span><span class="sp-row-count">'+ranked.length+'</span></div>'
-    + '<button class="sp-row-arrow left" aria-label="Précédent"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>'
-    + '<button class="sp-row-arrow right" aria-label="Suivant"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>'
-    + '<div class="sp-row-scroll">'+cards+'</div>'
-    + '</div>';
-}
-
-// ── Phase B: Billboard hero rotation Netflix-style ──
-function renderNetflixBillboard(){
-  var bb = document.getElementById('nfxBillboard');
-  var fallback = document.getElementById('heroFallback');
-  if (!bb) return;
-  // Données slides: 3 contenus (The Voice, L'Effet Lara, Star Académie)
-  var slides = [
-    { cat:'The Voice 2026', tag:'★ Top 1 · Cette semaine', title:'The Voice 2026', match:'98% Recommandé', year:'2026', badge:'TF1', sub:'Saison en cours',
-      desc:"Lara Fabian sublime la nouvelle saison de The Voice. Diffusion tous les samedis à 21h10 sur TF1.",
-      bg:'/images/categories-v2/The_Voice_2026.webp', vid:'/images/alune-thevoice-preview.mp4', rating:'TV-G' },
-    { cat:"L'Effet Lara - 2026", tag:'✦ Nouveauté 2026', title:"L'Effet Lara", match:'95% Recommandé', year:'2026', badge:'TVA', sub:'Saison 1',
-      desc:"Lara Fabian au cœur d'une nouvelle aventure musicale. Diffusion dès le dimanche 12 avril sur TVA.",
-      bg:'/images/categories-v2/LEffet_Lara_-_2026.webp', vid:'/images/alune-effetlara-preview.mp4', rating:'TV-G' },
-    { cat:'Star Academie 2025', tag:'⚡ Phénomène', title:'Star Académie 2025', match:'97% Recommandé', year:'2025', badge:'TVA', sub:'Édition complète',
-      desc:"Revivez la 7e Académie québécoise avec Lara Fabian au piano. Tous les épisodes, performances et coulisses.",
-      bg:'/images/categories-v2/Star_Acadmie_2025.webp', rating:'TV-G' }
-  ];
-  // Filtrer slides dont la cat existe dans allVideos (sinon clic mène vers page vide)
-  slides = slides.filter(function(s){ return allVideos.some(function(v){return v._cat===s.cat;}); });
-  if (!slides.length){ if(fallback) fallback.style.display=''; return; }
-
-  bb.innerHTML = slides.map(function(s, i){
-    var vidHtml = s.vid ? '<video class="nfx-bb-vid" muted loop playsinline preload="metadata" data-src="'+escAttr(s.vid)+'"></video>' : '';
-    return '<div class="nfx-billboard-slide'+(i===0?' active':'')+'" data-slide="'+i+'" data-cat="'+escAttr(s.cat)+'">'
-      + '<div class="nfx-bb-bg" style="background-image:url(\''+escAttr(s.bg)+'\')"></div>'
-      + vidHtml
-      + '<div class="nfx-bb-content">'
-      +   '<div class="nfx-bb-tag">'+escHtml(s.tag)+'</div>'
-      +   '<h1 class="nfx-bb-title">'+escHtml(s.title)+'</h1>'
-      +   '<div class="nfx-bb-meta">'
-      +     '<span class="match">'+escHtml(s.match)+'</span>'
-      +     '<span>'+escHtml(s.year)+'</span>'
-      +     '<span class="badge">'+escHtml(s.badge)+'</span>'
-      +     '<span>'+escHtml(s.sub)+'</span>'
-      +   '</div>'
-      +   '<p class="nfx-bb-desc">'+escHtml(s.desc)+'</p>'
-      +   '<div class="nfx-bb-actions">'
-      +     '<button class="nfx-bb-btn nfx-bb-btn-play" data-cat="'+escAttr(s.cat)+'" onclick="setAluneCategory(this.dataset.cat)"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Lecture</button>'
-      +     '<button class="nfx-bb-btn nfx-bb-btn-info" data-cat="'+escAttr(s.cat)+'" onclick="setAluneCategory(this.dataset.cat)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Plus d\'infos</button>'
-      +   '</div>'
-      + '</div>'
-      + (s.vid ? '<button class="nfx-bb-mute" data-mute="1" aria-label="Activer/désactiver le son"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg></button>' : '')
-      + '<div class="nfx-bb-rating">'+escHtml(s.rating)+'</div>'
-      + '</div>';
-  }).join('') + '<div class="nfx-bb-dots" id="nfxBbDots">' + slides.map(function(_,i){return '<button class="'+(i===0?'active':'')+'" data-dot="'+i+'" aria-label="Diapo '+(i+1)+'"></button>'}).join('') + '</div>';
-
-  bb.style.display = 'block';
-  if (fallback) fallback.style.display = 'none';
-
-  // Rotation logic
-  var bbIdx = 0, bbTimer = null;
-  var rm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  var slidesEl = bb.querySelectorAll('.nfx-billboard-slide');
-  var dots = bb.querySelectorAll('#nfxBbDots button');
-  function bbGo(i){
-    var oldEl = slidesEl[bbIdx];
-    oldEl.classList.remove('active');
-    if (dots[bbIdx]) dots[bbIdx].classList.remove('active');
-    var oldVid = oldEl.querySelector('video');
-    if (oldVid) try{ oldVid.pause(); oldVid.classList.remove('show'); }catch(_){}
-    bbIdx = ((i % slidesEl.length) + slidesEl.length) % slidesEl.length;
-    var newEl = slidesEl[bbIdx];
-    newEl.classList.add('active');
-    if (dots[bbIdx]) dots[bbIdx].classList.add('active');
-    var newVid = newEl.querySelector('video');
-    if (newVid && newVid.dataset.src && !newVid.src) newVid.src = newVid.dataset.src;
-    if (newVid && !rm){
-      setTimeout(function(){
-        if (newEl.classList.contains('active')){
-          try{ newVid.currentTime = 0; newVid.play().then(function(){ newVid.classList.add('show'); }).catch(function(){}); }catch(_){}
-        }
-      }, 1800);
-    }
-  }
-  function restartTimer(){ clearInterval(bbTimer); if (rm) return; bbTimer = setInterval(function(){ bbGo(bbIdx+1); }, 9000); }
-  dots.forEach(function(d, i){ d.addEventListener('click', function(){ bbGo(i); restartTimer(); }); });
-  bb.querySelectorAll('.nfx-bb-mute').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var slide = btn.closest('.nfx-billboard-slide');
-      var v = slide.querySelector('video');
-      if (!v) return;
-      v.muted = !v.muted;
-    });
-  });
-  if (!rm) setTimeout(function(){ bbGo(0); }, 200);
-  restartTimer();
-}
-
 function renderStreamingRows(el){
   var recent = getRecentVideos(10);
   var cats = [...new Set(allVideos.map(function(v){return v._cat;}))].sort();
   var html = '<div class="sp-rows">';
-
-  // Phase B: Top 10 row Netflix-style (avec posters portrait + chiffres géants)
-  if (cats.length >= 3) {
-    html += spTop10Row(cats.slice(0, 10));
-  }
 
   // Row 1: Derniers ajouts
   if (recent.length){
@@ -2541,34 +2428,161 @@ document.getElementById('settingsBtn').addEventListener('click', function(){
   p.classList.add('open');document.body.style.overflow='hidden';
   if(currentUser){
     var init=(currentUser.name||currentUser.email||'?').charAt(0).toUpperCase();
-    var av = document.getElementById('accountAvatar'); if (av) av.textContent = init;
-    var an = document.getElementById('accountName'); if (an) an.textContent = currentUser.name || '—';
-    var ae = document.getElementById('accountEmail'); if (ae) ae.textContent = currentUser.email || '—';
-    var ar = document.getElementById('accountRole'); if (ar) ar.textContent = currentUser.role==='admin'?'Administrateur':'Membre';
-    try {
-      var hist = JSON.parse(localStorage.getItem('lfiag_history')||'{}');
-      var seen = Object.keys(hist).length;
-      var as_ = document.getElementById('accountSeen'); if (as_) as_.textContent = seen + ' / ' + (allVideos.length || 0);
-      var avd = document.getElementById('accountVideos'); if (avd) avd.textContent = (allVideos.length || 0) + ' contenus';
-    } catch(_){}
+    document.getElementById('accountAvatar').textContent=init;
+    document.getElementById('accountName').textContent=currentUser.name||currentUser.email||'—';
+    document.getElementById('accountEmail').textContent=currentUser.email||'—';
+    document.getElementById('accountRole').textContent=currentUser.role==='admin'?'Administrateur':'Membre';
+    document.getElementById('accountVideos').textContent=allVideos.length?allVideos.length+' vidéos':'—';
+    try{var h=JSON.parse(localStorage.getItem('lfiag_history')||'{}'),s=Object.keys(h).length;
+      document.getElementById('accountSeen').textContent=s+' vidéo'+(s>1?'s':'');}
+    catch(e){document.getElementById('accountSeen').textContent='—';}
   }
 });
 
-/* Header transparent au top → opaque au scroll */
-function _updHdrPhaseB(){
-  var y = window.scrollY||0;
-  if (y < 80) document.body.classList.add('home-top'); else document.body.classList.remove('home-top');
-  var hero = document.querySelector('.hero');
-  if (hero && y < 500) { hero.style.setProperty('--parallax-y', (y * 0.3) + 'px'); }
-}
-window.addEventListener('scroll', function(){
-  if (!_updHdrPhaseB._t){ _updHdrPhaseB._t = true; requestAnimationFrame(function(){ _updHdrPhaseB(); _updHdrPhaseB._t=false; }); }
-}, {passive:true});
-document.addEventListener('DOMContentLoaded', _updHdrPhaseB);
-_updHdrPhaseB();
+// ============================================
+// INIT
+// ============================================
+_initLfiagLoader();
+if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream) document.documentElement.classList.add('is-ios');
 
-window.lfiagShare=function(title,url){
-  if (navigator.share) return navigator.share({title:title||document.title, url:url||location.href}).catch(function(){});
-  if (navigator.clipboard) { navigator.clipboard.writeText(url||location.href); return Promise.resolve(); }
-  return Promise.reject();
-};
+(function(){
+  var ua=navigator.userAgent||'';
+  var isTV=/Silk|SilkBrowser/i.test(ua)||/AppleTV|tvOS/i.test(ua)||
+    /Tizen/i.test(ua)||/WebOS|Web0S/i.test(ua)||/SMART-TV|SmartTV/i.test(ua)||
+    /CrKey/i.test(ua)||/Android.*TV|TV.*Android/i.test(ua)||
+    (screen.width>=1280&&!('ontouchstart' in window)&&window.matchMedia('(hover:none)').matches);
+  if(!isTV) return;
+  document.documentElement.classList.add('is-tv');
+  document.addEventListener('keydown',function(e){
+    var el=document.activeElement,key=e.key;
+    if(key==='Enter'&&el&&el!==document.body){el.click();e.preventDefault();return;}
+    if(key==='ArrowDown'||key==='ArrowUp'){
+      var items=Array.from(document.querySelectorAll('#catDrawerList .cat-drawer-item'));
+      var ix=items.indexOf(el);
+      if(ix>=0){var ni=key==='ArrowDown'?items[ix+1]:items[ix-1];if(ni){ni.focus();e.preventDefault();return;}}
+      var cards=Array.from(document.querySelectorAll('.video-card'));
+      var ci=cards.indexOf(el);
+      if(ci>=0){
+        var grid=document.querySelector('.video-grid');
+        var cols=grid?Math.max(1,Math.round(grid.offsetWidth/(cards[0]?cards[0].offsetWidth+20:320))):4;
+        var tc=key==='ArrowDown'?cards[ci+cols]:cards[ci-cols];
+        if(tc){tc.focus();tc.scrollIntoView({block:'nearest',behavior:'auto'});e.preventDefault();}
+      }
+    }
+    if(key==='ArrowLeft'||key==='ArrowRight'){
+      var cards2=Array.from(document.querySelectorAll('.video-card'));
+      var ci2=cards2.indexOf(el);
+      if(ci2>=0){var tc2=key==='ArrowRight'?cards2[ci2+1]:cards2[ci2-1];if(tc2){tc2.focus();tc2.scrollIntoView({block:'nearest',behavior:'auto'});e.preventDefault();}}
+    }
+    // Samsung(10009) / LG(461) remote back + generic back keys
+    if(key==='Escape'||key==='GoBack'||key==='BrowserBack'||e.keyCode===10009||e.keyCode===461){
+      var modal=document.getElementById('modal');
+      var drawer=document.getElementById('catDrawer');
+      var sp=document.getElementById('settingsPanel');
+      if(modal&&modal.classList.contains('open')){closeModal();e.preventDefault();return;}
+      if(drawer&&drawer.classList.contains('open')){closeCatDrawer();e.preventDefault();return;}
+      if(sp&&sp.classList.contains('open')){sp.classList.remove('open');document.body.style.overflow='';e.preventDefault();}
+    }
+  });
+  document.addEventListener('lfiag:ready',function(){
+    setTimeout(function(){var c=document.querySelector('.video-card');if(c)c.focus();},400);
+  });
+
+  /* TV burn-in dim: after 3min idle add .tv-idle, remove on input */
+  var _tvIdleT=null;
+  function _tvWake(){document.documentElement.classList.remove('tv-idle');clearTimeout(_tvIdleT);_tvIdleT=setTimeout(function(){document.documentElement.classList.add('tv-idle');},180000);}
+  ['keydown','mousemove','touchstart','click','focus'].forEach(function(ev){document.addEventListener(ev,_tvWake,true);});
+  _tvWake();
+
+  /* TV focus trap modal */
+  function _tvTrap(e){
+    if(e.key!=='Tab')return;
+    var modal=document.querySelector('.modal-backdrop.open .modal');
+    if(!modal)return;
+    var f=modal.querySelectorAll('button,a,iframe,[tabindex]:not([tabindex="-1"])');
+    if(!f.length)return;
+    var first=f[0],last=f[f.length-1];
+    if(e.shiftKey&&document.activeElement===first){last.focus();e.preventDefault();}
+    else if(!e.shiftKey&&document.activeElement===last){first.focus();e.preventDefault();}
+  }
+  document.addEventListener('keydown',_tvTrap);
+
+  /* Auto scroll focus center for alune-cards (TV: instant pour fluidité) */
+  document.addEventListener('focusin',function(e){
+    if(e.target.matches&&e.target.matches('.alune-card,.cat-vignette')){
+      e.target.scrollIntoView({block:'center',behavior:'auto'});
+    }
+  });
+})();
+
+/* =========================================================
+   MOBILE/TABLET ENHANCEMENTS — Tier 1+2+3
+   ========================================================= */
+(function(){
+  /* Slow connection (2G) → treat as low-end */
+  try{
+    var c=navigator.connection;
+    if(c&&['slow-2g','2g'].indexOf(c.effectiveType)>=0){
+      document.documentElement.classList.add('low-end');
+    }
+    if(c&&c.saveData){
+      document.documentElement.classList.add('low-end');
+    }
+  }catch(_){}
+
+  /* Haptic feedback on critical tap (mobile only) */
+  function _hap(n){try{navigator.vibrate&&navigator.vibrate(n||8);}catch(_){}}
+  document.addEventListener('click',function(e){
+    var t=e.target.closest&&e.target.closest('.btn,.modal-like-btn,.cat-pill,.mob-filter-btn,.play-btn');
+    if(t)_hap(8);
+  },{passive:true});
+
+  /* PWA install prompt — discrete button */
+  var _deferredPrompt=null;
+  window.addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault();
+    _deferredPrompt=e;
+    var btn=document.getElementById('pwaInstallBtn');
+    if(!btn){
+      btn=document.createElement('button');
+      btn.id='pwaInstallBtn';
+      btn.textContent='Installer l\'app';
+      btn.style.cssText='position:fixed;bottom:calc(80px + env(safe-area-inset-bottom,0px));right:16px;z-index:150;padding:.7rem 1.1rem;border-radius:24px;background:var(--gold);color:#000;border:none;font-weight:700;font-size:.85rem;box-shadow:0 8px 24px rgba(0,0,0,.4);cursor:pointer';
+      btn.addEventListener('click',async function(){
+        if(!_deferredPrompt)return;
+        _deferredPrompt.prompt();
+        var r=await _deferredPrompt.userChoice;
+        if(r.outcome==='accepted')btn.remove();
+        _deferredPrompt=null;
+      });
+      document.body.appendChild(btn);
+    }
+  });
+  window.addEventListener('appinstalled',function(){
+    var b=document.getElementById('pwaInstallBtn');if(b)b.remove();
+  });
+
+  /* Header transparent au top → opaque au scroll */
+  function _updHdr(){
+    var y = window.scrollY||0;
+    if (y < 80) document.body.classList.add('home-top');
+    else document.body.classList.remove('home-top');
+    // Parallax hero bg
+    var hero = document.querySelector('.hero');
+    if (hero && y < 500) {
+      hero.style.setProperty('--parallax-y', (y * 0.3) + 'px');
+    }
+  }
+  window.addEventListener('scroll', function(){
+    if (!_updHdr._t){ _updHdr._t = true; requestAnimationFrame(function(){ _updHdr(); _updHdr._t=false; }); }
+  }, {passive:true});
+  document.addEventListener('DOMContentLoaded', _updHdr);
+  _updHdr();
+
+  /* Native Share API wrapper — expose global */
+  window.lfiagShare=function(title,url){
+    if (navigator.share) return navigator.share({title:title||document.title, url:url||location.href}).catch(function(){});
+    if (navigator.clipboard) { navigator.clipboard.writeText(url||location.href); return Promise.resolve(); }
+    return Promise.reject();
+  };
+})();
