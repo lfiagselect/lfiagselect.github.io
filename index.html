@@ -972,56 +972,8 @@ if ('serviceWorker' in navigator) {
 <!-- Swiper 11 (coverflow) — CDN + SRI integrity hardening -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" integrity="sha384-gAPqlBuTCdtVcYt9ocMOYWrnBZ4XSL6q+4eXqwNycOr4iFczhNKtnYhF3NEXJM51" crossorigin="anonymous">
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" integrity="sha384-2UI1PfnXFjVMQ7/ZDEF70CR943oH3v6uZrFQGGqJYlvhh4g6z6uVktxYbOlAczav" crossorigin="anonymous" defer></script>
-<link rel="stylesheet" href="netflix-overlay.css?v=9">
-<script src="netflix-overlay.js?v=7" defer></script>
-<script>document.documentElement.classList.add('nfx-pre');</script>
-<style id="nfxHideOrig">
-/* PRE-RENDER kill: hide prod home immediately at first paint, before app.min.js mounts */
-html.nfx-pre .hero,
-html.nfx-pre .alune-section,
-html.nfx-pre #aluneSection,
-html.nfx-pre #newSection,
-html.nfx-pre #catGridSection,
-html.nfx-pre .cat-grid-section,
-html.nfx-pre #catGrid,
-html.nfx-pre .cov-stage,
-html.nfx-pre .swiper,
-html.nfx-pre .alune-grid,
-html.nfx-pre .alune-card,
-html.nfx-pre .alune-title,
-html.nfx-pre .desk-cat-bar,
-html.nfx-pre #toolbar,
-html.nfx-pre .toolbar,
-html.nfx-pre #content{display:none !important;visibility:hidden !important}
-/* Cat-view: restore #content + toolbar after user clicks a category */
-body.nfx-catview #content{display:block !important;visibility:visible !important}
-body.nfx-catview #toolbar,
-body.nfx-catview .desk-cat-bar{display:flex !important;visibility:visible !important}
-/* Pre-paint bg lock so flash isn\'t white */
-html.nfx-pre,html.nfx-pre body{background:#141414 !important}
-</style>
 </head>
-
 <body>
-<script>
-/* SAFETY: force hide loader après 7s + ensure auth screen visible si pas connecté */
-setTimeout(function(){
-  var l = document.getElementById('lfiagLoader');
-  if (l && !l.classList.contains('lfiag-hide')) {
-    l.classList.add('lfiag-hide');
-    setTimeout(function(){ if (l.parentNode) l.parentNode.removeChild(l); }, 800);
-  }
-  // Si pas connecté ET aucun screen actif → force auth screen visible
-  if (typeof currentUser === 'undefined' || !currentUser) {
-    var sa = document.getElementById('screen-auth');
-    if (sa) { sa.classList.add('active', 'visible'); sa.style.display = 'flex'; }
-    var sl = document.getElementById('screen-loading');
-    if (sl) sl.classList.remove('active', 'visible');
-    var sap = document.getElementById('screen-app');
-    if (sap) sap.classList.remove('active');
-  }
-}, 7000);
-</script>
 <button class="ios-exit-fs-btn" id="iosExitFsBtn" onclick="_iosExitFakeFS()" aria-label="Quitter plein écran">× Quitter</button>
 
 <a class="sr-only" href="#main-content">Aller au contenu principal</a>
@@ -1154,7 +1106,6 @@ setTimeout(function(){
 <!-- SCREEN: APP -->
 <div id="screen-app" class="screen">
   <main id="main-content">
-    <div id="nfxApp" class="nfx-app"></div>
     <section class="hero" aria-label="En-t&#xea;te">
       <picture>
         <source type="image/webp" srcset="/images/hero-small.webp 800w,/images/hero-bg.webp 1920w" sizes="100vw">
