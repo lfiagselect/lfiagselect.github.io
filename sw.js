@@ -1,6 +1,6 @@
-// LFIAGtube — Service Worker v5
+// LFIAGtube — Service Worker v6 (rollback phase B)
 // Stratégie: network-first HTML (freshness), stale-while-revalidate JS/CSS (perf), cache-first assets
-const CACHE_VERSION = 'lfiag-v5-202604220000';
+const CACHE_VERSION = 'lfiag-v6-202604261330';
 const CACHE_NAME = CACHE_VERSION;
 const SHELL_ASSETS = [
   '/manifest.json',
@@ -111,12 +111,7 @@ self.addEventListener('fetch', event => {
       }
       return fetch(req).then(response => {
         if (!response || response.status !== 200 || response.type !== 'basic') return response;
+        // Skip cache for non-http(s) schemes (ex: chrome-extension://)
+        if (!/^https?:/.test(req.url)) return response;
         const clone = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
-        return response;
-      });
-    }).catch(() => {
-      if (req.mode === 'navigate') return caches.match('/index.html');
-    })
-  );
-});
+        caches.open(CACHE_NAME).then(cache => cache.put(req, clone
