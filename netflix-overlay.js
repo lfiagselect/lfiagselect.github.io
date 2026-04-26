@@ -62,6 +62,20 @@
   var rm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   var _bbInstalled = false, _top10Installed = false, _catRowInstalled = false;
 
+  // ACTIVATE OVERLAY CSS EARLY — before app.min.js renders prod home.
+  // Kills double-render flicker by hiding prod sections on first paint.
+  function _activate(){
+    document.documentElement.classList.add('netflix-overlay-on');
+    if (document.body){
+      document.body.classList.add('netflix-overlay-on');
+      document.body.classList.add('nfx-active');
+    }
+  }
+  _activate();
+  if (!document.body){
+    document.addEventListener('DOMContentLoaded', _activate);
+  }
+
   function escAttr(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
   function escHtml(s){ return String(s==null?'':s).replace(/[&<>]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
 
@@ -258,8 +272,7 @@
   }
 
   function enableHoverExpand(){
-    document.body.classList.add('netflix-overlay-on');
-    document.body.classList.add('nfx-active');
+    _activate();
   }
 
   // ── Scroll-shadow nav (Netflix-grade) ──────

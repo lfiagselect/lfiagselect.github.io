@@ -41,17 +41,48 @@ body.netflix-overlay-on::-webkit-scrollbar-track{background:#000}
 body.netflix-overlay-on::-webkit-scrollbar-thumb{background:#333;border-radius:0}
 
 /* ─── HIDE PROD HOME SECTIONS (overlay takes over) ──────── */
+/* Aggressive blanket: kill ALL prod home rendering when overlay active.
+   Only #nfxApp + its nfx-* sections + the modal/screens stay visible. */
 body.netflix-overlay-on .hero,
+body.netflix-overlay-on .hero *,
 body.netflix-overlay-on .alune-section,
+body.netflix-overlay-on .alune-section *,
+body.netflix-overlay-on #aluneSection,
 body.netflix-overlay-on #newSection,
-body.netflix-overlay-on #catGridSection{display:none !important}
+body.netflix-overlay-on #catGridSection,
+body.netflix-overlay-on .cat-grid-section,
+body.netflix-overlay-on #catGrid,
+body.netflix-overlay-on .cov-stage,
+body.netflix-overlay-on .swiper,
+body.netflix-overlay-on .swiper-wrapper,
+body.netflix-overlay-on .cov-card,
+body.netflix-overlay-on .cov-arrow,
+body.netflix-overlay-on .cov-dots,
+body.netflix-overlay-on .alune-grid,
+body.netflix-overlay-on .alune-card,
+body.netflix-overlay-on .alune-title,
+body.netflix-overlay-on .alune-badge{display:none !important;visibility:hidden !important;height:0 !important;overflow:hidden !important;pointer-events:none !important}
+
+/* Hide all direct children of <main> that are NOT our overlay sections — kills any prod section we missed */
+body.netflix-overlay-on:not(.nfx-catview) #screen-app main > section:not(.nfx-billboard):not(.nfx-top10-row):not(.nfx-row):not(.nfx-catrow):not(.nfx-rows-wrap){display:none !important}
+body.netflix-overlay-on:not(.nfx-catview) #screen-app main > div:not(#nfxApp):not(.modal-backdrop):not(.toast-container):not(.settings-panel){display:none !important}
+
+/* Toolbar/cat-bar/content visibility split: hide on home, show on cat-view */
 body.netflix-overlay-on:not(.nfx-catview) .desk-cat-bar,
 body.netflix-overlay-on:not(.nfx-catview) #toolbar,
 body.netflix-overlay-on:not(.nfx-catview) .toolbar,
-body.netflix-overlay-on:not(.nfx-catview) #content{display:none !important}
-body.netflix-overlay-on.nfx-catview #content{display:block !important;padding:6rem var(--nfx-row-px) 4rem !important;background:var(--nfx-bg);min-height:100vh}
+body.netflix-overlay-on:not(.nfx-catview) #content{display:none !important;visibility:hidden !important;height:0 !important}
+body.netflix-overlay-on.nfx-catview #content{display:block !important;visibility:visible !important;height:auto !important;padding:6rem var(--nfx-row-px) 4rem !important;background:var(--nfx-bg);min-height:100vh;position:relative;z-index:1}
 body.netflix-overlay-on.nfx-catview #toolbar,
-body.netflix-overlay-on.nfx-catview .desk-cat-bar{display:flex !important}
+body.netflix-overlay-on.nfx-catview .desk-cat-bar{display:flex !important;visibility:visible !important;height:auto !important}
+
+/* Overlay z-index dominance */
+body.netflix-overlay-on #nfxApp{position:relative;z-index:5}
+body.netflix-overlay-on .nfx-billboard,
+body.netflix-overlay-on .nfx-rows-wrap,
+body.netflix-overlay-on .nfx-row,
+body.netflix-overlay-on .nfx-top10-row,
+body.netflix-overlay-on .nfx-catrow{position:relative;z-index:5}
 
 /* ─── HEADER — Netflix transparent → solid ──────────────── */
 body.netflix-overlay-on header{

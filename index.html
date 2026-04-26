@@ -972,23 +972,33 @@ if ('serviceWorker' in navigator) {
 <!-- Swiper 11 (coverflow) — CDN + SRI integrity hardening -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" integrity="sha384-gAPqlBuTCdtVcYt9ocMOYWrnBZ4XSL6q+4eXqwNycOr4iFczhNKtnYhF3NEXJM51" crossorigin="anonymous">
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" integrity="sha384-2UI1PfnXFjVMQ7/ZDEF70CR943oH3v6uZrFQGGqJYlvhh4g6z6uVktxYbOlAczav" crossorigin="anonymous" defer></script>
-<link rel="stylesheet" href="netflix-overlay.css?v=6">
-<script src="netflix-overlay.js?v=4" defer></script>
-
+<link rel="stylesheet" href="netflix-overlay.css?v=7">
+<script src="netflix-overlay.js?v=5" defer></script>
+<script>document.documentElement.classList.add('nfx-pre');</script>
 <style id="nfxHideOrig">
-/* Quand Netflix actif, cache les sections home prod */
-body.nfx-active .hero,
-body.nfx-active .alune-section,
-body.nfx-active #newSection,
-body.nfx-active #catGridSection,
-body.nfx-active .desk-cat-bar,
-body.nfx-active #toolbar,
-body.nfx-active .toolbar,
-body.nfx-active #content { display: none !important; }
-/* Vue catégorie filtrée: re-affiche #content style classique */
-body.nfx-active.nfx-catview #content { display: block !important; }
-body.nfx-active.nfx-catview #toolbar,
-body.nfx-active.nfx-catview .desk-cat-bar { display: flex !important; }
+/* PRE-RENDER kill: hide prod home immediately at first paint, before app.min.js mounts */
+html.nfx-pre .hero,
+html.nfx-pre .alune-section,
+html.nfx-pre #aluneSection,
+html.nfx-pre #newSection,
+html.nfx-pre #catGridSection,
+html.nfx-pre .cat-grid-section,
+html.nfx-pre #catGrid,
+html.nfx-pre .cov-stage,
+html.nfx-pre .swiper,
+html.nfx-pre .alune-grid,
+html.nfx-pre .alune-card,
+html.nfx-pre .alune-title,
+html.nfx-pre .desk-cat-bar,
+html.nfx-pre #toolbar,
+html.nfx-pre .toolbar,
+html.nfx-pre #content{display:none !important;visibility:hidden !important}
+/* Cat-view: restore #content + toolbar after user clicks a category */
+body.nfx-catview #content{display:block !important;visibility:visible !important}
+body.nfx-catview #toolbar,
+body.nfx-catview .desk-cat-bar{display:flex !important;visibility:visible !important}
+/* Pre-paint bg lock so flash isn\'t white */
+html.nfx-pre,html.nfx-pre body{background:#141414 !important}
 </style>
 </head>
 
