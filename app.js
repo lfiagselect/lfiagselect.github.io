@@ -1155,31 +1155,38 @@ function initCoverflow(root, cats){
       return;
     }
     var isMobile = window.innerWidth < 768;
+    var isTV = document.documentElement.classList.contains('is-tv');
     var swiper = new Swiper(root, {
       effect: 'coverflow',
-      grabCursor: true,
+      grabCursor: !isTV,
       centeredSlides: true,
       slidesPerView: 'auto',
       loop: cats.length >= 5,
       loopAdditionalSlides: 2,
       initialSlide: Math.floor(cats.length/2),
-      speed: isMobile ? 600 : 520,
+      speed: isTV ? 380 : (isMobile ? 600 : 520),
       spaceBetween: isMobile ? -40 : -60,
       threshold: 4,
       resistanceRatio: 0.5,
       watchSlidesProgress: true,
+      // TV: pas de drag tactile, pas de simulation mouse — D-pad uniquement
+      allowTouchMove: !isTV,
+      simulateTouch: !isTV,
+      preventClicks: false,
+      preventClicksPropagation: false,
       coverflowEffect: {
-        rotate: 28,
+        rotate: isTV ? 18 : 28,
         stretch: 0,
-        depth: 180,
+        depth: isTV ? 120 : 180,
         modifier: 1,
         slideShadows: false,
-        scale: 0.9
+        scale: isTV ? 0.95 : 0.9
       },
       navigation: { prevEl: prev, nextEl: next },
-      keyboard: { enabled: true, onlyInViewport: true },
-      mousewheel: { forceToAxis: true, sensitivity: 1, thresholdDelta: 20 },
-      a11y: {
+      // TV: désactive keyboard Swiper (gère D-pad nous-mêmes), mousewheel, a11y auto-focus
+      keyboard: isTV ? false : { enabled: true, onlyInViewport: true },
+      mousewheel: isTV ? false : { forceToAxis: true, sensitivity: 1, thresholdDelta: 20 },
+      a11y: isTV ? false : {
         prevSlideMessage: 'Catégorie précédente',
         nextSlideMessage: 'Catégorie suivante'
       },
@@ -1192,16 +1199,49 @@ function initCoverflow(root, cats){
 
     // Click active slide = ouvre catégorie, click autre = navigue vers
     root.querySelectorAll('.swiper-slide').forEach(function(slide){
-      slide.addEventListener('click', function(){
+      slide.addEventListener('click', function(e){
         if (slide.classList.contains('swiper-slide-active')){
           selectCatFromGrid(slide.dataset.cat);
         } else {
-          // index réel dans cats (data-swiper-slide-index si loop)
           var idx = parseInt(slide.getAttribute('data-swiper-slide-index') || cats.indexOf(slide.dataset.cat), 10);
           if (!isNaN(idx)) swiper.slideToLoop(idx);
         }
       });
     });
+
+    // ── TV-spécifique: D-pad ←/→ navigue Swiper, Enter/OK ouvre catégorie active
+    // Évite focus shift natif (scroll viewport erratique) + désactive scroll-into-view auto
+    if (isTV) {
+      root.setAttribute('tabindex', '0');
+      root.classList.add('cov-tv');
+      // Focus root au lieu des slides individuelles → pas de scrollIntoView par browser
+      var _tvKeyHandler = function(e) {
+        if (!root._swiper) return;
+        // Vérifie focus dans coverflow (root ou slide)
+        var inCov = root.contains(document.activeElement) || document.activeElement === root;
+        if (!inCov) return;
+        if (e.key === 'ArrowLeft' || e.keyCode === 37) {
+          e.preventDefault(); e.stopPropagation();
+          root._swiper.slidePrev();
+        } else if (e.key === 'ArrowRight' || e.keyCode === 39) {
+          e.preventDefault(); e.stopPropagation();
+          root._swiper.slideNext();
+        } else if (e.key === 'Enter' || e.keyCode === 13 || e.keyCode === 32) {
+          e.preventDefault(); e.stopPropagation();
+          var active = root.querySelector('.swiper-slide-active');
+          if (active && active.dataset.cat) selectCatFromGrid(active.dataset.cat);
+        }
+        // ↑/↓ laisse passer (sortie coverflow vers nav verticale globale)
+      };
+      // Cleanup ancien handler si existant
+      if (root._tvKeyHandler) document.removeEventListener('keydown', root._tvKeyHandler, true);
+      root._tvKeyHandler = _tvKeyHandler;
+      document.addEventListener('keydown', _tvKeyHandler, true);
+      // Slides non-tabbables individuellement (sinon focus auto-scroll viewport)
+      root.querySelectorAll('.swiper-slide').forEach(function(s){ s.setAttribute('tabindex','-1'); });
+      // Auto-focus root quand coverflow visible
+      setTimeout(function(){ if (document.activeElement === document.body) root.focus({preventScroll:true}); }, 200);
+    }
 
     // Entrance cascade (skip reduced-motion/low-end)
     if (!reducedMotion && !document.documentElement.classList.contains('low-end')){

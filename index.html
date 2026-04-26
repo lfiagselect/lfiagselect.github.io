@@ -840,6 +840,14 @@ body.ios-fake-fs-active{overflow:hidden}
 
   /* TV: focus ring */
   .is-tv .cov-card.swiper-slide-active{box-shadow:0 0 0 4px var(--gold),0 30px 80px rgba(0,0,0,.85) !important}
+  /* TV coverflow: lock scroll, root focusable seul, slides non-individuellement focus */
+  .is-tv .cov-stage.cov-tv{outline:none;contain:layout paint;overscroll-behavior:contain;scroll-margin:0;overflow:hidden !important}
+  .is-tv .cov-stage.cov-tv:focus,.is-tv .cov-stage.cov-tv:focus-visible{outline:4px solid var(--gold);outline-offset:6px;border-radius:8px}
+  .is-tv .cov-stage.cov-tv .swiper-slide{scroll-margin:9999px;outline:none !important}
+  .is-tv .cov-stage.cov-tv .swiper-slide:focus,.is-tv .cov-stage.cov-tv .swiper-slide:focus-visible{outline:none !important}
+  .is-tv .cov-stage.cov-tv .cov-card.swiper-slide-active{outline:none}
+  /* Désactive transitions transformations parasites D-pad rapide */
+  .is-tv .cov-stage.cov-tv .swiper-wrapper{will-change:transform}
 
   /* Reduced motion: désactive parallax + entrance */
   @media (prefers-reduced-motion: reduce){
