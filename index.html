@@ -992,6 +992,25 @@ body.nfx-active.nfx-catview .desk-cat-bar { display: flex !important; }
 </head>
 
 <body>
+<script>
+/* SAFETY: force hide loader après 7s + ensure auth screen visible si pas connecté */
+setTimeout(function(){
+  var l = document.getElementById('lfiagLoader');
+  if (l && !l.classList.contains('lfiag-hide')) {
+    l.classList.add('lfiag-hide');
+    setTimeout(function(){ if (l.parentNode) l.parentNode.removeChild(l); }, 800);
+  }
+  // Si pas connecté ET aucun screen actif → force auth screen visible
+  if (typeof currentUser === 'undefined' || !currentUser) {
+    var sa = document.getElementById('screen-auth');
+    if (sa) { sa.classList.add('active', 'visible'); sa.style.display = 'flex'; }
+    var sl = document.getElementById('screen-loading');
+    if (sl) sl.classList.remove('active', 'visible');
+    var sap = document.getElementById('screen-app');
+    if (sap) sap.classList.remove('active');
+  }
+}, 7000);
+</script>
 <button class="ios-exit-fs-btn" id="iosExitFsBtn" onclick="_iosExitFakeFS()" aria-label="Quitter plein écran">× Quitter</button>
 
 <a class="sr-only" href="#main-content">Aller au contenu principal</a>
