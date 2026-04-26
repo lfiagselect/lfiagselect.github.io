@@ -30,9 +30,29 @@
 }
 
 /* ─── HOST OVERRIDES ─────────────────────────────────────── */
-body.netflix-overlay-on{background:var(--nfx-bg) !important;color:var(--nfx-text);font-family:var(--nfx-font)}
-body.netflix-overlay-on #screen-app{background:var(--nfx-bg)}
-body.netflix-overlay-on #screen-app main{max-width:none !important;padding:0 !important;margin:0 !important;background:var(--nfx-bg)}
+body.netflix-overlay-on{background:var(--nfx-bg) !important;color:var(--nfx-text);font-family:var(--nfx-font);width:100% !important;max-width:none !important;margin:0 !important;padding:0 !important}
+html.nfx-pre,html.nfx-pre body{width:100% !important;max-width:none !important;margin:0 !important;padding:0 !important;overflow-x:hidden}
+
+/* CRITICAL: kill prod #screen-app flex-column-clamp that limits width to 400px on home.
+   Force full-viewport width so billboard + rows expand properly. */
+body.netflix-overlay-on #screen-app{
+  background:var(--nfx-bg) !important;
+  display:block !important;
+  width:100vw !important;
+  max-width:100vw !important;
+  min-width:100vw !important;
+  margin:0 !important;
+  padding:0 !important;
+  align-items:initial !important;
+  flex-direction:initial !important;
+}
+body.netflix-overlay-on #screen-app.screen.active{display:block !important}
+body.netflix-overlay-on #screen-app main,
+body.netflix-overlay-on #main-content{
+  max-width:none !important;width:100% !important;min-width:100% !important;
+  padding:0 !important;margin:0 !important;background:var(--nfx-bg);
+  display:block !important;
+}
 #nfxApp{display:block;width:100%;color:var(--nfx-text);font-family:var(--nfx-font)}
 
 /* Kill native scrollbar on overlay (subtle Netflix-like) */
