@@ -26,35 +26,39 @@ let settings = {
 };
 
 var CAT_IMAGES = {
-  "1985 - 1990 Les débuts": "/images/categories/1985_-_1990_Les_dbuts.jpg",
-  "1991 - 1993 Lara Fabian (Français)": "/images/categories/1991_-_1993_Lara_Fabian_Franais.jpg",
-  "1994 - 1995 Carpe Diem": "/images/categories/1994_-_1995_Carpe_Diem.jpg",
-  "1996 - 1999 Pure": "/images/categories/1996_-_1999_Pure.jpg",
-  "1999 -2001 Lara Fabian (Anglais)": "/images/categories/1999_-2001_Lara_Fabian_Anglais.jpg",
-  "2001 - 2003 Nue & ETI": "/images/categories/2001_-_2003_Nue__ETI.jpg",
-  "2004 A Wonderful Life": "/images/categories/2004_A_Wonderful_Life.jpg",
-  "2005 - 2008 9": "/images/categories/2005_-_2008_9.jpg",
-  "2009 - 2010 TLFM & EWIM": "/images/categories/2009_-_2010_TLFM__EWIM.jpg",
-  "2010 - 2012 Mademoiselle Zhivago": "/images/categories/2010_-_2012_Mademoiselle_Zhivago.jpg",
-  "2013 - 2014 Le Secret": "/images/categories/2013_-_2014_Le_Secret.jpg",
-  "2015 - 2016 Ma Vie dans La Tienne": "/images/categories/2015_-_2016_Ma_Vie_dans_La_Tienne.jpg",
-  "2017 - 2018 Camouflage": "/images/categories/2017_-_2018_Camouflage.jpg",
-  "2019 - 2021 Papillon": "/images/categories/2019_-_2021_Papillon.jpg",
-  "2024 - Aujourd’hui": "/images/categories/2024_-_Aujourdhui.jpg",
-  "2024 - Aujourd'hui": "/images/categories/2024_-_Aujourdhui.jpg",
-  "L’Effet Lara - 2026": "/images/categories/LEffet_Lara_-_2026.jpg",
-  "L'Effet Lara - 2026": "/images/categories/LEffet_Lara_-_2026.jpg",
-  "Lara Fabian - Concerts": "/images/categories/Lara_Fabian_-_Concerts.jpg",
-  "Lara Fabian - Divers": "/images/categories/Lara_Fabian_-_Divers.jpg",
-  "Lara Fabian - Livres": "/images/categories/Lara_Fabian_-_Livres.jpg",
-  "Lara Fabian Documentaires": "/images/categories/Lara_Fabian_Documentaires.jpg",
-  "Lara Fabian au Cinéma": "/images/categories/Lara_Fabian_au_Cinma.jpg",
-  "Lara Fabian aux Enfoirés": "/images/categories/Lara_Fabian_aux_Enfoirs.jpg",
-  "Star Academie 2025": "/images/categories/Star_Acadmie_2025.jpg",
-  "Star Academy France": "/images/categories/Star_Acadmie_2025.jpg",
-  "The Voice 2026": "/images/categories/The_Voice_2026.jpg",
-  "The Voice Kids 2024": "/images/categories/The_Voice_Kids_2024.jpg"
+  "1985 - 1990 Les débuts": "/images/categories-v2/1985_-_1990_Les_dbuts.webp",
+  "1991 - 1993 Lara Fabian (Français)": "/images/categories-v2/1991_-_1993_Lara_Fabian_Franais.webp",
+  "1994 - 1995 Carpe Diem": "/images/categories-v2/1994_-_1995_Carpe_Diem.webp",
+  "1996 - 1999 Pure": "/images/categories-v2/1996_-_1999_Pure.webp",
+  "1999 -2001 Lara Fabian (Anglais)": "/images/categories-v2/1999_-2001_Lara_Fabian_Anglais.webp",
+  "2001 - 2003 Nue & ETI": "/images/categories-v2/2001_-_2003_Nue__ETI.webp",
+  "2004 A Wonderful Life": "/images/categories-v2/2004_A_Wonderful_Life.webp",
+  "2005 - 2008 9": "/images/categories-v2/2005_-_2008_9.webp",
+  "2009 - 2010 TLFM & EWIM": "/images/categories-v2/2009_-_2010_TLFM__EWIM.webp",
+  "2010 - 2012 Mademoiselle Zhivago": "/images/categories-v2/2010_-_2012_Mademoiselle_Zhivago.webp",
+  "2013 - 2014 Le Secret": "/images/categories-v2/2013_-_2014_Le_Secret.webp",
+  "2015 - 2016 Ma Vie dans La Tienne": "/images/categories-v2/2015_-_2016_Ma_Vie_dans_La_Tienne.webp",
+  "2017 - 2018 Camouflage": "/images/categories-v2/2017_-_2018_Camouflage.webp",
+  "2019 - 2021 Papillon": "/images/categories-v2/2019_-_2021_Papillon.webp",
+  "2024 - Aujourd’hui": "/images/categories-v2/2024_-_Aujourdhui.webp",
+  "2024 - Aujourd'hui": "/images/categories-v2/2024_-_Aujourdhui.webp",
+  "L’Effet Lara - 2026": "/images/categories-v2/LEffet_Lara_-_2026.webp",
+  "L'Effet Lara - 2026": "/images/categories-v2/LEffet_Lara_-_2026.webp",
+  "Lara Fabian - Concerts": "/images/categories-v2/Lara_Fabian_-_Concerts.webp",
+  "Lara Fabian - Divers": "/images/categories-v2/Lara_Fabian_-_Divers.webp",
+  "Lara Fabian - Livres": "/images/categories-v2/Lara_Fabian_-_Livres.webp",
+  "Lara Fabian Documentaires": "/images/categories-v2/Lara_Fabian_Documentaires.webp",
+  "Lara Fabian au Cinéma": "/images/categories-v2/Lara_Fabian_au_Cinma.webp",
+  "Lara Fabian aux Enfoirés": "/images/categories-v2/Lara_Fabian_aux_Enfoirs.webp",
+  "Star Academie 2025": "/images/categories-v2/Star_Acadmie_2025.webp",
+  "Star Academy France": "/images/categories-v2/Star_Acadmie_2025.webp",
+  "The Voice 2026": "/images/categories-v2/The_Voice_2026.webp",
+  "The Voice Kids 2024": "/images/categories-v2/The_Voice_Kids_2024.webp"
 };
+// Posters portrait 2:3 pour Top 10 (Cinematic Hush)
+var CAT_POSTERS = Object.fromEntries(Object.entries(CAT_IMAGES).map(function(e){
+  return [e[0], e[1].replace('/categories-v2/','/categories-v2-poster/')];
+}));
 try { const s = JSON.parse(localStorage.getItem('lfiag_settings_v2')||'{}'); if(s.rules) settings.rules=s.rules; } catch(e){}
 
 // ============================================
@@ -2577,13 +2581,8 @@ if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream) document.d
 
   /* Native Share API wrapper — expose global */
   window.lfiagShare=function(title,url){
-    if(navigator.share){
-      return navigator.share({title:title||document.title,url:url||location.href}).catch(function(){});
-    }
-    // fallback clipboard
-    if(navigator.clipboard){navigator.clipboard.writeText(url||location.href);return Promise.resolve();}
+    if (navigator.share) return navigator.share({title:title||document.title, url:url||location.href}).catch(function(){});
+    if (navigator.clipboard) { navigator.clipboard.writeText(url||location.href); return Promise.resolve(); }
     return Promise.reject();
   };
 })();
-
-handleCallback();
