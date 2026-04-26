@@ -67,37 +67,45 @@ function signIn(prompt_mode) {
     + '&response_type=token&scope=' + encodeURIComponent(SCOPES)
     + '&prompt=' + prompt_mode;
 }
+// Single source of truth: sessionStorage = canonical, localStorage = mirror PWA iOS
+function _readTokenStore() {
+  var st = sessionStorage.getItem('lfiag_token');
+  var se = +sessionStorage.getItem('lfiag_expiry') || 0;
+  if (st && se) return { t: st, e: se };
+  var lt, le;
+  try { lt = localStorage.getItem('lfiag_token'); le = +localStorage.getItem('lfiag_expiry') || 0; } catch(_) {}
+  if (lt && le) return { t: lt, e: le };
+  return { t: null, e: 0 };
+}
+function _clearTokenStore() {
+  sessionStorage.removeItem('lfiag_token');
+  sessionStorage.removeItem('lfiag_expiry');
+  try { localStorage.removeItem('lfiag_token'); localStorage.removeItem('lfiag_expiry'); } catch(_) {}
+}
 function saveToken(t) {
   var expiry = (Date.now() + 55*60*1000).toString();
   sessionStorage.setItem('lfiag_token', t);
   sessionStorage.setItem('lfiag_expiry', expiry);
-  // localStorage pour la persistance PWA iOS (sessionStorage vidé à la fermeture)
-  try {
-    localStorage.setItem('lfiag_token', t);
-    localStorage.setItem('lfiag_expiry', expiry);
-  } catch(e) {}
+  try { localStorage.setItem('lfiag_token', t); localStorage.setItem('lfiag_expiry', expiry); } catch(_) {}
 }
 function getToken() {
-  // Lire depuis sessionStorage en priorité, sinon localStorage (PWA iOS)
-  var t = sessionStorage.getItem('lfiag_token') || localStorage.getItem('lfiag_token');
-  var e = +(sessionStorage.getItem('lfiag_expiry') || localStorage.getItem('lfiag_expiry')) || 0;
-  if (!t || Date.now() > e) {
-    sessionStorage.removeItem('lfiag_token');
-    sessionStorage.removeItem('lfiag_expiry');
-    try { localStorage.removeItem('lfiag_token'); localStorage.removeItem('lfiag_expiry'); } catch(e2) {}
-    return null;
+  var s = _readTokenStore();
+  if (!s.t || Date.now() > s.e) { _clearTokenStore(); return null; }
+  // Sync sessionStorage si lecture vient du localStorage (PWA iOS relance)
+  if (!sessionStorage.getItem('lfiag_token')) {
+    sessionStorage.setItem('lfiag_token', s.t);
+    sessionStorage.setItem('lfiag_expiry', s.e.toString());
   }
-  // Synchroniser sessionStorage si token vient du localStorage
-  if (!sessionStorage.getItem('lfiag_token') && t) {
-    sessionStorage.setItem('lfiag_token', t);
-    sessionStorage.setItem('lfiag_expiry', e.toString());
-  }
-  return t;
+  return s.t;
+}
+function getTokenExpiry() {
+  return _readTokenStore().e;
 }
 function scheduleTokenRefresh() {
-  var delay=(+sessionStorage.getItem('lfiag_expiry')||0)-Date.now()-120000;
-  if(delay<=0)return;
-  setTimeout(function(){toast('Session expire bientôt…');setTimeout(function(){signIn('none');},2000);},delay);
+  // Source unique: _readTokenStore (sessionStorage prioritaire, fallback localStorage)
+  var delay = getTokenExpiry() - Date.now() - 120000;
+  if (delay <= 0) return;
+  setTimeout(function(){ toast('Session expire bientôt…'); setTimeout(function(){ signIn('none'); }, 2000); }, delay);
 }
 
 // ── iOS fake-fullscreen (position:fixed) ────────────────────
