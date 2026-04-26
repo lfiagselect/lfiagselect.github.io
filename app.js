@@ -44,6 +44,7 @@ var CAT_IMAGES = {
   "2024 - Aujourd'hui": "/images/categories/2024_-_Aujourdhui.jpg",
   "L’Effet Lara - 2026": "/images/categories/LEffet_Lara_-_2026.jpg",
   "L'Effet Lara - 2026": "/images/categories/LEffet_Lara_-_2026.jpg",
+  "Lara Fabian - Concerts": "/images/categories/Lara_Fabian_-_Concerts.jpg",
   "Lara Fabian - Divers": "/images/categories/Lara_Fabian_-_Divers.jpg",
   "Lara Fabian - Livres": "/images/categories/Lara_Fabian_-_Livres.jpg",
   "Lara Fabian Documentaires": "/images/categories/Lara_Fabian_Documentaires.jpg",
