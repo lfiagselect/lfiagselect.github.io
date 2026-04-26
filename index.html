@@ -621,17 +621,45 @@ body.ios-fake-fs-active{overflow:hidden}
   .is-tv .hero-copy p{font-size:1.15rem !important;line-height:1.6}
   .is-tv .cat-drawer-item{font-size:1.05rem !important;padding:1rem 1.4rem !important}
   /* P1-3 Audit 2026-04-26: bump tailles micro-éléments illisibles à 2-3m */
-  .is-tv .card-meta,.is-tv .vc-meta,.is-tv .modal-meta{font-size:1rem !important;line-height:1.5 !important}
-  .is-tv .card-category,.is-tv .pill,.is-tv .new-badge,.is-tv .seen-badge{font-size:.95rem !important;letter-spacing:.04em !important;padding:.35rem .7rem !important}
-  .is-tv .duration-badge{font-size:.95rem !important;padding:.3rem .6rem !important}
-  .is-tv .section-count{font-size:1rem !important}
-  .is-tv .modal-title{font-size:1.6rem !important}
-  .is-tv footer,.is-tv footer a{font-size:.85rem !important}
-  /* Mode "TV accessible" optionnel: classe .tv-large à appliquer manuellement (toggle utilisateur futur) */
-  .is-tv.tv-large .card-title{font-size:1.4rem !important}
-  .is-tv.tv-large .section-title{font-size:2rem !important}
-  .is-tv.tv-large .card-meta,.is-tv.tv-large .vc-meta{font-size:1.15rem !important}
-  .is-tv.tv-large .card-category,.is-tv.tv-large .pill{font-size:1.1rem !important}
+  .is-tv .card-meta,.is-tv .vc-meta,.is-tv .modal-meta{font-size:.85rem !important;line-height:1.4 !important}
+  .is-tv .card-category,.is-tv .pill,.is-tv .new-badge,.is-tv .seen-badge{font-size:.78rem !important;letter-spacing:.04em !important;padding:.25rem .55rem !important}
+  .is-tv .duration-badge{font-size:.78rem !important;padding:.22rem .5rem !important}
+  .is-tv .section-count{font-size:.85rem !important}
+  .is-tv .modal-title{font-size:1.3rem !important}
+  .is-tv footer,.is-tv footer a{font-size:.7rem !important}
+  /* Reduce card-title bump aussi */
+  .is-tv .card-title{font-size:.95rem !important}
+  .is-tv .section-title{font-size:1.25rem !important}
+  .is-tv .hero h1{font-size:2.6rem !important}
+
+  /* ═══ TV PERFORMANCE BOOST 2026-04-26 ═══
+     FireTV/Tizen/Chromecast WebView Chromium 70-90 = vieux GPU
+     Tout effet GPU-coûteux désactivé pour fluidité 60 fps */
+  /* 1. Alune previews CONSERVÉS sur TV (fix bug écran noir géré dans aluneStartPreview) */
+  .is-tv .alune-card--preview{cursor:pointer}
+  /* 2. Pas de filtres backdrop-blur (très coûteux GPU) */
+  .is-tv *,.is-tv *::before,.is-tv *::after{backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+  /* 3. Pas de blur ambiant/noise/parallax */
+  .is-tv .hero-video-bg,.is-tv .ambient-bg,.is-tv .ambient-noise,.is-tv .alune-noise,.is-tv .hero-particles{display:none !important}
+  /* 4. Pas de hover zoom (focus uniquement TV) */
+  .is-tv .video-card:hover,.is-tv .alune-card:hover,.is-tv .cat-vignette:hover,.is-tv .cov-card:hover{transform:none !important}
+  .is-tv .video-card-preview{display:none !important}
+  /* 5. Coverflow simplifié TV: désactive 3D rotate (plat = bcp moins GPU) */
+  .is-tv .cov-card.swiper-slide{transform-style:flat !important}
+  /* 6. Transitions courtes (sinon perçu comme lag) */
+  .is-tv *,.is-tv *::before,.is-tv *::after{transition-duration:.18s !important;animation-duration:.4s !important}
+  /* 7. Force GPU-layer cards = scrolling fluide */
+  .is-tv .video-card,.is-tv .alune-card,.is-tv .cov-card,.is-tv .cat-vignette{transform:translateZ(0);will-change:auto;backface-visibility:hidden}
+  /* 8. Désactive shimmer/shadows complexes loader */
+  .is-tv .lfi-bar-shimmer,.is-tv .lfi-particles,.is-tv .lfi-sky{display:none !important}
+  /* 9. Box-shadow simplifié (multi-shadows = repaints) */
+  .is-tv .video-card,.is-tv .alune-card{box-shadow:0 4px 12px rgba(0,0,0,.6) !important}
+  /* 10. Cards proportions raisonnables (pas trop grosses) */
+  .is-tv .video-grid{grid-template-columns:repeat(5,1fr) !important;gap:1rem !important}
+  .is-tv .alune-grid{gap:1rem !important}
+  .is-tv .alune-card{aspect-ratio:16/9 !important;max-height:280px !important}
+  /* 11. Hide widgets desktop-only inutiles TV */
+  .is-tv .back-to-top,.is-tv .video-card-preview{display:none !important}
   .is-tv :focus-visible{transition:outline .15s,transform .15s !important}
   .is-tv .video-grid{scroll-snap-type:y proximity;grid-template-columns:repeat(4,1fr) !important;gap:1.4rem !important}
   .is-tv .video-card{scroll-snap-align:start}

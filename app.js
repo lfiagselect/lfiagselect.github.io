@@ -155,15 +155,41 @@ function aluneStartPreview(card) {
   if (!vid || vid._playing) return;
   vid._playing = true;
   card.classList.add('alune-card--playing');
-  img.style.opacity = '0';
-  vid.muted = false; vid.volume = 0; vid.currentTime = 0;
-  vid.play().catch(function() { vid.muted = true; vid.volume = 1; vid.play(); });
-  vid.classList.add('is-visible');
+  // Fix bug "écran noir + son": muted=true requis pour autoplay browser policy.
+  // is-visible appliqué APRÈS premier frame décodé (loadeddata) → pas de flash noir.
+  vid.muted = true; vid.volume = 0; vid.currentTime = 0;
+  // Force load explicit (preload=none → certains WebView ne déclenchent pas sur play seul)
+  try { if (vid.readyState < 2) vid.load(); } catch(_) {}
+  // Attend frame dispo avant fade-in image→video
+  var _onReady = function(){
+    if (!vid._playing) return; // stoppé entre temps
+    img.style.opacity = '0';
+    vid.classList.add('is-visible');
+    // Unmute progressif après play confirmé (user a ouvert l'app = gesture implicite OK)
+    setTimeout(function(){
+      if (!vid._playing) return;
+      vid.muted = false;
+      if (vid._volIv) clearInterval(vid._volIv);
+      vid._volIv = setInterval(function() {
+        if (!vid.muted) vid.volume = Math.min(1, vid.volume + 0.05);
+        if (vid.volume >= 1) { clearInterval(vid._volIv); vid._volIv = null; }
+      }, 75);
+    }, 200);
+  };
+  if (vid.readyState >= 2) _onReady();
+  else { vid.addEventListener('loadeddata', _onReady, { once:true }); }
+  vid.play().catch(function(err) {
+    // Si rejet: fallback muted forcé (sécurité)
+    vid.muted = true;
+    vid.play().catch(function(){
+      // Échec total: revert image
+      vid._playing = false;
+      card.classList.remove('alune-card--playing');
+      img.style.opacity = '1';
+      vid.classList.remove('is-visible');
+    });
+  });
   if (vid._volIv) clearInterval(vid._volIv);
-  vid._volIv = setInterval(function() {
-    if (!vid.muted) vid.volume = Math.min(1, vid.volume + 0.05);
-    if (vid.volume >= 1) { clearInterval(vid._volIv); vid._volIv = null; }
-  }, 75);
   if (vid._barIv) clearInterval(vid._barIv);
   if (bar) vid._barIv = setInterval(function() {
     if (vid.duration) bar.style.width = (vid.currentTime / vid.duration * 100) + '%';
@@ -2429,13 +2455,13 @@ if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream) document.d
         var grid=document.querySelector('.video-grid');
         var cols=grid?Math.max(1,Math.round(grid.offsetWidth/(cards[0]?cards[0].offsetWidth+20:320))):4;
         var tc=key==='ArrowDown'?cards[ci+cols]:cards[ci-cols];
-        if(tc){tc.focus();tc.scrollIntoView({block:'nearest',behavior:'smooth'});e.preventDefault();}
+        if(tc){tc.focus();tc.scrollIntoView({block:'nearest',behavior:'auto'});e.preventDefault();}
       }
     }
     if(key==='ArrowLeft'||key==='ArrowRight'){
       var cards2=Array.from(document.querySelectorAll('.video-card'));
       var ci2=cards2.indexOf(el);
-      if(ci2>=0){var tc2=key==='ArrowRight'?cards2[ci2+1]:cards2[ci2-1];if(tc2){tc2.focus();tc2.scrollIntoView({block:'nearest',behavior:'smooth'});e.preventDefault();}}
+      if(ci2>=0){var tc2=key==='ArrowRight'?cards2[ci2+1]:cards2[ci2-1];if(tc2){tc2.focus();tc2.scrollIntoView({block:'nearest',behavior:'auto'});e.preventDefault();}}
     }
     // Samsung(10009) / LG(461) remote back + generic back keys
     if(key==='Escape'||key==='GoBack'||key==='BrowserBack'||e.keyCode===10009||e.keyCode===461){
@@ -2470,10 +2496,10 @@ if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream) document.d
   }
   document.addEventListener('keydown',_tvTrap);
 
-  /* Auto scroll focus center for alune-cards */
+  /* Auto scroll focus center for alune-cards (TV: instant pour fluidité) */
   document.addEventListener('focusin',function(e){
     if(e.target.matches&&e.target.matches('.alune-card,.cat-vignette')){
-      e.target.scrollIntoView({block:'center',behavior:'smooth'});
+      e.target.scrollIntoView({block:'center',behavior:'auto'});
     }
   });
 })();
